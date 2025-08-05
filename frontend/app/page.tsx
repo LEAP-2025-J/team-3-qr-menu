@@ -1,9 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card, CardContent } from "../components/ui/card"
+import { Badge } from "../components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { ChefHat, Fish, Soup, Beef, Coffee, Clock, Calendar } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 
@@ -221,7 +221,7 @@ export default function QRMenu() {
                           <div className="flex justify-between items-start mb-2">
                             <h3 className="font-semibold text-lg text-gray-800 flex items-center gap-2">
                               {item.name}
-                              {item.spicy && (
+                              {"spicy" in item && item.spicy && (
                                 <Badge variant="destructive" className="text-xs">
                                   Spicy
                                 </Badge>
@@ -388,6 +388,7 @@ export default function QRMenu() {
   </Card>
 </TabsContent>
 
+        </Tabs>
         {/* Footer */}
         <div className="mt-12 text-center text-gray-500 text-sm border-t pt-6">
           <p className="mb-2">Thank you for dining with us!</p>
