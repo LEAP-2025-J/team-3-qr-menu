@@ -14,6 +14,7 @@ export default function QRGenerator() {
     // Google Charts API ашиглан QR код үүсгэх
     const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}`
     setQrUrl(qrCodeUrl)
+    // qr generator
   }
 
   const downloadQR = () => {
