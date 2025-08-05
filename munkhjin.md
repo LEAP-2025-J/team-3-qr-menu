@@ -1,1 +1,0 @@
-Kherlen God
