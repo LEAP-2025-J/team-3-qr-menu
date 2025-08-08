@@ -72,7 +72,7 @@ const ReservationSchema = new Schema<IReservation>(
 // Generate reservation number before saving
 ReservationSchema.pre("save", async function (next) {
   if (this.isNew) {
-    const count = await mongoose.models.Reservation.countDocuments()
+    const count = await mongoose.models['Reservation']?.countDocuments() || 0
     this.reservationNumber = `RES-${String(count + 1).padStart(4, "0")}`
   }
   next()
@@ -83,4 +83,5 @@ ReservationSchema.index({ date: 1, time: 1 })
 ReservationSchema.index({ customerPhone: 1 })
 ReservationSchema.index({ status: 1 })
 
-export default mongoose.models.Reservation || mongoose.model<IReservation>("Reservation", ReservationSchema) 
+export default mongoose.models['Reservation'] || mongoose.model<IReservation>("Reservation", ReservationSchema)
+

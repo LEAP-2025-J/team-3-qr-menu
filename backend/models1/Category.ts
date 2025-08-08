@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from "mongoose"
+import mongoose, { type Document, Schema } from "mongoose"
 
 export interface ICategory extends Document {
   name: string
@@ -18,7 +18,6 @@ const CategorySchema = new Schema<ICategory>(
       type: String,
       required: [true, "Category name is required"],
       trim: true,
-      unique: true,
     },
     nameEn: {
       type: String,
@@ -52,8 +51,5 @@ const CategorySchema = new Schema<ICategory>(
   },
 )
 
-// Index for better performance
-CategorySchema.index({ name: 1 })
-CategorySchema.index({ order: 1 })
+export default mongoose.models['Category'] || mongoose.model<ICategory>("Category", CategorySchema)
 
-export default mongoose.model<ICategory>("Category", CategorySchema) 

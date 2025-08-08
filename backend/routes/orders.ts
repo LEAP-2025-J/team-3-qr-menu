@@ -1,7 +1,8 @@
 import express, { Request, Response } from "express"
-import Order from "../models/Order.js"
-import Table from "../models/Table.js"
-import MenuItem from "../models/MenuItem.js"
+import { body, validationResult } from "express-validator"
+import Order from "../models1/OrderItem.js"
+import Table from "../models1/Table.js"
+import MenuItem from "../models1/MenuItems.js"
 
 const router = express.Router()
 
@@ -78,7 +79,7 @@ router.post("/", async (req: Request, res: Response) => {
     const { tableId, items, customerName, customerPhone, specialRequests } = req.body
 
     // Validate table exists and is available
-    const table = await Table.findById(tableId)
+    const table = await (Table as any).findById(tableId)
     if (!table) {
       return res.status(404).json({ success: false, error: "Table not found" })
     }
@@ -130,7 +131,7 @@ router.post("/", async (req: Request, res: Response) => {
     await order.save()
 
     // Update table status
-    await Table.findByIdAndUpdate(tableId, {
+    await (Table as any).findByIdAndUpdate(tableId, {
       status: "occupied",
       currentOrder: order._id,
     })
@@ -157,7 +158,7 @@ router.patch(
       .isIn(["pending", "confirmed", "preparing", "ready", "served", "completed", "cancelled"])
       .withMessage("Invalid status"),
   ],
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req)
       if (!errors.isEmpty()) {
@@ -171,7 +172,7 @@ router.patch(
       const { status } = req.body
 
       const order = await Order.findByIdAndUpdate(
-        req.params.id,
+        req.params['id'],
         { status },
         { new: true, runValidators: true },
       ).populate("table", "number")
@@ -185,7 +186,7 @@ router.patch(
 
       // Update table status if order is completed
       if (status === "completed") {
-        await Table.findByIdAndUpdate(order.table._id, {
+        await (Table as any).findByIdAndUpdate(order.table._id, {
           status: "cleaning",
           currentOrder: null,
         })

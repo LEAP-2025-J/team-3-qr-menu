@@ -5,6 +5,13 @@ import helmet from "helmet"
 import rateLimit from "express-rate-limit"
 import dotenv from "dotenv"
 
+// Import models (to register schemas with Mongoose)
+import "./models1/Category.js"
+import "./models1/MenuItems.js"
+import "./models1/OrderItem.js"
+import "./models1/Table.js"
+import "./models1/Reservetion.js"
+
 // Import routes
 import menuRoutes from "./routes/menu.js"
 import orderRoutes from "./routes/orders.js"
