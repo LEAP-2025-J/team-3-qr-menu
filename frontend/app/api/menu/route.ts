@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
-import dbConnect from "@/frontend/lib/mongodb"
-import MenuItem from "@/backend/models1/MenuItem"
+import dbConnect from "../../../lib/mongodb"
+import MenuItem from "../../../models1/MenuItem"
+import Category from "../../../models1/Category"
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,7 +22,6 @@ export async function GET(request: NextRequest) {
     }
 
     const menuItems = await MenuItem.find(query)
-      .populate("category", "name nameEn nameMn")
       .sort({ order: 1, name: 1 })
       .lean()
 
