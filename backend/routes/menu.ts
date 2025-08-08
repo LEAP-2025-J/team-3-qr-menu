@@ -1,16 +1,14 @@
-const express = require("express")
-const { body, validationResult } = require("express-validator")
-const MenuItem = require("../models/MenuItem")
-const Category = require("../models/Category")
+import express, { Request, Response } from "express"
+import MenuItem from "../models/MenuItem.js"
+import Category from "../models/Category.js"
 
 const router = express.Router()
 
 // GET /api/menu - Get all menu items
-router.get("/", async (req, res) => {
+router.get("/", async (req: Request, res: Response) => {
   try {
-    const { category, available, search, page = 1, limit = 50 } = req.query
-
-    const query = {}
+    const { category, available } = req.query
+    const query: any = {}
 
     if (category) {
       query.category = category
@@ -20,35 +18,18 @@ router.get("/", async (req, res) => {
       query.isAvailable = true
     }
 
-    if (search) {
-      query.$text = { $search: search }
-    }
-
     const menuItems = await MenuItem.find(query)
       .populate("category", "name nameEn nameMn")
       .sort({ order: 1, name: 1 })
-      .limit(limit * 1)
-      .skip((page - 1) * limit)
       .lean()
-
-    const total = await MenuItem.countDocuments(query)
 
     res.json({
       success: true,
       data: menuItems,
-      pagination: {
-        page: Number.parseInt(page),
-        limit: Number.parseInt(limit),
-        total,
-        pages: Math.ceil(total / limit),
-      },
     })
   } catch (error) {
     console.error("Error fetching menu items:", error)
-    res.status(500).json({
-      success: false,
-      error: "Failed to fetch menu items",
-    })
+    res.status(500).json({ success: false, error: "Failed to fetch menu items" })
   }
 })
 
@@ -78,59 +59,22 @@ router.get("/:id", async (req, res) => {
 })
 
 // POST /api/menu - Create new menu item
-router.post(
-  "/",
-  [
-    body("nameEn").notEmpty().withMessage("English name is required"),
-    body("nameMn").notEmpty().withMessage("Mongolian name is required"),
-    body("descriptionEn").notEmpty().withMessage("English description is required"),
-    body("descriptionMn").notEmpty().withMessage("Mongolian description is required"),
-    body("price").isFloat({ min: 0 }).withMessage("Price must be a positive number"),
-    body("category").isMongoId().withMessage("Valid category ID is required"),
-    body("preparationTime").isInt({ min: 1 }).withMessage("Preparation time must be at least 1 minute"),
-  ],
-  async (req, res) => {
-    try {
-      const errors = validationResult(req)
-      if (!errors.isEmpty()) {
-        return res.status(400).json({
-          success: false,
-          error: "Validation failed",
-          details: errors.array(),
-        })
-      }
+router.post("/", async (req: Request, res: Response) => {
+  try {
+    const menuItem = new MenuItem(req.body)
+    await menuItem.save()
 
-      // Check if category exists
-      const category = await Category.findById(req.body.category)
-      if (!category) {
-        return res.status(400).json({
-          success: false,
-          error: "Category not found",
-        })
-      }
+    const populatedItem = await MenuItem.findById(menuItem._id).populate("category", "name nameEn nameMn")
 
-      const menuItem = new MenuItem({
-        ...req.body,
-        name: req.body.nameEn, // Set default name to English
-      })
-
-      await menuItem.save()
-
-      const populatedItem = await MenuItem.findById(menuItem._id).populate("category", "name nameEn nameMn")
-
-      res.status(201).json({
-        success: true,
-        data: populatedItem,
-      })
-    } catch (error) {
-      console.error("Error creating menu item:", error)
-      res.status(500).json({
-        success: false,
-        error: "Failed to create menu item",
-      })
-    }
-  },
-)
+    res.status(201).json({
+      success: true,
+      data: populatedItem,
+    })
+  } catch (error) {
+    console.error("Error creating menu item:", error)
+    res.status(500).json({ success: false, error: "Failed to create menu item" })
+  }
+})
 
 // PUT /api/menu/:id - Update menu item
 router.put(
@@ -205,4 +149,4 @@ router.delete("/:id", async (req, res) => {
   }
 })
 
-module.exports = router
+export default router

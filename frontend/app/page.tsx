@@ -69,10 +69,14 @@ export default function QRMenu() {
   }, [cart])
 
   useEffect(() => {
-    fetch("/api/menu")
+    fetch("http://localhost:5000/api/menu")
       .then(res => res.json())
       .then(data => {
         if (data.success) setMenuItems(data.data)
+        setLoadingMenu(false)
+      })
+      .catch(error => {
+        console.error("Error fetching menu:", error)
         setLoadingMenu(false)
       })
   }, [])

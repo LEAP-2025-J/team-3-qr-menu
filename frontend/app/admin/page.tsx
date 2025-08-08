@@ -78,7 +78,7 @@ export default function AdminDashboard() {
   // Fetch data functions
   const fetchOrders = async () => {
     try {
-      const response = await fetch("/api/orders?limit=20")
+      const response = await fetch("http://localhost:5000/api/orders?limit=20")
       const data = await response.json()
       if (data.success) {
         setOrders(data.data)
@@ -106,7 +106,7 @@ export default function AdminDashboard() {
 
   const fetchTables = async () => {
     try {
-      const response = await fetch("/api/tables")
+      const response = await fetch("http://localhost:5000/api/tables")
       const data = await response.json()
       if (data.success) {
         setTables(data.data)
@@ -119,7 +119,7 @@ export default function AdminDashboard() {
   const fetchReservations = async () => {
     try {
       const today = new Date().toISOString().split('T')[0]
-      const response = await fetch(`/api/reservations?date=${today}`)
+      const response = await fetch(`http://localhost:5000/api/reservations?date=${today}`)
       const data = await response.json()
       if (data.success) {
         setReservations(data.data)
@@ -137,7 +137,7 @@ export default function AdminDashboard() {
 
   const fetchMenuItems = async () => {
     try {
-      const response = await fetch("/api/menu")
+      const response = await fetch("http://localhost:5000/api/menu")
       const data = await response.json()
       if (data.success) {
         setMenuItems(data.data)
@@ -149,7 +149,7 @@ export default function AdminDashboard() {
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
-      const response = await fetch(`/api/orders/${orderId}`, {
+      const response = await fetch(`http://localhost:5000/api/orders/${orderId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),

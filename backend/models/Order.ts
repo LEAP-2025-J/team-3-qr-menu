@@ -1,8 +1,34 @@
-const mongoose = require("mongoose")
+import mongoose, { Document, Schema } from "mongoose"
 
-const OrderItemSchema = new mongoose.Schema({
+export interface IOrderItem {
+  menuItem: mongoose.Types.ObjectId
+  quantity: number
+  price: number
+  specialInstructions?: string
+}
+
+export interface IOrder extends Document {
+  orderNumber: string
+  table: mongoose.Types.ObjectId
+  items: IOrderItem[]
+  subtotal: number
+  tax: number
+  total: number
+  status: "pending" | "confirmed" | "preparing" | "ready" | "served" | "completed" | "cancelled"
+  customerName?: string
+  customerPhone?: string
+  specialRequests?: string
+  estimatedTime?: number
+  actualTime?: number
+  paymentStatus: "pending" | "paid" | "failed"
+  paymentMethod?: "cash" | "card" | "mobile"
+  createdAt: Date
+  updatedAt: Date
+}
+
+const OrderItemSchema = new Schema<IOrderItem>({
   menuItem: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: "MenuItem",
     required: [true, "Menu item is required"],
   },
@@ -22,7 +48,7 @@ const OrderItemSchema = new mongoose.Schema({
   },
 })
 
-const OrderSchema = new mongoose.Schema(
+const OrderSchema = new Schema<IOrder>(
   {
     orderNumber: {
       type: String,
@@ -30,7 +56,7 @@ const OrderSchema = new mongoose.Schema(
       unique: true,
     },
     table: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "Table",
       required: [true, "Table is required"],
     },
@@ -38,7 +64,7 @@ const OrderSchema = new mongoose.Schema(
       type: [OrderItemSchema],
       required: [true, "Order items are required"],
       validate: {
-        validator: (items) => items.length > 0,
+        validator: (items: IOrderItem[]) => items.length > 0,
         message: "Order must have at least one item",
       },
     },
@@ -112,4 +138,4 @@ OrderSchema.index({ orderNumber: 1 })
 OrderSchema.index({ createdAt: -1 })
 OrderSchema.index({ status: 1 })
 
-module.exports = mongoose.model("Order", OrderSchema)
+export default mongoose.model<IOrder>("Order", OrderSchema) 

@@ -1,4 +1,4 @@
-import mongoose, { type Document, Schema } from "mongoose"
+import mongoose, { Document, Schema } from "mongoose"
 
 export interface ITable extends Document {
   number: number
@@ -53,4 +53,4 @@ const TableSchema = new Schema<ITable>(
   },
 )
 
-export default mongoose.models.Table || mongoose.model<ITable>("Table", TableSchema)
+export default mongoose.models.Table || mongoose.model<ITable>("Table", TableSchema) 
