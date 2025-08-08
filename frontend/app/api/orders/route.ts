@@ -1,8 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
-import dbConnect from "@/frontend/lib/mongodb"
-import Order from "@/backend/models1/Order"
-import Table from "@/backend/models1/Table"
-import MenuItem from "@/backend/models1/MenuItem"
+import dbConnect from "@/lib/mongodb"
+import Order from "@/models1/Order"
+import Table from "@/models1/Table"
+import MenuItem from "@/models1/MenuItem"
 
 export async function GET(request: NextRequest) {
   try {
