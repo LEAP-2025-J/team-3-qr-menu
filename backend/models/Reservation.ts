@@ -83,4 +83,4 @@ ReservationSchema.index({ date: 1, time: 1 })
 ReservationSchema.index({ customerPhone: 1 })
 ReservationSchema.index({ status: 1 })
 
-export default mongoose.models.Reservation || mongoose.model<IReservation>("Reservation", ReservationSchema)
+export default mongoose.models.Reservation || mongoose.model<IReservation>("Reservation", ReservationSchema) 

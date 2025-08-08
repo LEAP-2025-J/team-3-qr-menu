@@ -1,6 +1,18 @@
-const mongoose = require("mongoose")
+import mongoose, { Document, Schema } from "mongoose"
 
-const CategorySchema = new mongoose.Schema(
+export interface ICategory extends Document {
+  name: string
+  nameEn: string
+  nameMn: string
+  description?: string
+  icon?: string
+  order: number
+  isActive: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
+const CategorySchema = new Schema<ICategory>(
   {
     name: {
       type: String,
@@ -44,4 +56,4 @@ const CategorySchema = new mongoose.Schema(
 CategorySchema.index({ name: 1 })
 CategorySchema.index({ order: 1 })
 
-module.exports = mongoose.model("Category", CategorySchema)
+export default mongoose.model<ICategory>("Category", CategorySchema) 
