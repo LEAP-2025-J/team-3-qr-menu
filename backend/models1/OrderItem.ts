@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from "mongoose"
+import mongoose, { type Document, Schema } from "mongoose"
 
 export interface IOrderItem {
   menuItem: mongoose.Types.ObjectId
@@ -126,16 +126,16 @@ const OrderSchema = new Schema<IOrder>(
 // Generate order number before saving
 OrderSchema.pre("save", async function (next) {
   if (this.isNew) {
-    const count = await mongoose.models.Order.countDocuments()
+    const count = await mongoose.models['Order']?.countDocuments() || 0
     this.orderNumber = `ORD-${String(count + 1).padStart(4, "0")}`
   }
   next()
 })
 
-// Indexes for better query performance
+// Index for better query performance
 OrderSchema.index({ table: 1, status: 1 })
 OrderSchema.index({ orderNumber: 1 })
 OrderSchema.index({ createdAt: -1 })
-OrderSchema.index({ status: 1 })
 
-export default mongoose.model<IOrder>("Order", OrderSchema) 
+export default mongoose.models['Order'] || mongoose.model<IOrder>("Order", OrderSchema)
+

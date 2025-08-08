@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from "mongoose"
+import mongoose, { type Document, Schema } from "mongoose"
 
 export interface IMenuItem extends Document {
   name: string
@@ -17,7 +17,7 @@ export interface IMenuItem extends Document {
   isVegan: boolean
   isGlutenFree: boolean
   isAvailable: boolean
-  preparationTime: number
+  preparationTime: number // minutes
   calories?: number
   order: number
   createdAt: Date
@@ -122,9 +122,9 @@ const MenuItemSchema = new Schema<IMenuItem>(
   },
 )
 
-// Indexes for better query performance
+// Index for better query performance
 MenuItemSchema.index({ category: 1, isAvailable: 1 })
 MenuItemSchema.index({ name: "text", description: "text" })
-MenuItemSchema.index({ order: 1 })
 
-export default mongoose.model<IMenuItem>("MenuItem", MenuItemSchema) 
+export default mongoose.models['MenuItem'] || mongoose.model<IMenuItem>("MenuItem", MenuItemSchema)
+

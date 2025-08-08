@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express"
-import MenuItem from "../models/MenuItem.js"
-import Category from "../models/Category.js"
+import { body, validationResult } from "express-validator"
+import MenuItem from "../models1/MenuItems.js"
+import Category from "../models1/Category.js"
 
 const router = express.Router()
 
@@ -18,7 +19,7 @@ router.get("/", async (req: Request, res: Response) => {
       query.isAvailable = true
     }
 
-    const menuItems = await MenuItem.find(query)
+    const menuItems = await (MenuItem as any).find(query)
       .populate("category", "name nameEn nameMn")
       .sort({ order: 1, name: 1 })
       .lean()
@@ -36,7 +37,7 @@ router.get("/", async (req: Request, res: Response) => {
 // GET /api/menu/:id - Get single menu item
 router.get("/:id", async (req, res) => {
   try {
-    const menuItem = await MenuItem.findById(req.params.id).populate("category", "name nameEn nameMn")
+    const menuItem = await (MenuItem as any).findById(req.params.id).populate("category", "name nameEn nameMn")
 
     if (!menuItem) {
       return res.status(404).json({
@@ -64,7 +65,7 @@ router.post("/", async (req: Request, res: Response) => {
     const menuItem = new MenuItem(req.body)
     await menuItem.save()
 
-    const populatedItem = await MenuItem.findById(menuItem._id).populate("category", "name nameEn nameMn")
+    const populatedItem = await (MenuItem as any).findById(menuItem._id).populate("category", "name nameEn nameMn")
 
     res.status(201).json({
       success: true,
@@ -86,7 +87,7 @@ router.put(
     body("category").optional().isMongoId().withMessage("Valid category ID is required"),
     body("preparationTime").optional().isInt({ min: 1 }).withMessage("Preparation time must be at least 1 minute"),
   ],
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req)
       if (!errors.isEmpty()) {
@@ -97,8 +98,8 @@ router.put(
         })
       }
 
-      const menuItem = await MenuItem.findByIdAndUpdate(
-        req.params.id,
+      const menuItem = await (MenuItem as any).findByIdAndUpdate(
+        req.params['id'],
         { ...req.body, name: req.body.nameEn || req.body.name },
         { new: true, runValidators: true },
       ).populate("category", "name nameEn nameMn")
@@ -127,7 +128,7 @@ router.put(
 // DELETE /api/menu/:id - Delete menu item
 router.delete("/:id", async (req, res) => {
   try {
-    const menuItem = await MenuItem.findByIdAndDelete(req.params.id)
+    const menuItem = await (MenuItem as any).findByIdAndDelete(req.params.id)
 
     if (!menuItem) {
       return res.status(404).json({
