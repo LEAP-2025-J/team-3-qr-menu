@@ -28,6 +28,7 @@ export default function QRMenu() {
   const [menuItems, setMenuItems] = useState<any[]>([])
   const [loadingMenu, setLoadingMenu] = useState(true)
   const [cart, setCart] = useState<{ id: string; nameEn: string; nameMn: string; nameJa: string; price: number; quantity: number; image?: string }[]>([])
+  const [fetchingData, setFetchingData] = useState(false)
   const [cartOpen, setCartOpen] = useState(false)
   const [restaurantName, setRestaurantName] = useState("Loading...")
   const [currentLanguage, setCurrentLanguage] = useState<'en' | 'mn' | 'ja'>('en')
@@ -97,20 +98,20 @@ export default function QRMenu() {
   }, [cart])
 
   useEffect(() => {
-    console.log("Fetching menu from:", "http://localhost:5000/api/menu")
+    // Ensure skeleton shows for at least 1.5 seconds for better UX
+    const startTime = Date.now()
+    const minLoadingTime = 1500 // 1.5 seconds minimum
+    
+    setFetchingData(true)
+    
     fetch("http://localhost:5000/api/menu")
-      .then(res => {
-        console.log("Response status:", res.status)
-        return res.json()
-      })
+      .then(res => res.json())
       .then(data => {
-        console.log("Menu data received:", data)
         if (data.success) {
           setMenuItems(data.data)
           // Set restaurant name based on the first menu item's category or use default
           if (data.data.length > 0) {
             const firstCategory = data.data[0].category?.nameEn
-            console.log("First category:", firstCategory)
             if (firstCategory === "Sushi" || firstCategory === "Ramen") {
               setRestaurantName("Haku")
             } else {
@@ -118,12 +119,28 @@ export default function QRMenu() {
             }
           }
         }
-        setLoadingMenu(false)
+        
+        // Calculate remaining time to ensure minimum loading duration
+        const elapsed = Date.now() - startTime
+        const remaining = Math.max(0, minLoadingTime - elapsed)
+        
+        setTimeout(() => {
+          setLoadingMenu(false)
+          setFetchingData(false)
+        }, remaining)
       })
       .catch(error => {
         console.error("Error fetching menu:", error)
         setRestaurantName("Restaurant")
-        setLoadingMenu(false)
+        
+        // Even on error, show skeleton for minimum time
+        const elapsed = Date.now() - startTime
+        const remaining = Math.max(0, minLoadingTime - elapsed)
+        
+        setTimeout(() => {
+          setLoadingMenu(false)
+          setFetchingData(false)
+        }, remaining)
       })
   }, [])
 
@@ -135,14 +152,11 @@ export default function QRMenu() {
   // Group menu items by category (using category.nameEn)
   const groupedMenu = useMemo(() => {
     const groups: Record<string, any[]> = {}
-    console.log("Grouping menu items:", menuItems)
     menuItems.forEach(item => {
       const cat = item.category?.nameEn?.toLowerCase() || "other"
-      console.log("Item:", item.nameEn, "Category:", item.category?.nameEn, "->", cat, "Image:", item.image)
       if (!groups[cat]) groups[cat] = []
       groups[cat].push(item)
     })
-    console.log("Grouped menu:", groups)
     return groups
   }, [menuItems])
 
@@ -251,11 +265,32 @@ export default function QRMenu() {
       <div className="container mx-auto px-4 py-4 md:py-6 max-w-4xl">
         {loadingMenu ? (
           <div className="w-full space-y-12">
-            {Object.entries(categoryIcons).map(([category]) => (
+            {/* Loading indicator */}
+            <div className="text-center py-8">
+              <div className="inline-flex items-center space-x-2 text-gray-600">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500"></div>
+                <span className="text-lg">Loading delicious menu items...</span>
+              </div>
+            </div>
+            
+            {/* Skeleton loading */}
+            {["appetizers", "sushi", "ramen", "main dishes", "desserts", "drinks"].map((category) => (
               <CategorySkeleton key={category} />
             ))}
           </div>
         ) : (
+          <>
+            {/* Subtle loading indicator after skeleton */}
+            {fetchingData && (
+              <div className="text-center py-4 mb-6">
+                <div className="inline-flex items-center space-x-2 text-gray-500">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-400"></div>
+                  <span className="text-sm">Finalizing menu...</span>
+                </div>
+              </div>
+            )}
+            
+            {/* Actual menu content */}
             <div className="w-full space-y-12">
               {Object.entries(groupedMenu).map(([category, items]) => (
                 <div key={category} className="space-y-6 md:space-y-8">
@@ -331,7 +366,8 @@ export default function QRMenu() {
                 </div>
               ))}
             </div>
-          )}
+          </>
+        )}
         {/* Floating Cart Button */}
         <Button
           className="fixed bottom-4 md:bottom-8 right-4 md:right-8 z-50 shadow-lg px-4 md:px-6 py-2 md:py-3 rounded-full text-sm md:text-base"
