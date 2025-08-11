@@ -26,11 +26,21 @@ export default function QRMenu() {
   const [tableNumber, setTableNumber] = useState<string | null>(null)
   const [menuItems, setMenuItems] = useState<any[]>([])
   const [loadingMenu, setLoadingMenu] = useState(true)
-  const [cart, setCart] = useState<{ name: string; price: number; quantity: number; image?: string }[]>([])
+  const [cart, setCart] = useState<{ id: string; nameEn: string; nameMn: string; nameJa: string; price: number; quantity: number; image?: string }[]>([])
   const [cartOpen, setCartOpen] = useState(false)
   const [restaurantName, setRestaurantName] = useState("Loading...")
+  const [currentLanguage, setCurrentLanguage] = useState<'en' | 'mn' | 'ja'>('en')
   const searchParams = useSearchParams()
   const cartLoaded = useRef(false)
+
+  // Language helper function
+  const getText = (en: string, mn: string, ja: string) => {
+    switch (currentLanguage) {
+      case 'mn': return mn
+      case 'ja': return ja
+      default: return en
+    }
+  }
 
   // Check if current time is before 7pm for discount
   const isBefore7PM = () => {
@@ -58,7 +68,22 @@ export default function QRMenu() {
   useEffect(() => {
     if (!cartLoaded.current) {
       const stored = localStorage.getItem("qr-menu-cart")
-      if (stored) setCart(JSON.parse(stored))
+      if (stored) {
+        try {
+          const parsedCart = JSON.parse(stored)
+          // Handle legacy cart format (convert old format to new format)
+          if (parsedCart.length > 0 && !parsedCart[0].id) {
+            // Clear old format cart
+            setCart([])
+            localStorage.removeItem("qr-menu-cart")
+          } else {
+            setCart(parsedCart)
+          }
+        } catch (error) {
+          console.error("Error parsing cart from localStorage:", error)
+          setCart([])
+        }
+      }
       cartLoaded.current = true
     }
   }, [])
@@ -86,9 +111,9 @@ export default function QRMenu() {
             const firstCategory = data.data[0].category?.nameEn
             console.log("First category:", firstCategory)
             if (firstCategory === "Sushi" || firstCategory === "Ramen") {
-              setRestaurantName("Sakura Restaurant")
+              setRestaurantName("Haku")
             } else {
-              setRestaurantName("Fusion Restaurant")
+              setRestaurantName("Haku")
             }
           }
         }
@@ -120,9 +145,9 @@ export default function QRMenu() {
     return groups
   }, [menuItems])
 
-  const addToCart = (item: { nameEn: string; price: string | number; image?: string }) => {
+  const addToCart = (item: { _id: string; nameEn: string; nameMn: string; nameJa: string; price: string | number; image?: string }) => {
     setCart(prev => {
-      const idx = prev.findIndex(i => i.name === item.nameEn)
+      const idx = prev.findIndex(i => i.id === item._id)
       const originalPrice = typeof item.price === "string"
         ? parseFloat(item.price.replace(/[^0-9.]/g, "")) || 0
         : (typeof item.price === "number" && !isNaN(item.price) ? item.price : 0)
@@ -135,16 +160,24 @@ export default function QRMenu() {
         updated[idx].quantity += 1
         return updated
       }
-      return [...prev, { name: item.nameEn, price: finalPrice, quantity: 1, image: item.image }]
+      return [...prev, { 
+        id: item._id, 
+        nameEn: item.nameEn, 
+        nameMn: item.nameMn, 
+        nameJa: item.nameJa, 
+        price: finalPrice, 
+        quantity: 1, 
+        image: item.image 
+      }]
     })
   }
 
-  const removeFromCart = (name: string) => {
-    setCart(prev => prev.filter(i => i.name !== name))
+  const removeFromCart = (id: string) => {
+    setCart(prev => prev.filter(i => i.id !== id))
   }
 
-  const changeQuantity = (name: string, qty: number) => {
-    setCart(prev => prev.map(i => i.name === name ? { ...i, quantity: Math.max(1, qty) } : i))
+  const changeQuantity = (id: string, qty: number) => {
+    setCart(prev => prev.map(i => i.id === id ? { ...i, quantity: Math.max(1, qty) } : i))
   }
 
   const total = cart.reduce((sum, i) => sum + i.price * i.quantity, 0)
@@ -155,6 +188,30 @@ export default function QRMenu() {
       <div className="text-center p-4 md:p-6" style={{ backgroundColor: '#FFD09B' }}>
         <h1 className="text-2xl md:text-4xl font-bold mb-2" style={{ color: '#8B4513' }}>{restaurantName}</h1>
         <p className="text-gray-700 mb-4 text-sm md:text-base">Experience the perfect blend of tradition and innovation</p>
+        
+        {/* Language Selector */}
+        <div className="flex justify-center mb-4">
+          <div className="flex bg-white rounded-lg p-1 shadow-md">
+            {[
+              { code: 'en', name: 'English', flag: '🇺🇸' },
+              { code: 'mn', name: 'Монгол', flag: '🇲🇳' },
+              { code: 'ja', name: '日本語', flag: '🇯🇵' }
+            ].map((lang) => (
+              <button
+                key={lang.code}
+                onClick={() => setCurrentLanguage(lang.code as 'en' | 'mn' | 'ja')}
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                  currentLanguage === lang.code
+                    ? 'bg-orange-500 text-white shadow-sm'
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                }`}
+              >
+                <span className="mr-2">{lang.flag}</span>
+                {lang.name}
+              </button>
+            ))}
+          </div>
+        </div>
         
         {tableNumber && (
           <div className="mt-2">
@@ -173,8 +230,16 @@ export default function QRMenu() {
           <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-center py-3 px-4 rounded-lg shadow-lg">
             <div className="flex items-center justify-center gap-2">
               <span className="text-lg">🎉</span>
-              <span className="font-bold text-lg">Happy Hour!</span>
-              <span className="text-sm">10% OFF all items before 7:00 PM</span>
+              <span className="font-bold text-lg">
+                {getText('Happy Hour!', 'Хөгжөөний цаг!', 'ハッピーアワー！')}
+              </span>
+              <span className="text-sm">
+                {getText(
+                  '10% OFF all items before 7:00 PM',
+                  '19:00 цагийн өмнөх бүх бараанд 10% хөнгөлөлт',
+                  '19:00までの全商品10%オフ'
+                )}
+              </span>
               <span className="text-lg">🎉</span>
             </div>
           </div>
@@ -222,7 +287,7 @@ export default function QRMenu() {
                         <div className="p-2 md:p-4 flex flex-col flex-grow">
                           <div className="flex justify-between items-center mb-1 md:mb-2">
                             <h3 className="font-bold text-sm md:text-lg text-gray-900">
-                              {item.nameEn || item.name}
+                              {getText(item.nameEn || item.name, item.nameMn || item.name, item.nameJa || item.nameEn || item.name)}
                             </h3>
                             <div className="flex flex-col items-end">
                               {isBefore7PM() ? (
@@ -243,7 +308,7 @@ export default function QRMenu() {
                           </div>
 
                           <p className="text-gray-600 text-xs md:text-sm leading-relaxed mb-2 md:mb-4 line-clamp-2 flex-grow">
-                            {item.descriptionEn || item.description}
+                            {getText(item.descriptionEn || item.description, item.descriptionMn || item.description, item.descriptionJa || item.descriptionEn || item.description)}
                           </p>
                           <Button 
                             size="sm"
@@ -251,7 +316,7 @@ export default function QRMenu() {
                             className="w-full hover:opacity-80 font-medium text-xs md:text-sm py-1 md:py-2 mt-auto" 
                             onClick={() => addToCart(item)}
                           >
-                            Add to Cart
+                            {getText('Add to Cart', 'Сагсанд нэмэх', 'カートに追加')}
                           </Button>
                         </div>
                       </CardContent>
@@ -268,74 +333,86 @@ export default function QRMenu() {
           style={{ display: cart.length ? "block" : "none", backgroundColor: '#FFB0B0', color: '#8B4513' }}
           onClick={() => setCartOpen(true)}
         >
-          View Cart ({cart.reduce((sum, i) => sum + i.quantity, 0)})
+          {getText('View Cart', 'Сагс харах', 'カートを見る')} ({cart.reduce((sum, i) => sum + i.quantity, 0)})
         </Button>
         {/* Cart Modal */}
         <Dialog open={cartOpen} onOpenChange={setCartOpen}>
           <DialogContent className="max-w-lg w-[95vw] md:max-w-lg max-h-[80vh] overflow-hidden">
             <DialogHeader>
-              <DialogTitle className="text-xl font-bold text-center">Your Order</DialogTitle>
+              <DialogTitle className="text-xl font-bold text-center">
+                {getText('Your Order', 'Таны захиалга', 'ご注文')}
+              </DialogTitle>
               <div className="text-sm text-gray-500 text-center">
-                {cart.length} item{cart.length !== 1 ? 's' : ''} in cart
+                {getText(
+                  `${cart.length} item${cart.length !== 1 ? 's' : ''} in cart`,
+                  `Сагсанд ${cart.length} бараа`,
+                  `カートに${cart.length}アイテム`
+                )}
               </div>
             </DialogHeader>
             {cart.length === 0 ? (
               <div className="text-center text-gray-500 py-12">
                 <div className="text-4xl mb-2">🛒</div>
-                <div className="text-lg font-medium mb-2">Your cart is empty</div>
-                <div className="text-sm">Add some delicious items to get started!</div>
+                <div className="text-lg font-medium mb-2">
+                  {getText('Your cart is empty', 'Таны сагс хоосон байна', 'カートが空です')}
+                </div>
+                <div className="text-sm">
+                  {getText('Add some delicious items to get started!', 'Вкусхан зүйлс нэмж эхлээрэй!', 'おいしい商品を追加して始めましょう！')}
+                </div>
               </div>
                         ) : (
               <div className="flex flex-col h-[60vh]">
                 {/* Scrollable food items */}
                 <div className="flex-1 overflow-y-auto space-y-4 pr-2">
-                  {cart.map(item => (
-                    <div key={item.name} className="flex items-center gap-4 border-b pb-4">
-                      <CloudinaryImage 
-                        src={item.image || "/placeholder.svg"} 
-                        alt={item.name} 
-                        width={80} 
-                        height={80} 
-                        className="w-20 h-20 rounded-lg object-cover shadow-sm flex-shrink-0" 
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-base mb-1">{item.name}</div>
-                        <div className="text-sm text-gray-600 mb-2">
-                          ${typeof item.price === "number" && !isNaN(item.price) ? item.price.toFixed(2) : "0.00"}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            onClick={() => changeQuantity(item.name, item.quantity - 1)} 
-                            disabled={item.quantity === 1}
-                            className="w-8 h-8 p-0"
-                          >
-                            -
-                          </Button>
-                          <span className="px-3 py-1 bg-gray-100 rounded-md text-sm font-medium min-w-[2rem] text-center">
-                            {item.quantity}
-                          </span>
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            onClick={() => changeQuantity(item.name, item.quantity + 1)}
-                            className="w-8 h-8 p-0"
-                          >
-                            +
-                          </Button>
-                        </div>
+                                  {cart.map(item => (
+                  <div key={item.id} className="flex items-center gap-4 border-b pb-4">
+                    <CloudinaryImage 
+                      src={item.image || "/placeholder.svg"} 
+                      alt={getText(item.nameEn, item.nameMn, item.nameJa)} 
+                      width={80} 
+                      height={80} 
+                      className="w-20 h-20 rounded-lg object-cover shadow-sm flex-shrink-0" 
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-base mb-1">
+                        {getText(item.nameEn, item.nameMn, item.nameJa)}
                       </div>
-                      <Button 
-                        size="icon" 
-                        variant="ghost" 
-                        onClick={() => removeFromCart(item.name)} 
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2"
-                      >
-                        ×
-                      </Button>
+                      <div className="text-sm text-gray-600 mb-2">
+                        ${typeof item.price === "number" && !isNaN(item.price) ? item.price.toFixed(2) : "0.00"}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => changeQuantity(item.id, item.quantity - 1)} 
+                          disabled={item.quantity === 1}
+                          className="w-8 h-8 p-0"
+                        >
+                          -
+                        </Button>
+                        <span className="px-3 py-1 bg-gray-100 rounded-md text-sm font-medium min-w-[2rem] text-center">
+                          {item.quantity}
+                        </span>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => changeQuantity(item.id, item.quantity + 1)}
+                          className="w-8 h-8 p-0"
+                        >
+                          +
+                        </Button>
+                      </div>
                     </div>
-                  ))}
+                    <Button 
+                      size="icon" 
+                      variant="ghost" 
+                      onClick={() => removeFromCart(item.id)} 
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2"
+                    >
+                      ×
+                    </Button>
+                  </div>
+                ))}
                 </div>
                 
                 {/* Sticky total and buttons section */}
@@ -350,13 +427,13 @@ export default function QRMenu() {
                       onClick={() => setCart([])}
                       className="flex-1 py-3 rounded-lg font-medium text-base border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
                     >
-                      Empty Cart
+                      {getText('Empty Cart', 'Сагсыг цэвэрлэх', 'カートを空にする')}
                     </Button>
                     <Button 
                       className="flex-1 py-3 rounded-lg font-medium text-base"
                       style={{ backgroundColor: '#FFD09B', color: '#8B4513' }}
                     >
-                      Place Order
+                      {getText('Place Order', 'Захиалга өгөх', '注文する')}
                     </Button>
                   </div>
                 </div>
@@ -366,10 +443,18 @@ export default function QRMenu() {
         </Dialog>
         {/* Footer */}
         <div className="mt-12 text-center text-gray-500 text-sm border-t pt-6">
-          <p className="mb-2">Thank you for dining with us!</p>
-          <p>Please let your server know about any allergies or dietary restrictions</p>
+          <p className="mb-2">
+            {getText('Thank you for dining with us!', 'Бидэнтэй хооллохдод баярлалаа!', 'ご利用いただきありがとうございます！')}
+          </p>
+          <p>
+            {getText(
+              'Please let your server know about any allergies or dietary restrictions',
+              'Аллерги эсвэл хоолны хязгаарлалттай бол үйлчилгээний ажилтанд мэдэгдээрэй',
+              'アレルギーや食事制限がある場合は、スタッフにお知らせください'
+            )}
+          </p>
           <div className="mt-4 text-xs">
-            <p>WiFi: Sakura_Guest | Password: sushi2024</p>
+            <p>WiFi: Haku_Guest | Password: sushi2024</p>
           </div>
         </div>
       </div>
@@ -386,7 +471,7 @@ export default function QRMenu() {
               <h4 className="font-semibold mb-3 md:mb-4" style={{ color: '#8B4513' }}>Hours</h4>
               <div className="text-gray-700 text-xs md:text-sm space-y-1">
                 <div>Mon-Thu: 11:00 AM - 10:00 PM</div>
-                <div>Fri-Sat: 11:00 AM - 11:00 PM</div>
+                <div>Fri-Sat: 11:00 AM - 12:00 PM</div>
                 <div>Sunday: 12:00 PM - 9:00 PM</div>
               </div>
             </div>
