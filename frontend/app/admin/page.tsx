@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Skeleton } from "@/components/ui/skeleton"
+import { StatsCardSkeleton, OrderRowSkeleton, AdminTabSkeleton, ReservationSkeleton, MenuManagementSkeleton } from "@/components/ui/loading-skeleton"
 import { LayoutDashboard, ShoppingCart, Users, Calendar, MenuIcon, Settings, TrendingUp, Clock, CheckCircle, AlertCircle, Search, Filter, Download, Bell, User, Plus, Edit, Trash2, Eye, RefreshCw } from 'lucide-react'
 
 // Types
@@ -68,12 +70,34 @@ export default function AdminDashboard() {
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [stats, setStats] = useState({
     todayOrders: 0,
     activeReservations: 0,
     totalRevenue: 0,
     averageOrderValue: 0,
   })
+
+  // Load all data function
+  const loadData = async () => {
+    if (loading) {
+      setLoading(true)
+      // Add a small delay to show skeleton loading (remove in production)
+      await new Promise(resolve => setTimeout(resolve, 2000))
+    } else {
+      setRefreshing(true)
+    }
+    
+    await Promise.all([
+      fetchOrders(),
+      fetchTables(),
+      fetchReservations(),
+      fetchMenuItems(),
+    ])
+    
+    setLoading(false)
+    setRefreshing(false)
+  }
 
   // Fetch data functions
   const fetchOrders = async () => {
@@ -165,17 +189,6 @@ export default function AdminDashboard() {
   }
 
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true)
-      await Promise.all([
-        fetchOrders(),
-        fetchTables(),
-        fetchReservations(),
-        fetchMenuItems(),
-      ])
-      setLoading(false)
-    }
-
     loadData()
 
     // Auto-refresh every 30 seconds
@@ -236,17 +249,88 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="flex items-center space-x-2">
-          <RefreshCw className="w-6 h-6 animate-spin" />
-          <span className="text-lg">Loading admin dashboard...</span>
+      <div className="min-h-screen bg-gray-50">
+        {/* Header Skeleton */}
+        <header className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Skeleton className="h-8 w-48" />
+              <Skeleton className="h-6 w-20" />
+            </div>
+            <div className="flex items-center space-x-4">
+              <Skeleton className="h-9 w-24" />
+              <Skeleton className="h-9 w-32" />
+              <Skeleton className="h-9 w-20" />
+            </div>
+          </div>
+        </header>
+
+        <div className="flex">
+          {/* Sidebar Skeleton */}
+          <aside className="w-64 bg-white border-r border-gray-200 min-h-screen sticky top-16">
+            <nav className="p-4 space-y-4">
+              {[...Array(6)].map((_, i) => (
+                <Skeleton key={i} className="h-10 w-full" />
+              ))}
+            </nav>
+          </aside>
+
+          {/* Main Content Skeleton */}
+          <main className="flex-1 p-6">
+            <div className="space-y-6">
+              {/* Show different skeleton based on active tab */}
+              {activeTab === "dashboard" && (
+                <>
+                  {/* Stats Cards Skeleton */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {[...Array(4)].map((_, i) => (
+                      <Card key={i}>
+                        <StatsCardSkeleton />
+                      </Card>
+                    ))}
+                  </div>
+
+                  {/* Recent Orders Skeleton */}
+                  <Card>
+                    <CardHeader>
+                      <Skeleton className="h-6 w-32" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {[...Array(5)].map((_, i) => (
+                          <OrderRowSkeleton key={i} />
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+
+              {activeTab === "orders" && <AdminTabSkeleton />}
+              {activeTab === "tables" && <AdminTabSkeleton />}
+              {activeTab === "reservations" && <AdminTabSkeleton />}
+              {activeTab === "menu" && <MenuManagementSkeleton />}
+            </div>
+          </main>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 relative">
+      {/* Refreshing Overlay */}
+      {refreshing && (
+        <div className="absolute inset-0 bg-black bg-opacity-20 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 shadow-xl">
+            <div className="flex items-center space-x-3">
+              <RefreshCw className="w-6 h-6 animate-spin text-blue-600" />
+              <span className="text-lg font-medium">Refreshing data...</span>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-50">
         <div className="flex items-center justify-between">
@@ -258,9 +342,9 @@ export default function AdminDashboard() {
             </Badge>
           </div>
           <div className="flex items-center space-x-4">
-            <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Refresh
+            <Button variant="outline" size="sm" onClick={() => loadData()}>
+              <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+              {refreshing ? 'Refreshing...' : 'Refresh'}
             </Button>
             <Button variant="outline" size="sm">
               <Bell className="w-4 h-4 mr-2" />
@@ -385,8 +469,8 @@ export default function AdminDashboard() {
                   <CardTitle className="flex items-center justify-between">
                     Recent Orders
                     <Button variant="outline" size="sm" onClick={fetchOrders}>
-                      <RefreshCw className="w-4 h-4 mr-2" />
-                      Refresh
+                      <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+                      {refreshing ? 'Refreshing...' : 'Refresh'}
                     </Button>
                   </CardTitle>
                 </CardHeader>

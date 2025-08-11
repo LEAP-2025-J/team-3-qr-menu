@@ -8,6 +8,7 @@ import { ChefHat, Fish, Soup, Beef, Coffee, Clock, Calendar } from 'lucide-react
 import { useSearchParams } from 'next/navigation'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { CategorySkeleton } from "@/components/ui/loading-skeleton"
 import CloudinaryImage from "@/components/CloudinaryImage"
 
 const categoryIcons = {
@@ -161,8 +162,12 @@ export default function QRMenu() {
       {/* Menu Content */}
       <div className="container mx-auto px-4 py-4 md:py-6 max-w-4xl">
         {loadingMenu ? (
-          <div className="text-center py-12 text-gray-500">Loading menu...</div>
-                  ) : (
+          <div className="w-full space-y-12">
+            {Object.entries(categoryIcons).map(([category]) => (
+              <CategorySkeleton key={category} />
+            ))}
+          </div>
+        ) : (
             <div className="w-full space-y-12">
               {Object.entries(categoryIcons).map(([category]) => (
                 <div key={category} className="space-y-6 md:space-y-8">
