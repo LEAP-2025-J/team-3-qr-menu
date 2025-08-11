@@ -22,6 +22,15 @@ const getCategoryIcon = (categoryName: string) => {
   return ChefHat // default icon
 }
 
+const categoryIcons = {
+  "appetizers": ChefHat,
+  "sushi": Fish,
+  "ramen": Soup,
+  "main dishes": Beef,
+  "desserts": Coffee,
+  "drinks": Coffee
+}
+
 export default function QRMenu() {
   const [activeTab, setActiveTab] = useState("appetizers")
   const [tableNumber, setTableNumber] = useState<string | null>(null)
@@ -30,9 +39,8 @@ export default function QRMenu() {
   const [cart, setCart] = useState<{ id: string; nameEn: string; nameMn: string; nameJa: string; price: number; quantity: number; image?: string }[]>([])
   const [fetchingData, setFetchingData] = useState(false)
   const [cartOpen, setCartOpen] = useState(false)
-  const [restaurantName, setRestaurantName] = useState("Loading...")
+  const [restaurantName, setRestaurantName] = useState("Haku")
   const [currentLanguage, setCurrentLanguage] = useState<'en' | 'mn' | 'ja'>('en')
-  const searchParams = useSearchParams()
   const cartLoaded = useRef(false)
 
   // Language helper function
@@ -90,6 +98,15 @@ export default function QRMenu() {
     }
   }, [])
 
+  // Detect table number from URL parameters (safe for production)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      const table = urlParams.get('table')
+      setTableNumber(table)
+    }
+  }, [])
+
   // Persist cart to localStorage
   useEffect(() => {
     if (cartLoaded.current) {
@@ -109,15 +126,6 @@ export default function QRMenu() {
       .then(data => {
         if (data.success) {
           setMenuItems(data.data)
-          // Set restaurant name based on the first menu item's category or use default
-          if (data.data.length > 0) {
-            const firstCategory = data.data[0].category?.nameEn
-            if (firstCategory === "Sushi" || firstCategory === "Ramen") {
-              setRestaurantName("Haku")
-            } else {
-              setRestaurantName("Haku")
-            }
-          }
         }
         
         // Calculate remaining time to ensure minimum loading duration
@@ -131,23 +139,9 @@ export default function QRMenu() {
       })
       .catch(error => {
         console.error("Error fetching menu:", error)
-        setRestaurantName("Restaurant")
-        
-        // Even on error, show skeleton for minimum time
-        const elapsed = Date.now() - startTime
-        const remaining = Math.max(0, minLoadingTime - elapsed)
-        
-        setTimeout(() => {
-          setLoadingMenu(false)
-          setFetchingData(false)
-        }, remaining)
+        setLoadingMenu(false)
       })
   }, [])
-
-  useEffect(() => {
-    const table = searchParams.get('table')
-    setTableNumber(table)
-  }, [searchParams])
 
   // Group menu items by category (using category.nameEn)
   const groupedMenu = useMemo(() => {
@@ -228,6 +222,7 @@ export default function QRMenu() {
           </div>
         </div>
         
+        {/* Table Number Display */}
         {tableNumber && (
           <div className="mt-2">
             <Badge variant="secondary" style={{ backgroundColor: '#FFB0B0', color: '#8B4513' }} className="font-bold text-xs md:text-sm">
@@ -263,7 +258,7 @@ export default function QRMenu() {
 
       {/* Menu Content */}
       <div className="container mx-auto px-4 py-4 md:py-6 max-w-4xl">
-        {loadingMenu ? (
+        {loadingMenu || Object.keys(groupedMenu).length === 0 ? (
           <div className="w-full space-y-12">
             {/* Loading indicator */}
             <div className="text-center py-8">
@@ -382,6 +377,11 @@ export default function QRMenu() {
             <DialogHeader>
               <DialogTitle className="text-xl font-bold text-center">
                 {getText('Your Order', 'Таны захиалга', 'ご注文')}
+                {tableNumber && (
+                  <div className="text-sm text-gray-600 mt-1">
+                    Table {tableNumber}
+                  </div>
+                )}
               </DialogTitle>
               <div className="text-sm text-gray-500 text-center">
                 {getText(
