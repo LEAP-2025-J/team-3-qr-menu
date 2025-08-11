@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { UploadProgressSkeleton } from "@/components/ui/loading-skeleton"
 
 export default function UploadPage() {
   const [uploading, setUploading] = useState(false)
@@ -62,9 +63,18 @@ export default function UploadPage() {
           </div>
 
           {uploading && (
-            <div className="text-center py-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
-              <p className="mt-2 text-sm text-gray-600">Uploading images...</p>
+            <div className="space-y-4">
+              <div className="text-center py-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
+                <p className="mt-2 text-sm text-gray-600">Uploading images...</p>
+              </div>
+              
+              {/* Upload Progress Skeletons */}
+              <div className="space-y-3">
+                {[...Array(3)].map((_, index) => (
+                  <UploadProgressSkeleton key={index} />
+                ))}
+              </div>
             </div>
           )}
 

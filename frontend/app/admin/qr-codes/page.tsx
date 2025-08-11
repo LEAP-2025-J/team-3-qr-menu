@@ -1,6 +1,9 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { QRCodeSkeleton } from "@/components/ui/loading-skeleton"
 
 const BASE_URL = typeof window !== "undefined"
   ? window.location.origin
@@ -16,10 +19,42 @@ function getQrUrl(table: number) {
 }
 
 export default function QRCodesPage() {
+  const [loading, setLoading] = useState(true)
+  
   const codes = Array.from({ length: TABLE_COUNT }, (_, i) => {
     const table = i + 1;
     return { table, ...getQrUrl(table) };
   });
+
+  // Simulate loading for QR code generation
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 1000)
+    return () => clearTimeout(timer)
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-4xl mx-auto">
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-8 w-64 mb-2" />
+              <Skeleton className="h-4 w-80" />
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {[...Array(8)].map((_, index) => (
+                  <Card key={index} className="text-center">
+                    <QRCodeSkeleton />
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
