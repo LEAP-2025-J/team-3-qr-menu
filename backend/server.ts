@@ -6,17 +6,17 @@ import rateLimit from "express-rate-limit"
 import dotenv from "dotenv"
 
 // Import models (to register schemas with Mongoose)
-import "./models1/Category.js"
-import "./models1/MenuItems.js"
-import "./models1/OrderItem.js"
-import "./models1/Table.js"
-import "./models1/Reservetion.js"
+import "./models/model.category"
+import "./models/model.menuItem"
+import "./models/model.order"
+import "./models/model.table"
+import "./models/model.reservation"
 
 // Import routes
-import menuRoutes from "./routes/menu.js"
-import orderRoutes from "./routes/orders.js"
-import tableRoutes from "./routes/tables.js"
-import reservationRoutes from "./routes/reservations.js"
+import menuRoutes from "./routes/route.menu"
+import orderRoutes from "./routes/route.orders"
+import tableRoutes from "./routes/route.tables"
+import reservationRoutes from "./routes/route.reservations"
 
 dotenv.config()
 

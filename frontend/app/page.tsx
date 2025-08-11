@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useMemo } from "react"
+import React, { useState, useEffect, useRef, useMemo } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -10,14 +10,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button"
 import CloudinaryImage from "@/components/CloudinaryImage"
 
-const categoryIcons = {
-  appetizers: ChefHat,
-  sushi: Fish,
-  ramen: Soup,
-  mains: Beef,
-  desserts: Coffee,
-  hours: Clock,
-  reservation: Calendar
+const getCategoryIcon = (categoryName: string) => {
+  const category = categoryName.toLowerCase()
+  if (category.includes('appetizer') || category.includes('завсрын')) return ChefHat
+  if (category.includes('sushi') || category.includes('суши')) return Fish
+  if (category.includes('ramen') || category.includes('рамен')) return Soup
+  if (category.includes('main') || category.includes('үндсэн')) return Beef
+  if (category.includes('dessert') || category.includes('амттан')) return Coffee
+  if (category.includes('drink') || category.includes('ундаа')) return Coffee
+  return ChefHat // default icon
 }
 
 export default function QRMenu() {
@@ -27,6 +28,7 @@ export default function QRMenu() {
   const [loadingMenu, setLoadingMenu] = useState(true)
   const [cart, setCart] = useState<{ name: string; price: number; quantity: number; image?: string }[]>([])
   const [cartOpen, setCartOpen] = useState(false)
+  const [restaurantName, setRestaurantName] = useState("Loading...")
   const searchParams = useSearchParams()
   const cartLoaded = useRef(false)
 
@@ -69,14 +71,32 @@ export default function QRMenu() {
   }, [cart])
 
   useEffect(() => {
+    console.log("Fetching menu from:", "http://localhost:5000/api/menu")
     fetch("http://localhost:5000/api/menu")
-      .then(res => res.json())
+      .then(res => {
+        console.log("Response status:", res.status)
+        return res.json()
+      })
       .then(data => {
-        if (data.success) setMenuItems(data.data)
+        console.log("Menu data received:", data)
+        if (data.success) {
+          setMenuItems(data.data)
+          // Set restaurant name based on the first menu item's category or use default
+          if (data.data.length > 0) {
+            const firstCategory = data.data[0].category?.nameEn
+            console.log("First category:", firstCategory)
+            if (firstCategory === "Sushi" || firstCategory === "Ramen") {
+              setRestaurantName("Sakura Restaurant")
+            } else {
+              setRestaurantName("Fusion Restaurant")
+            }
+          }
+        }
         setLoadingMenu(false)
       })
       .catch(error => {
         console.error("Error fetching menu:", error)
+        setRestaurantName("Restaurant")
         setLoadingMenu(false)
       })
   }, [])
@@ -86,14 +106,17 @@ export default function QRMenu() {
     setTableNumber(table)
   }, [searchParams])
 
-  // Group menu items by category (using categoryNameEn)
+  // Group menu items by category (using category.nameEn)
   const groupedMenu = useMemo(() => {
     const groups: Record<string, any[]> = {}
+    console.log("Grouping menu items:", menuItems)
     menuItems.forEach(item => {
-      const cat = item.categoryNameEn?.toLowerCase() || "other"
+      const cat = item.category?.nameEn?.toLowerCase() || "other"
+      console.log("Item:", item.nameEn, "Category:", item.category?.nameEn, "->", cat, "Image:", item.image)
       if (!groups[cat]) groups[cat] = []
       groups[cat].push(item)
     })
+    console.log("Grouped menu:", groups)
     return groups
   }, [menuItems])
 
@@ -130,7 +153,7 @@ export default function QRMenu() {
     <div className="min-h-screen" style={{ backgroundColor: '#FFF7D1' }}>
       {/* Header */}
       <div className="text-center p-4 md:p-6" style={{ backgroundColor: '#FFD09B' }}>
-        <h1 className="text-2xl md:text-4xl font-bold mb-2" style={{ color: '#8B4513' }}>Fusion Sushi</h1>
+        <h1 className="text-2xl md:text-4xl font-bold mb-2" style={{ color: '#8B4513' }}>{restaurantName}</h1>
         <p className="text-gray-700 mb-4 text-sm md:text-base">Experience the perfect blend of tradition and innovation</p>
         
         {tableNumber && (
@@ -164,26 +187,37 @@ export default function QRMenu() {
           <div className="text-center py-12 text-gray-500">Loading menu...</div>
                   ) : (
             <div className="w-full space-y-12">
-              {Object.entries(categoryIcons).map(([category]) => (
+              {Object.entries(groupedMenu).map(([category, items]) => (
                 <div key={category} className="space-y-6 md:space-y-8">
-                                  <div className="mb-6 md:mb-8">
-                  <h2 className="text-2xl md:text-3xl font-bold capitalize text-gray-900 mb-4">
-                    {category}
-                  </h2>
-                </div>
+                  <div className="mb-6 md:mb-8">
+                    <div className="flex items-center gap-3">
+                      {React.createElement(getCategoryIcon(category), { 
+                        className: "w-8 h-8 text-gray-700" 
+                      })}
+                      <h2 className="text-2xl md:text-3xl font-bold capitalize text-gray-900">
+                        {category}
+                      </h2>
+                    </div>
+                  </div>
                   
-                                  <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 items-start">
-                  {(groupedMenu[category] || []).map((item, index) => (
+                  <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 items-start">
+                    {items.map((item, index) => (
                     <Card key={item._id || index} className="overflow-hidden hover:shadow-2xl transition-all duration-200 rounded-lg border-0 shadow-xl bg-white p-0 h-full flex flex-col" style={{ boxShadow: '8px 8px 16px rgba(0, 0, 0, 0.15), 4px 4px 8px rgba(0, 0, 0, 0.1)' }}>
                       <CardContent className="p-0 flex flex-col h-full">
                         <div className="relative flex-shrink-0">
-                          <CloudinaryImage 
-                            src={item.image || "/placeholder.svg"} 
-                            alt={item.nameEn || item.name}
-                            width={300}
-                            height={200}
-                            className="w-full h-32 md:h-48 object-cover rounded-t-lg"
-                          />
+                          {item.image ? (
+                            <CloudinaryImage 
+                              src={item.image} 
+                              alt={item.nameEn || item.name}
+                              width={300}
+                              height={200}
+                              className="w-full h-32 md:h-48 object-cover rounded-t-lg"
+                            />
+                          ) : (
+                            <div className="w-full h-32 md:h-48 bg-gray-200 rounded-t-lg flex items-center justify-center">
+                              <span className="text-gray-500 text-sm">No image</span>
+                            </div>
+                          )}
                         </div>
                         <div className="p-2 md:p-4 flex flex-col flex-grow">
                           <div className="flex justify-between items-center mb-1 md:mb-2">
@@ -238,43 +272,94 @@ export default function QRMenu() {
         </Button>
         {/* Cart Modal */}
         <Dialog open={cartOpen} onOpenChange={setCartOpen}>
-          <DialogContent className="max-w-md w-[95vw] md:max-w-md max-h-[80vh] overflow-hidden">
+          <DialogContent className="max-w-lg w-[95vw] md:max-w-lg max-h-[80vh] overflow-hidden">
             <DialogHeader>
-              <DialogTitle className="text-lg md:text-xl">Your Order</DialogTitle>
+              <DialogTitle className="text-xl font-bold text-center">Your Order</DialogTitle>
+              <div className="text-sm text-gray-500 text-center">
+                {cart.length} item{cart.length !== 1 ? 's' : ''} in cart
+              </div>
             </DialogHeader>
             {cart.length === 0 ? (
-              <div className="text-center text-gray-500 py-8">Your cart is empty.</div>
-            ) : (
-              <div className="space-y-4 max-h-[60vh] overflow-y-auto">
-                {cart.map(item => (
-                  <div key={item.name} className="flex flex-col md:flex-row md:items-center gap-3 border-b pb-3">
-                    <CloudinaryImage src={item.image || "/placeholder.svg"} alt={item.name} width={64} height={64} className="w-16 h-16 rounded-lg object-cover shadow-sm" />
-                    <div className="flex-1">
-                      <div className="font-semibold text-sm md:text-base">{item.name}</div>
-                      <div className="text-xs md:text-sm text-gray-500">
-                        ${typeof item.price === "number" && !isNaN(item.price) ? item.price.toFixed(2) : "0.00"}
+              <div className="text-center text-gray-500 py-12">
+                <div className="text-4xl mb-2">🛒</div>
+                <div className="text-lg font-medium mb-2">Your cart is empty</div>
+                <div className="text-sm">Add some delicious items to get started!</div>
+              </div>
+                        ) : (
+              <div className="flex flex-col h-[60vh]">
+                {/* Scrollable food items */}
+                <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+                  {cart.map(item => (
+                    <div key={item.name} className="flex items-center gap-4 border-b pb-4">
+                      <CloudinaryImage 
+                        src={item.image || "/placeholder.svg"} 
+                        alt={item.name} 
+                        width={80} 
+                        height={80} 
+                        className="w-20 h-20 rounded-lg object-cover shadow-sm flex-shrink-0" 
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-base mb-1">{item.name}</div>
+                        <div className="text-sm text-gray-600 mb-2">
+                          ${typeof item.price === "number" && !isNaN(item.price) ? item.price.toFixed(2) : "0.00"}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={() => changeQuantity(item.name, item.quantity - 1)} 
+                            disabled={item.quantity === 1}
+                            className="w-8 h-8 p-0"
+                          >
+                            -
+                          </Button>
+                          <span className="px-3 py-1 bg-gray-100 rounded-md text-sm font-medium min-w-[2rem] text-center">
+                            {item.quantity}
+                          </span>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={() => changeQuantity(item.name, item.quantity + 1)}
+                            className="w-8 h-8 p-0"
+                          >
+                            +
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 mt-2">
-                        <Button size="sm" variant="outline" onClick={() => changeQuantity(item.name, item.quantity - 1)} disabled={item.quantity === 1}>-</Button>
-                        <span className="px-2 text-sm">{item.quantity}</span>
-                        <Button size="sm" variant="outline" onClick={() => changeQuantity(item.name, item.quantity + 1)}>+</Button>
-                      </div>
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        onClick={() => removeFromCart(item.name)} 
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2"
+                      >
+                        ×
+                      </Button>
                     </div>
-                    <Button size="icon" variant="ghost" onClick={() => removeFromCart(item.name)} className="md:self-start">
-                      ×
+                  ))}
+                </div>
+                
+                {/* Sticky total and buttons section */}
+                <div className="border-t pt-4 bg-white sticky bottom-0">
+                  <div className="flex justify-between items-center font-bold text-lg mb-4">
+                    <span>Total</span>
+                    <span>${total.toFixed(2)}</span>
+                  </div>
+                  <div className="flex gap-3">
+                    <Button 
+                      variant="outline"
+                      onClick={() => setCart([])}
+                      className="flex-1 py-3 rounded-lg font-medium text-base border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
+                    >
+                      Empty Cart
+                    </Button>
+                    <Button 
+                      className="flex-1 py-3 rounded-lg font-medium text-base"
+                      style={{ backgroundColor: '#FFD09B', color: '#8B4513' }}
+                    >
+                      Place Order
                     </Button>
                   </div>
-                ))}
-                <div className="flex justify-between items-center font-bold text-base md:text-lg pt-4">
-                  <span>Total</span>
-                  <span>${total.toFixed(2)}</span>
                 </div>
-                <Button 
-                  className="w-full py-3 rounded-lg mt-2 font-medium"
-                  style={{ backgroundColor: '#FFD09B', color: '#8B4513' }}
-                >
-                  Place Order
-                </Button>
               </div>
             )}
           </DialogContent>
@@ -294,7 +379,7 @@ export default function QRMenu() {
         <div className="container mx-auto px-4 py-8 md:py-12">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
             <div>
-              <h3 className="text-lg md:text-xl font-bold mb-3 md:mb-4" style={{ color: '#8B4513' }}>Fusion Sushi</h3>
+              <h3 className="text-lg md:text-xl font-bold mb-3 md:mb-4" style={{ color: '#8B4513' }}>{restaurantName}</h3>
               <p className="text-gray-700 text-xs md:text-sm">Experience the perfect blend of tradition and innovation</p>
             </div>
             <div>
@@ -323,7 +408,7 @@ export default function QRMenu() {
             </div>
           </div>
           <div className="border-t border-gray-400 mt-6 md:mt-8 pt-6 md:pt-8 text-center">
-            <p className="text-gray-600 text-xs md:text-sm">© 2024 Fusion Sushi. All rights reserved.</p>
+            <p className="text-gray-600 text-xs md:text-sm">© 2024 {restaurantName}. All rights reserved.</p>
           </div>
         </div>
       </div>
