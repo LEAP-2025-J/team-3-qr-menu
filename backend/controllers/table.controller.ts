@@ -47,3 +47,32 @@ export const createTable = async (req: Request, res: Response) => {
     res.status(500).json({ success: false, error: "Failed to create table" });
   }
 };
+
+// PATCH /api/tables/:id - Update table
+export const updateTable = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    const table = await Table.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true, runValidators: true }
+    );
+
+    if (!table) {
+      return res.status(404).json({ 
+        success: false, 
+        error: "Table not found" 
+      });
+    }
+
+    res.json({
+      success: true,
+      data: table,
+    });
+  } catch (error) {
+    console.error("Error updating table:", error);
+    res.status(500).json({ success: false, error: "Failed to update table" });
+  }
+};

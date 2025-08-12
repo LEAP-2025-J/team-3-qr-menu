@@ -70,13 +70,7 @@ const ReservationSchema = new Schema<IReservation>(
 )
 
 // Generate reservation number before saving
-ReservationSchema.pre("save", async function (next) {
-  if (this.isNew) {
-    const count = await mongoose.models.Reservation.countDocuments()
-    this.reservationNumber = `RES-${String(count + 1).padStart(4, "0")}`
-  }
-  next()
-})
+// Removed pre-save hook to simplify the model
 
 // Index for better query performance
 ReservationSchema.index({ date: 1, time: 1 })

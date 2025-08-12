@@ -438,7 +438,7 @@ export default function QRMenu() {
                                   {cart.map(item => (
                   <div key={item.id} className="flex items-center gap-4 border-b pb-4">
                     <CloudinaryImage 
-                      src={item.image || "/placeholder.svg"} 
+                      src={item.image || ""} 
                       alt={getText(item.nameEn, item.nameMn, item.nameJa)} 
                       width={80} 
                       height={80} 

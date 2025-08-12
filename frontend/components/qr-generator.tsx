@@ -58,7 +58,7 @@ export default function QRGenerator() {
 
             {qrUrl && (
               <div className="text-center space-y-4">
-                <img src={qrUrl || "/placeholder.svg"} alt="QR Code" className="mx-auto border rounded-lg" />
+                <img src={qrUrl || ""} alt="QR Code" className="mx-auto border rounded-lg" />
                 <Button onClick={downloadQR} className="flex items-center gap-2">
                   <Download className="w-4 h-4" />
                   Download QR Code
