@@ -1,42 +1,66 @@
 import { Request, Response } from "express";
 import MenuItem from "../models/model.menuItem.js";
 import Category from "../models/model.category.js";
+import {
+  uploadToCloudinary,
+  deleteFromCloudinary,
+} from "../utils/cloudinary.js";
 
 // GET /api/menu - Get all menu items
 export const getAllMenuItems = async (req: Request, res: Response) => {
   try {
-    const { category, available } = req.query;
+    const { category, search, page, limit } = req.query;
     const query: any = {};
 
+    // Category-гаар шүүх
     if (category) {
-      query.category = category;
+      query.categoryNameEn = { $regex: category, $options: "i" };
     }
 
-    if (available === "true") {
-      query.isAvailable = true;
+    // Хайлтаар шүүх
+    if (search) {
+      query.$or = [
+        { nameEn: { $regex: search, $options: "i" } },
+        { nameMn: { $regex: search, $options: "i" } },
+      ];
     }
 
-    const menuItems = await MenuItem.find(query)
-      .populate("category", "name nameEn nameMn")
-      .sort({ order: 1, name: 1 })
-      .lean();
+    // Pagination
+    const pageNum = parseInt(page as string) || 1;
+    const limitNum = parseInt(limit as string) || 10;
+    const skip = (pageNum - 1) * limitNum;
+
+    const [menuItems, total] = await Promise.all([
+      MenuItem.find(query)
+        .populate("category", "name nameEn nameMn")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNum),
+      MenuItem.countDocuments(query),
+    ]);
 
     res.json({
       success: true,
       data: menuItems,
+      total,
+      page: pageNum,
+      totalPages: Math.ceil(total / limitNum),
     });
   } catch (error) {
     console.error("Error fetching menu items:", error);
-    res
-      .status(500)
-      .json({ success: false, error: "Failed to fetch menu items" });
+    res.status(500).json({
+      success: false,
+      error:
+        "MongoDB-с өгөгдөл авахад алдаа гарлаа. Алдааны дэлгэрэнгүй мэдээлэл: " +
+        (error as Error).message,
+    });
   }
 };
 
 // GET /api/menu/:id - Get single menu item
 export const getMenuItemById = async (req: Request, res: Response) => {
   try {
-    const menuItem = await MenuItem.findById(req.params.id).populate(
+    const menuItem = await MenuItem.findById(req.params["id"]).populate(
       "category",
       "name nameEn nameMn"
     );
@@ -64,7 +88,77 @@ export const getMenuItemById = async (req: Request, res: Response) => {
 // POST /api/menu - Create new menu item
 export const createMenuItem = async (req: Request, res: Response) => {
   try {
-    const menuItem = new MenuItem(req.body);
+    const body = req.body;
+
+    // Debug logging
+    console.log("=== CREATE MENU ITEM DEBUG ===");
+    console.log("Request body:", body);
+    console.log("Request file:", req.file);
+    console.log("Request headers:", req.headers);
+    console.log("===============================");
+
+    // Validation
+    if (!body.nameEn || !body.nameMn || !body.price || !body.categoryNameEn) {
+      return res.status(400).json({
+        success: false,
+        error: "Бүх талбарыг бөглөх шаардлагатай",
+      });
+    }
+
+    // Category-г олох
+    const category = await Category.findOne({ nameEn: body.categoryNameEn });
+    if (!category) {
+      return res.status(400).json({
+        success: false,
+        error: "Категори олдсонгүй",
+      });
+    }
+
+    // Зураг upload хийх (хэрэв файл байвал)
+    let imageUrl = body.image || "";
+    let imagePublicId = "";
+
+    if (req.file) {
+      const uploadResult = await uploadToCloudinary(req.file.path);
+      if (uploadResult.success) {
+        imageUrl = uploadResult.url;
+        imagePublicId = uploadResult.public_id || "";
+      } else {
+        return res.status(400).json({
+          success: false,
+          error: uploadResult.error,
+        });
+      }
+    }
+
+    // MenuItem-ийн data бэлтгэх
+    const menuItemData = {
+      name: body.nameEn, // name талбарт nameEn-ийг хадгалах
+      nameEn: body.nameEn,
+      nameMn: body.nameMn,
+      description: body.description || body.nameEn, // description талбарт description эсвэл nameEn
+      descriptionEn: body.description || body.nameEn, // descriptionEn талбарт description эсвэл nameEn
+      descriptionMn: body.description || body.nameMn, // descriptionMn талбарт description эсвэл nameMn
+      price: parseFloat(body.price) || 0, // string-ийг number болгож хөрвүүлэх
+      category: category._id, // ObjectId хадгалах
+      image: imageUrl,
+      imagePublicId: imagePublicId, // Cloudinary public_id хадгалах
+      ingredients: body.ingredients || [],
+      allergens: body.allergens || [],
+      isSpicy: body.isSpicy === "true" || body.isSpicy === true, // string эсвэл boolean болгож хөрвүүлэх
+      isVegetarian: body.isVegetarian === "true" || body.isVegetarian === true,
+      isVegan: body.isVegan === "true" || body.isVegan === true,
+      isGlutenFree: body.isGlutenFree === "true" || body.isGlutenFree === true,
+      isAvailable:
+        body.isAvailable === "true" ||
+        body.isAvailable === true ||
+        body.isAvailable === undefined, // string эсвэл boolean болгож хөрвүүлэх
+      preparationTime: parseInt(body.preparationTime) || 15, // string-ийг number болгож хөрвүүлэх
+      calories: body.calories ? parseInt(body.calories) : undefined,
+      order: body.order ? parseInt(body.order) : 0,
+    };
+
+    const menuItem = new MenuItem(menuItemData);
     await menuItem.save();
 
     const populatedItem = await MenuItem.findById(menuItem._id).populate(
@@ -75,40 +169,103 @@ export const createMenuItem = async (req: Request, res: Response) => {
     res.status(201).json({
       success: true,
       data: populatedItem,
+      message: "Бараа амжилттай нэмэгдлээ",
     });
   } catch (error) {
     console.error("Error creating menu item:", error);
-    res
-      .status(500)
-      .json({ success: false, error: "Failed to create menu item" });
+    res.status(500).json({
+      success: false,
+      error: "Бараа үүсгэхэд алдаа гарлаа: " + (error as Error).message,
+    });
   }
 };
 
 // PUT /api/menu/:id - Update menu item
 export const updateMenuItem = async (req: Request, res: Response) => {
   try {
+    const body = req.body;
+
+    // Validation
+    if (!body.nameEn || !body.nameMn || !body.price || !body.categoryNameEn) {
+      return res.status(400).json({
+        success: false,
+        error: "Бүх талбарыг бөглөх шаардлагатай",
+      });
+    }
+
+    // Category-г олох
+    const category = await Category.findOne({ nameEn: body.categoryNameEn });
+    if (!category) {
+      return res.status(400).json({
+        success: false,
+        error: "Категори олдсонгүй",
+      });
+    }
+
+    // Зураг upload хийх (хэрэв файл байвал)
+    let imageUrl = body.image || "";
+    let imagePublicId = "";
+
+    if (req.file) {
+      const uploadResult = await uploadToCloudinary(req.file.path);
+      if (uploadResult.success) {
+        imageUrl = uploadResult.url;
+        imagePublicId = uploadResult.public_id || "";
+      } else {
+        return res.status(400).json({
+          success: false,
+          error: uploadResult.error,
+        });
+      }
+    }
+
+    // MenuItem-ийн data бэлтгэх
+    const updateData = {
+      name: body.nameEn, // name талбарт nameEn-ийг хадгалах
+      nameEn: body.nameEn,
+      nameMn: body.nameMn,
+      description: body.description || body.nameEn, // description талбарт description эсвэл nameEn
+      descriptionEn: body.description || body.nameEn, // descriptionEn талбарт description эсвэл nameEn
+      descriptionMn: body.description || body.nameMn, // descriptionMn талбарт description эсвэл nameMn
+      price: body.price,
+      category: category._id, // ObjectId хадгалах
+      image: imageUrl,
+      imagePublicId: imagePublicId, // Cloudinary public_id хадгалах
+      ingredients: body.ingredients || [],
+      allergens: body.allergens || [],
+      isSpicy: body.isSpicy || false,
+      isVegetarian: body.isVegetarian || false,
+      isVegan: body.isVegan || false,
+      isGlutenFree: body.isGlutenFree || false,
+      isAvailable: body.isAvailable !== undefined ? body.isAvailable : true,
+      preparationTime: body.preparationTime || 15,
+      calories: body.calories,
+      order: body.order || 0,
+    };
+
     const menuItem = await MenuItem.findByIdAndUpdate(
-      req.params.id,
-      { ...req.body, name: req.body.nameEn || req.body.name },
+      req.params["id"],
+      updateData,
       { new: true, runValidators: true }
     ).populate("category", "name nameEn nameMn");
 
     if (!menuItem) {
       return res.status(404).json({
         success: false,
-        error: "Menu item not found",
+        error: "Бараа олдсонгүй",
       });
     }
 
     res.json({
       success: true,
       data: menuItem,
+      message: "Бараа амжилттай шинэчлэгдлээ",
     });
   } catch (error) {
     console.error("Error updating menu item:", error);
     res.status(500).json({
       success: false,
-      error: "Failed to update menu item",
+      error: "Бараа засахад алдаа гарлаа: " + (error as Error).message,
     });
   }
 };
@@ -116,24 +273,24 @@ export const updateMenuItem = async (req: Request, res: Response) => {
 // DELETE /api/menu/:id - Delete menu item
 export const deleteMenuItem = async (req: Request, res: Response) => {
   try {
-    const menuItem = await MenuItem.findByIdAndDelete(req.params.id);
+    const menuItem = await MenuItem.findByIdAndDelete(req.params["id"]);
 
     if (!menuItem) {
       return res.status(404).json({
         success: false,
-        error: "Menu item not found",
+        error: "Бараа олдсонгүй",
       });
     }
 
     res.json({
       success: true,
-      message: "Menu item deleted successfully",
+      message: "Бараа амжилттай устгагдлаа",
     });
   } catch (error) {
     console.error("Error deleting menu item:", error);
     res.status(500).json({
       success: false,
-      error: "Failed to delete menu item",
+      error: "Бараа устгахад алдаа гарлаа: " + (error as Error).message,
     });
   }
 };

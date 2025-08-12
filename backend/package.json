@@ -8,7 +8,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "dev": "tsx watch server.ts",
-    "seed": "tsx scripts/seed-database.js",
+    "seed": "tsx scripts/seed-database.ts",
     "test": "jest"
   },
   "dependencies": {
