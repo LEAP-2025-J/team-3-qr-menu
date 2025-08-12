@@ -35,6 +35,7 @@ export default function QRMenu() {
   const [activeTab, setActiveTab] = useState("appetizers")
   const [tableNumber, setTableNumber] = useState<string | null>(null)
   const [menuItems, setMenuItems] = useState<any[]>([])
+  const [categories, setCategories] = useState<any[]>([])
   const [loadingMenu, setLoadingMenu] = useState(true)
   const [cart, setCart] = useState<{ id: string; nameEn: string; nameMn: string; nameJa: string; price: number; quantity: number; image?: string }[]>([])
   const [fetchingData, setFetchingData] = useState(false)
@@ -121,11 +122,19 @@ export default function QRMenu() {
     
     setFetchingData(true)
     
-    fetch("http://localhost:5000/api/menu")
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          setMenuItems(data.data)
+    // Fetch both menu items and categories
+    Promise.all([
+      fetch("http://localhost:5000/api/menu"),
+      fetch("http://localhost:5000/api/categories")
+    ])
+      .then(responses => Promise.all(responses.map(res => res.json())))
+      .then(([menuData, categoriesData]) => {
+        if (menuData.success) {
+          setMenuItems(menuData.data)
+        }
+        
+        if (categoriesData.success) {
+          setCategories(categoriesData.data)
         }
         
         // Calculate remaining time to ensure minimum loading duration
@@ -138,21 +147,42 @@ export default function QRMenu() {
         }, remaining)
       })
       .catch(error => {
-        console.error("Error fetching menu:", error)
+        console.error("Error fetching data:", error)
         setLoadingMenu(false)
       })
   }, [])
 
-  // Group menu items by category (using category.nameEn)
+  // Group menu items by category and sort by category order (matching admin panel)
   const groupedMenu = useMemo(() => {
     const groups: Record<string, any[]> = {}
+    
+    // Group items by category
     menuItems.forEach(item => {
-      const cat = item.category?.nameEn?.toLowerCase() || "other"
+      const cat = item.category?.nameEn || "other"
       if (!groups[cat]) groups[cat] = []
       groups[cat].push(item)
     })
-    return groups
-  }, [menuItems])
+    
+    // Sort categories by their order field (matching admin panel)
+    const sortedCategories = categories
+      .sort((a, b) => a.order - b.order)
+      .map(cat => cat.nameEn)
+    
+    // Add "other" category at the end if it exists
+    if (groups["other"]) {
+      sortedCategories.push("other")
+    }
+    
+    // Create ordered grouped menu
+    const orderedGroups: Record<string, any[]> = {}
+    sortedCategories.forEach(categoryName => {
+      if (groups[categoryName]) {
+        orderedGroups[categoryName] = groups[categoryName]
+      }
+    })
+    
+    return orderedGroups
+  }, [menuItems, categories])
 
   const addToCart = (item: { _id: string; nameEn: string; nameMn: string; nameJa: string; price: string | number; image?: string }) => {
     setCart(prev => {
