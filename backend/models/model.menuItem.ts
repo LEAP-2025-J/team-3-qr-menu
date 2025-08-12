@@ -10,6 +10,7 @@ export interface IMenuItem extends Document {
   price: number
   category: mongoose.Types.ObjectId
   image?: string
+  imagePublicId?: string
   ingredients: string[]
   allergens: string[]
   isSpicy: boolean
@@ -67,6 +68,10 @@ const MenuItemSchema = new Schema<IMenuItem>(
       required: [true, "Category is required"],
     },
     image: {
+      type: String,
+      trim: true,
+    },
+    imagePublicId: {
       type: String,
       trim: true,
     },

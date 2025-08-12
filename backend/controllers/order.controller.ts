@@ -77,7 +77,7 @@ export const createOrder = async (req: Request, res: Response) => {
       req.body;
 
     // Validate table exists and is available
-    const table = await Table.findById(tableId);
+    const table = await (Table as any).findById(tableId);
     if (!table) {
       return res.status(404).json({ success: false, error: "Table not found" });
     }
@@ -139,7 +139,7 @@ export const createOrder = async (req: Request, res: Response) => {
     await order.save();
 
     // Update table status
-    await Table.findByIdAndUpdate(tableId, {
+    await (Table as any).findByIdAndUpdate(tableId, {
       status: "occupied",
       currentOrder: order._id,
     });
@@ -178,7 +178,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 
     // Update table status if order is completed
     if (status === "completed") {
-      await Table.findByIdAndUpdate(order.table._id, {
+      await (Table as any).findByIdAndUpdate(order.table._id, {
         status: "cleaning",
         currentOrder: null,
       });
