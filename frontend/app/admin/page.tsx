@@ -71,6 +71,38 @@ export default function AdminDashboard() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [restaurantSettings, setRestaurantSettings] = useState(() => {
+    // Load saved settings from localStorage on component mount
+    const saved = localStorage.getItem('restaurantSettings')
+    if (saved) {
+      return JSON.parse(saved)
+    }
+    // Default values if nothing is saved
+    return {
+      name: "桜 Sakura",
+      phone: "(555) 123-4567",
+      address: "123 Main Street, City, State 12345",
+      description: "Authentic Japanese cuisine in the heart of the city"
+    }
+  })
+
+  const [operatingHours, setOperatingHours] = useState(() => {
+    // Load saved operating hours from localStorage on component mount
+    const saved = localStorage.getItem('operatingHours')
+    if (saved) {
+      return JSON.parse(saved)
+    }
+    // Default values if nothing is saved
+    return [
+      { day: "Monday", hours: "11:00 AM - 10:00 PM" },
+      { day: "Tuesday", hours: "11:00 AM - 10:00 PM" },
+      { day: "Wednesday", hours: "11:00 AM - 10:00 PM" },
+      { day: "Thursday", hours: "11:00 AM - 10:00 PM" },
+      { day: "Friday", hours: "11:00 AM - 11:00 PM" },
+      { day: "Saturday", hours: "12:00 PM - 11:00 PM" },
+      { day: "Sunday", hours: "12:00 PM - 9:00 PM" },
+    ]
+  })
   const [stats, setStats] = useState({
     todayOrders: 0,
     activeReservations: 0,
@@ -188,8 +220,83 @@ export default function AdminDashboard() {
     }
   }
 
+  const updateRestaurantSetting = (field: string, value: string) => {
+    setRestaurantSettings(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  const saveRestaurantSettings = async () => {
+    try {
+      // Save to localStorage for persistence
+      localStorage.setItem('restaurantSettings', JSON.stringify(restaurantSettings))
+      
+      // Here you would typically save to your backend API
+      // For now, we'll just update the local state
+      console.log('Saving restaurant settings:', restaurantSettings)
+      
+      // TODO: Add API call to save to backend
+      // const response = await fetch('/api/settings', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify(restaurantSettings)
+      // })
+      
+      alert('Restaurant settings saved successfully!')
+    } catch (error) {
+      console.error("Error saving restaurant settings:", error)
+      alert('Error saving settings')
+    }
+  }
+
+  const loadRestaurantSettings = async () => {
+    try {
+      // TODO: Load from backend API when available
+      // const response = await fetch('/api/settings')
+      // if (response.ok) {
+      //   const data = await response.json()
+      //   setRestaurantSettings(data)
+      // }
+      
+      // For now, settings are loaded from localStorage in useState initializer
+      console.log('Restaurant settings loaded from localStorage')
+    } catch (error) {
+      console.error("Error loading restaurant settings:", error)
+    }
+  }
+
+  const updateOperatingHours = (day: string, hours: string) => {
+    setOperatingHours(prev => 
+      prev.map(item => 
+        item.day === day ? { ...item, hours } : item
+      )
+    )
+  }
+
+  const saveOperatingHours = async () => {
+    try {
+      // Save to localStorage for persistence
+      localStorage.setItem('operatingHours', JSON.stringify(operatingHours))
+      
+      // TODO: Add API call to save to backend
+      // const response = await fetch('/api/operating-hours', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify(operatingHours)
+      // })
+      
+      console.log('Saving operating hours:', operatingHours)
+      alert('Operating hours saved successfully!')
+    } catch (error) {
+      console.error("Error saving operating hours:", error)
+      alert('Error saving operating hours')
+    }
+  }
+
   useEffect(() => {
     loadData()
+    loadRestaurantSettings()
 
     // Auto-refresh every 30 seconds
     const interval = setInterval(loadData, 30000)
@@ -335,7 +442,7 @@ export default function AdminDashboard() {
       <header className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-50">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold text-gray-900">桜 Sakura Admin</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{restaurantSettings.name} Admin</h1>
             <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
               <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
               Live
@@ -778,57 +885,71 @@ export default function AdminDashboard() {
             <TabsContent value="settings" className="space-y-6">
               <h2 className="text-3xl font-bold text-gray-900">Settings</h2>
 
-              <div className="grid gap-6">
-                <Card>
+              <div className="flex gap-6 justify-center items-center">
+                <Card className="flex-1 min-w-[350px]">
                   <CardHeader>
                     <CardTitle>Restaurant Information</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Restaurant Name</label>
-                        <Input defaultValue="桜 Sakura" />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Phone</label>
-                        <Input defaultValue="(555) 123-4567" />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Address</label>
-                      <Input defaultValue="123 Main Street, City, State 12345" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Description</label>
-                      <Textarea defaultValue="Authentic Japanese cuisine in the heart of the city" />
-                    </div>
-                    <Button>Save Changes</Button>
+                  <CardContent>
+                                         <div className="flex flex-wrap gap-4">
+                       <div className="flex items-center gap-4 w-full">
+                         <label className="text-sm font-medium w-32">Restaurant Name:</label>
+                         <Input 
+                           value={restaurantSettings.name} 
+                           onChange={(e) => updateRestaurantSetting('name', e.target.value)}
+                           className="flex-1" 
+                         />
+                       </div>
+                       <div className="flex items-center gap-4 w-full">
+                         <label className="text-sm font-medium w-32">Phone:</label>
+                         <Input 
+                           value={restaurantSettings.phone} 
+                           onChange={(e) => updateRestaurantSetting('phone', e.target.value)}
+                           className="flex-1" 
+                         />
+                       </div>
+                       <div className="flex items-center gap-4 w-full">
+                         <label className="text-sm font-medium w-32">Address:</label>
+                         <Input 
+                           value={restaurantSettings.address} 
+                           onChange={(e) => updateRestaurantSetting('address', e.target.value)}
+                           className="flex-1" 
+                         />
+                       </div>
+                       <div className="flex items-center gap-4 w-full">
+                         <label className="text-sm font-medium w-32">Description:</label>
+                         <Textarea 
+                           value={restaurantSettings.description} 
+                           onChange={(e) => updateRestaurantSetting('description', e.target.value)}
+                           className="flex-1" 
+                         />
+                       </div>
+                       <div className="flex w-full">
+                         <Button className="ml-auto" onClick={saveRestaurantSettings}>Save Changes</Button>
+                       </div>
+                     </div>
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="flex-1 min-w-[350px]">
                   <CardHeader>
                     <CardTitle>Operating Hours</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      {[
-                        { day: "Monday", hours: "11:00 AM - 10:00 PM" },
-                        { day: "Tuesday", hours: "11:00 AM - 10:00 PM" },
-                        { day: "Wednesday", hours: "11:00 AM - 10:00 PM" },
-                        { day: "Thursday", hours: "11:00 AM - 10:00 PM" },
-                        { day: "Friday", hours: "11:00 AM - 11:00 PM" },
-                        { day: "Saturday", hours: "12:00 PM - 11:00 PM" },
-                        { day: "Sunday", hours: "12:00 PM - 9:00 PM" },
-                      ].map(({ day, hours }) => (
+                    <div className="flex flex-col gap-4">
+                      {operatingHours.map(({ day, hours }) => (
                         <div key={day} className="flex items-center justify-between">
                           <span className="font-medium w-24">{day}</span>
-                          <Input defaultValue={hours} className="flex-1 mx-4" />
+                          <Input 
+                            value={hours} 
+                            onChange={(e) => updateOperatingHours(day, e.target.value)}
+                            className="flex-1 mx-4" 
+                          />
                           <Button variant="outline" size="sm">Edit</Button>
                         </div>
                       ))}
                     </div>
-                    <Button className="mt-4">Save Hours</Button>
+                    <Button className="mt-4" onClick={saveOperatingHours}>Save Hours</Button>
                   </CardContent>
                 </Card>
               </div>
