@@ -84,7 +84,7 @@ export default function TableQRGenerator() {
                   <Card key={code.table} className="text-center">
                     <CardContent className="p-4">
                       <h3 className="font-bold text-lg mb-2">Table {code.table}</h3>
-                      <img src={code.qrUrl || "/placeholder.svg"} alt={`Table ${code.table} QR`} className="mx-auto mb-2" />
+                      <img src={code.qrUrl || ""} alt={`Table ${code.table} QR`} className="mx-auto mb-2" />
                       <p className="text-xs text-gray-500 break-all">{code.url}</p>
                     </CardContent>
                   </Card>

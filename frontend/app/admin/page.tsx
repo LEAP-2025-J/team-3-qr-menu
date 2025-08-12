@@ -47,6 +47,7 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
+  X,
 } from "lucide-react";
 
 // Import components
@@ -57,6 +58,8 @@ import { OrdersList } from "@/components/admin/orders-list";
 import { TablesGrid } from "@/components/admin/tables-grid";
 import { ReservationsList } from "@/components/admin/reservations-list";
 import { SettingsForm } from "@/components/admin/settings-form";
+import { ReservationModal } from "@/components/admin/reservation-modal";
+import { EditReservationModal } from "@/components/admin/edit-reservation-modal";
 
 // Types
 interface Order {
@@ -92,7 +95,8 @@ interface Reservation {
   time: string;
   partySize: number;
   status: string;
-  table?: { number: number };
+  table?: { number: number; _id: string };
+  createdAt: string;
 }
 
 interface MenuItem {
@@ -129,6 +133,9 @@ export default function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
+  const [isEditReservationModalOpen, setIsEditReservationModalOpen] = useState(false);
+  const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
   const [categoryFormData, setCategoryFormData] = useState({
     nameEn: "",
     nameMn: "",
@@ -142,6 +149,7 @@ export default function AdminDashboard() {
     totalRevenue: 0,
     averageOrderValue: 0,
   });
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // MenuGrid ref
   const menuGridRef = useRef<MenuGridRef>(null);
@@ -193,25 +201,67 @@ export default function AdminDashboard() {
 
   const fetchReservations = async () => {
     try {
-      const today = new Date().toISOString().split("T")[0];
-      const response = await fetch(
-        `http://localhost:5000/api/reservations?date=${today}`
-      );
+      const response = await fetch("http://localhost:5000/api/reservations");
       const data = await response.json();
       if (data.success) {
         setReservations(data.data);
-        setStats((prev) => ({
-          ...prev,
-          activeReservations: data.data.filter(
-            (res: Reservation) =>
-              res.status === "confirmed" || res.status === "pending"
-          ).length,
-        }));
       }
     } catch (error) {
       console.error("Error fetching reservations:", error);
     }
   };
+
+  const checkAndCancelExpiredReservations = async () => {
+    try {
+      const today = new Date().toISOString().split('T')[0]
+      const response = await fetch(
+        `http://localhost:5000/api/reservations?date=${today}`
+      )
+      const data = await response.json()
+      
+      if (data.success) {
+        const now = new Date()
+        const expiredReservations = data.data.filter((r: Reservation) => {
+          if (r.status !== "pending") return false
+          
+          const reservationDateTime = new Date(`${r.date}T${r.time}`)
+          const expiryTime = new Date(reservationDateTime.getTime() + 30 * 60 * 1000) // 30 minutes
+          
+          return now > expiryTime
+        })
+
+        // Cancel expired reservations
+        for (const reservation of expiredReservations) {
+          await fetch(`http://localhost:5000/api/reservations/${reservation._id}`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ status: "cancelled" }),
+          })
+
+          // Update table status back to available
+          if (reservation.table) {
+            await fetch(`http://localhost:5000/api/tables/${reservation.table.number}`, {
+              method: "PATCH",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ status: "available" }),
+            })
+          }
+        }
+
+        // Refresh data if any reservations were cancelled
+        if (expiredReservations.length > 0) {
+          fetchReservations()
+          fetchTables()
+        }
+      }
+    } catch (error) {
+      console.error("Error checking expired reservations:", error)
+    }
+  }
 
   const fetchMenuItems = async () => {
     try {
@@ -357,23 +407,30 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     const loadData = async () => {
-      setLoading(true);
-      await Promise.all([
-        fetchOrders(),
-        fetchTables(),
-        fetchReservations(),
-        fetchMenuItems(),
-        fetchCategories(),
-      ]);
-      setLoading(false);
-    };
+      setLoading(true)
+      try {
+        await Promise.all([
+          fetchReservations(),
+          fetchTables(),
+          fetchMenuItems(),
+          fetchCategories(),
+          fetchOrders()
+        ])
+      } catch (error) {
+        console.error("Error loading data:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    loadData()
+  }, [])
 
-    loadData();
-
-    // Auto-refresh every 30 seconds - түр идэвхгүй болгосон
-    // const interval = setInterval(loadData, 30000);
-    // return () => clearInterval(interval);
-  }, []);
+  // Check for expired reservations every minute
+  useEffect(() => {
+    const interval = setInterval(checkAndCancelExpiredReservations, 60000) // Check every minute
+    return () => clearInterval(interval)
+  }, [])
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -450,6 +507,197 @@ export default function AdminDashboard() {
     });
   };
 
+  const openReservationModal = () => {
+    setIsReservationModalOpen(true);
+  };
+
+  const closeReservationModal = () => {
+    setIsReservationModalOpen(false);
+  };
+
+  const openEditReservationModal = (reservation: Reservation) => {
+    setSelectedReservation(reservation);
+    setIsEditReservationModalOpen(true);
+  };
+
+  const closeEditReservationModal = () => {
+    setIsEditReservationModalOpen(false);
+    setSelectedReservation(null);
+  };
+
+  const handleEditReservation = async (id: string, data: any) => {
+    try {
+      // Convert tableId to table to match the backend model
+      const { tableId, ...otherData } = data;
+      const requestData = {
+        ...otherData,
+        table: tableId
+      };
+
+      const response = await fetch(`http://localhost:5000/api/reservations/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestData),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Refresh data
+        fetchReservations();
+        fetchTables();
+        return { success: true, message: "Reservation updated successfully!" };
+      } else {
+        return { success: false, error: result.message || "Failed to update reservation" };
+      }
+    } catch (error) {
+      console.error("Error updating reservation:", error);
+      return { success: false, error: "Error updating reservation" };
+    }
+  };
+
+  const handleDeleteReservation = async (id: string) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/reservations/${id}/delete`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Refresh data
+        fetchReservations();
+        fetchTables();
+        alert("Reservation deleted successfully!");
+      } else {
+        alert(result.error || "Failed to delete reservation");
+      }
+    } catch (error) {
+      console.error("Error deleting reservation:", error);
+      alert("Error deleting reservation");
+    }
+  };
+
+  const handleReservationSubmit = async (reservationData: any) => {
+    try {
+      // Convert tableId to table to match the backend model
+      const { tableId, ...otherData } = reservationData;
+      const requestData = {
+        ...otherData,
+        table: tableId
+      };
+
+      const response = await fetch("http://localhost:5000/api/reservations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestData),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Update table status to reserved
+        await fetch(`http://localhost:5000/api/tables/${tableId}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ status: "reserved" }),
+        });
+
+        // Refresh data
+        fetchReservations();
+        fetchTables();
+        return { success: true, message: "Reservation created successfully!" };
+      } else {
+        return { success: false, error: data.message || "Failed to create reservation" };
+      }
+    } catch (error) {
+      console.error("Error creating reservation:", error);
+      return { success: false, error: "Error creating reservation" };
+    }
+  };
+
+  const handleReservationStatusChange = async (id: string, status: string) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/reservations/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // If status changed to seated, update table status
+        if (status === "seated") {
+          const reservation = reservations.find(r => r._id === id);
+          if (reservation?.table) {
+            await fetch(`http://localhost:5000/api/tables/${reservation.table._id}`, {
+              method: "PATCH",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ status: "occupied" }),
+            });
+          }
+        }
+        
+        fetchReservations();
+        fetchTables();
+      } else {
+        alert("Failed to update reservation status");
+      }
+    } catch (error) {
+      console.error("Error updating reservation status:", error);
+      alert("Error updating reservation status");
+    }
+  };
+
+  const handleReservationCancel = async (id: string) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/reservations/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Update table status back to available
+        const reservation = reservations.find(r => r._id === id);
+        if (reservation?.table) {
+          await fetch(`http://localhost:5000/api/tables/${reservation.table._id}`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ status: "available" }),
+          });
+        }
+        
+        fetchReservations();
+        fetchTables();
+      } else {
+        alert("Failed to cancel reservation");
+      }
+    } catch (error) {
+      console.error("Error cancelling reservation:", error);
+      alert("Error cancelling reservation");
+    }
+  };
+
   const handleCategorySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setCategoryLoading(true);
@@ -481,48 +729,39 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="sticky top-0 z-50 px-6 py-4 bg-white border-b border-gray-200">
+    <div className="min-h-screen bg-gray-100">
+      {/* Mobile Header */}
+      <div className="lg:hidden bg-white shadow-sm border-b px-4 py-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold text-gray-900">
-              桜 Sakura Admin
-            </h1>
-            <Badge
-              variant="outline"
-              className="text-green-700 border-green-200 bg-green-50"
-            >
-              <div className="w-2 h-2 mr-2 bg-green-500 rounded-full animate-pulse"></div>
-              Live
-            </Badge>
-          </div>
-
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => window.location.reload()}
-            >
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Refresh
-            </Button>
-            <Button variant="outline" size="sm">
-              <Bell className="w-4 h-4 mr-2" />
-              Notifications (
-              {orders.filter((o) => o.status === "pending").length})
-            </Button>
-            <Button variant="outline" size="sm">
-              <User className="w-4 h-4 mr-2" />
-              Admin
-            </Button>
-          </div>
+          <h1 className="text-xl font-bold text-gray-900">Sakura Admin</h1>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
+            <MenuIcon className="w-5 h-5" />
+          </Button>
         </div>
-      </header>
+      </div>
 
       <div className="flex">
         {/* Sidebar */}
-        <aside className="sticky w-64 min-h-screen bg-white border-r border-gray-200 top-16">
+        <div
+          className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
+            sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          <div className="flex items-center justify-between p-6 border-b">
+            <h1 className="text-xl font-bold text-gray-900">Sakura Admin</h1>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSidebarOpen(false)}
+              className="lg:hidden"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
           <nav className="p-4">
             <Tabs
               value={activeTab}
@@ -563,201 +802,259 @@ export default function AdminDashboard() {
               </TabsList>
             </Tabs>
           </nav>
-        </aside>
+        </div>
 
         {/* Main Content */}
-        <main className="flex-1 p-6">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            {/* Dashboard Tab */}
-            <TabsContent value="dashboard" className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold text-gray-900">Dashboard</h2>
-                <div className="flex space-x-2">
-                  <Button variant="outline">
-                    <Download className="w-4 h-4 mr-2" />
-                    Export Report
-                  </Button>
-                  <Button>
-                    <TrendingUp className="w-4 h-4 mr-2" />
-                    View Analytics
-                  </Button>
-                </div>
+        <main className="flex-1 lg:ml-0">
+          {/* Desktop Header */}
+          <header className="hidden lg:block sticky top-0 z-40 px-6 py-4 bg-white border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <h1 className="text-2xl font-bold text-gray-900">
+                  桜 Sakura Admin
+                </h1>
+                <Badge
+                  variant="outline"
+                  className="text-green-700 border-green-200 bg-green-50"
+                >
+                  <div className="w-2 h-2 mr-2 bg-green-500 rounded-full animate-pulse"></div>
+                  Live
+                </Badge>
               </div>
 
-              {/* Stats Cards */}
-              <DashboardStats stats={stats} orders={orders} tables={tables} />
-
-              {/* Recent Orders */}
-              <RecentOrders
-                orders={orders}
-                onRefresh={fetchOrders}
-                onUpdateStatus={updateOrderStatus}
-              />
-            </TabsContent>
-
-            {/* Orders Tab */}
-            <TabsContent value="orders" className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold text-gray-900">
-                  Orders Management
-                </h2>
-                <div className="flex space-x-2">
-                  <div className="relative">
-                    <Search className="absolute w-4 h-4 text-gray-400 transform -translate-y-1/2 left-3 top-1/2" />
-                    <Input
-                      placeholder="Search orders..."
-                      className="w-64 pl-10"
-                    />
-                  </div>
-                  <Select defaultValue="all">
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Status</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="preparing">Preparing</SelectItem>
-                      <SelectItem value="ready">Ready</SelectItem>
-                      <SelectItem value="served">Served</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <OrdersList orders={orders} onUpdateStatus={updateOrderStatus} />
-            </TabsContent>
-
-            {/* Tables Tab */}
-            <TabsContent value="tables" className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold text-gray-900">
-                  Table Management
-                </h2>
-                <Button>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Table
+              <div className="flex items-center space-x-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.location.reload()}
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Refresh
+                </Button>
+                <Button variant="outline" size="sm">
+                  <Bell className="w-4 h-4 mr-2" />
+                  Notifications (
+                  {orders.filter((o) => o.status === "pending").length})
+                </Button>
+                <Button variant="outline" size="sm">
+                  <User className="w-4 h-4 mr-2" />
+                  Admin
                 </Button>
               </div>
+            </div>
+          </header>
 
-              <TablesGrid tables={tables} />
-            </TabsContent>
-
-            {/* Reservations Tab */}
-            <TabsContent value="reservations" className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold text-gray-900">
-                  Reservations
-                </h2>
-                <Button>
-                  <Plus className="w-4 h-4 mr-2" />
-                  New Reservation
-                </Button>
+          {/* Content */}
+          <div className="p-4 lg:p-6">
+            {loading ? (
+              <div className="flex items-center justify-center min-h-[60vh]">
+                <div className="flex items-center space-x-2">
+                  <RefreshCw className="w-6 h-6 animate-spin" />
+                  <span className="text-lg">Loading admin dashboard...</span>
+                </div>
               </div>
+            ) : (
+              <>
+                <Tabs value={activeTab} onValueChange={setActiveTab}>
+                  {/* Dashboard Tab */}
+                  <TabsContent value="dashboard" className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-3xl font-bold text-gray-900">Dashboard</h2>
+                      <div className="flex space-x-2">
+                        <Button variant="outline">
+                          <Download className="w-4 h-4 mr-2" />
+                          Export Report
+                        </Button>
+                        <Button>
+                          <TrendingUp className="w-4 h-4 mr-2" />
+                          View Analytics
+                        </Button>
+                      </div>
+                    </div>
 
-              <ReservationsList reservations={reservations} />
-            </TabsContent>
+                    {/* Stats Cards */}
+                    <DashboardStats stats={stats} orders={orders} tables={tables} />
 
-            {/* Menu Tab */}
-            <TabsContent value="menu" className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold text-gray-900">
-                  Menu Management
-                </h2>
-                <div className="flex items-center space-x-4">
-                  <div className="relative">
-                    <Search className="absolute w-4 h-4 text-gray-400 transform -translate-y-1/2 left-3 top-1/2" />
-                    <Input
-                      placeholder="Хоол хайх..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-64 pl-10"
+                    {/* Recent Orders */}
+                    <RecentOrders
+                      orders={orders}
+                      onRefresh={fetchOrders}
+                      onUpdateStatus={updateOrderStatus}
                     />
-                  </div>
-                  <Button
-                    onClick={() => {
-                      // MenuGrid ref ашиглан modal нээх
-                      menuGridRef.current?.openAddModal();
-                    }}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Menu Item
-                  </Button>
-                </div>
-              </div>
+                  </TabsContent>
 
-              {/* Dishes Category Filter */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Dishes category
-                </h3>
-                <div className="flex flex-wrap gap-3">
-                  {/* All Dishes Button */}
-                  <button
-                    onClick={() => setSelectedCategory("all")}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-colors ${
-                      selectedCategory === "all"
-                        ? "border-red-500 bg-white text-gray-900"
-                        : "border-gray-300 bg-white text-gray-900 hover:bg-gray-50"
-                    }`}
-                  >
-                    <span>All Dishes</span>
-                    <Badge className="px-2 py-1 text-xs text-white bg-gray-900 rounded-full">
-                      {menuItems.length}
-                    </Badge>
-                  </button>
+                  {/* Orders Tab */}
+                  <TabsContent value="orders" className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-3xl font-bold text-gray-900">
+                        Orders Management
+                      </h2>
+                      <div className="flex space-x-2">
+                        <div className="relative">
+                          <Search className="absolute w-4 h-4 text-gray-400 transform -translate-y-1/2 left-3 top-1/2" />
+                          <Input
+                            placeholder="Search orders..."
+                            className="w-64 pl-10"
+                          />
+                        </div>
+                        <Select defaultValue="all">
+                          <SelectTrigger className="w-32">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Status</SelectItem>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="preparing">Preparing</SelectItem>
+                            <SelectItem value="ready">Ready</SelectItem>
+                            <SelectItem value="served">Served</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
 
-                  {/* Category Buttons */}
-                  {categories.map((category) => {
-                    const categoryItemCount = menuItems.filter(
-                      (item) => item.category?.nameEn === category.nameEn
-                    ).length;
+                    <OrdersList orders={orders} onUpdateStatus={updateOrderStatus} />
+                  </TabsContent>
 
-                    return (
-                      <button
-                        key={category._id}
-                        onClick={() => setSelectedCategory(category.nameEn)}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-colors ${
-                          selectedCategory === category.nameEn
-                            ? "border-red-500 bg-white text-gray-900"
-                            : "border-gray-300 bg-white text-gray-900 hover:bg-gray-50"
-                        }`}
-                      >
-                        <span>{category.nameEn}</span>
-                        <Badge className="px-2 py-1 text-xs text-white bg-gray-900 rounded-full">
-                          {categoryItemCount}
-                        </Badge>
-                      </button>
-                    );
-                  })}
+                  {/* Tables Tab */}
+                  <TabsContent value="tables" className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-3xl font-bold text-gray-900">
+                        Table Management
+                      </h2>
+                      <Button>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Table
+                      </Button>
+                    </div>
 
-                  {/* Add Category Button */}
-                  <button
-                    onClick={openCategoryModal}
-                    className="flex items-center justify-center w-10 h-10 text-white transition-colors bg-red-500 rounded-full hover:bg-red-600"
-                  >
-                    <Plus className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
+                    <TablesGrid tables={tables} />
+                  </TabsContent>
 
-              <MenuGrid
-                ref={menuGridRef}
-                menuItems={menuItems}
-                categories={categories}
-                searchQuery={searchQuery}
-                selectedCategory={selectedCategory}
-                onAdd={addMenuItem}
-                onUpdate={updateMenuItem}
-                onDelete={deleteMenuItem}
-              />
-            </TabsContent>
+                  {/* Reservations Tab */}
+                  <TabsContent value="reservations" className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-3xl font-bold text-gray-900">
+                        Reservations
+                      </h2>
+                      <Button onClick={openReservationModal}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        New Reservation
+                      </Button>
+                    </div>
 
-            {/* Settings Tab */}
-            <TabsContent value="settings" className="space-y-6">
-              <h2 className="text-3xl font-bold text-gray-900">Settings</h2>
-              <SettingsForm />
-            </TabsContent>
-          </Tabs>
+                    <ReservationsList 
+                      reservations={reservations} 
+                      onStatusChange={handleReservationStatusChange}
+                      onCancel={handleReservationCancel}
+                      onEdit={openEditReservationModal}
+                      onDelete={handleDeleteReservation}
+                    />
+                  </TabsContent>
+
+                  {/* Menu Tab */}
+                  <TabsContent value="menu" className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-3xl font-bold text-gray-900">
+                        Menu Management
+                      </h2>
+                      <div className="flex items-center space-x-4">
+                        <div className="relative">
+                          <Search className="absolute w-4 h-4 text-gray-400 transform -translate-y-1/2 left-3 top-1/2" />
+                          <Input
+                            placeholder="Хоол хайх..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-64 pl-10"
+                          />
+                        </div>
+                        <Button
+                          onClick={() => {
+                            // MenuGrid ref ашиглан modal нээх
+                            menuGridRef.current?.openAddModal();
+                          }}
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Add Menu Item
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Dishes Category Filter */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        Dishes category
+                      </h3>
+                      <div className="flex flex-wrap gap-3">
+                        {/* All Dishes Button */}
+                        <button
+                          onClick={() => setSelectedCategory("all")}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-colors ${
+                            selectedCategory === "all"
+                              ? "border-red-500 bg-white text-gray-900"
+                              : "border-gray-300 bg-white text-gray-900 hover:bg-gray-50"
+                          }`}
+                        >
+                          <span>All Dishes</span>
+                          <Badge className="px-2 py-1 text-xs text-white bg-gray-900 rounded-full">
+                            {menuItems.length}
+                          </Badge>
+                        </button>
+
+                        {/* Category Buttons */}
+                        {categories.map((category) => {
+                          const categoryItemCount = menuItems.filter(
+                            (item) => item.category?.nameEn === category.nameEn
+                          ).length;
+
+                          return (
+                            <button
+                              key={category._id}
+                              onClick={() => setSelectedCategory(category.nameEn)}
+                              className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-colors ${
+                                selectedCategory === category.nameEn
+                                  ? "border-red-500 bg-white text-gray-900"
+                                  : "border-gray-300 bg-white text-gray-900 hover:bg-gray-50"
+                              }`}
+                            >
+                              <span>{category.nameEn}</span>
+                              <Badge className="px-2 py-1 text-xs text-white bg-gray-900 rounded-full">
+                                {categoryItemCount}
+                              </Badge>
+                            </button>
+                          );
+                        })}
+
+                        {/* Add Category Button */}
+                        <button
+                          onClick={openCategoryModal}
+                          className="flex items-center justify-center w-10 h-10 text-white transition-colors bg-red-500 rounded-full hover:bg-red-600"
+                        >
+                          <Plus className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <MenuGrid
+                      ref={menuGridRef}
+                      menuItems={menuItems}
+                      categories={categories}
+                      searchQuery={searchQuery}
+                      selectedCategory={selectedCategory}
+                      onAdd={addMenuItem}
+                      onUpdate={updateMenuItem}
+                      onDelete={deleteMenuItem}
+                    />
+                  </TabsContent>
+
+                  {/* Settings Tab */}
+                  <TabsContent value="settings" className="space-y-6">
+                    <h2 className="text-3xl font-bold text-gray-900">Settings</h2>
+                    <SettingsForm />
+                  </TabsContent>
+                </Tabs>
+              </>
+            )}
+          </div>
         </main>
       </div>
 
@@ -852,6 +1149,23 @@ export default function AdminDashboard() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Reservation Modal */}
+      <ReservationModal
+        isOpen={isReservationModalOpen}
+        onClose={closeReservationModal}
+        onSubmit={handleReservationSubmit}
+        tables={tables}
+      />
+
+      {/* Edit Reservation Modal */}
+      <EditReservationModal
+        isOpen={isEditReservationModalOpen}
+        onClose={closeEditReservationModal}
+        onSave={handleEditReservation}
+        reservation={selectedReservation}
+        tables={tables}
+      />
     </div>
   );
 }

@@ -31,15 +31,17 @@ export const MenuCard = ({ item, onEdit, onDelete }: MenuCardProps) => {
       <div className="relative">
         {/* Хоолны зураг */}
         <div className="aspect-[3/2] overflow-hidden rounded-t-lg">
-          <img
-            src={item.image || "/placeholder-food.svg"}
-            alt={item.nameEn}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.src = "/placeholder-food.svg";
-            }}
-          />
+          {item.image ? (
+            <img
+              src={item.image}
+              alt={item.nameEn}
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+              <span className="text-gray-400 text-sm">No Image</span>
+            </div>
+          )}
         </div>
 
         {/* Status badges */}

@@ -19,6 +19,9 @@ import tableRoutes from "./routes/route.tables";
 import reservationRoutes from "./routes/route.reservations";
 import categoryRoutes from "./routes/route.categories";
 
+// Import cleanup function
+import { cleanupOldReservations } from "./controllers/reservation.controller.js";
+
 dotenv.config();
 
 // Debug environment variables
@@ -98,4 +101,43 @@ app.listen(PORT, () => {
   console.log(
     `📱 Frontend URL: ${process.env["FRONTEND_URL"] || "http://localhost:3000"}`
   );
+  
+  // Schedule automatic cleanup every day at 2 AM
+  const scheduleCleanup = () => {
+    const now = new Date();
+    const nextRun = new Date(now);
+    nextRun.setHours(2, 0, 0, 0); // 2 AM
+    
+    // If it's already past 2 AM today, schedule for tomorrow
+    if (now.getHours() >= 2) {
+      nextRun.setDate(nextRun.getDate() + 1);
+    }
+    
+    const timeUntilNextRun = nextRun.getTime() - now.getTime();
+    
+    setTimeout(async () => {
+      console.log("🧹 Starting automatic reservation cleanup...");
+      const result = await cleanupOldReservations();
+      if (result.success) {
+        console.log(`✅ Cleanup completed: ${result.deleted.completed} completed, ${result.deleted.cancelled} cancelled, ${result.deleted.noShow} no-show reservations removed`);
+      } else {
+        console.log("❌ Cleanup failed:", result.error);
+      }
+      
+      // Schedule next cleanup (every 24 hours)
+      setInterval(async () => {
+        console.log("🧹 Starting automatic reservation cleanup...");
+        const result = await cleanupOldReservations();
+        if (result.success) {
+          console.log(`✅ Cleanup completed: ${result.deleted.completed} completed, ${result.deleted.cancelled} cancelled, ${result.deleted.noShow} no-show reservations removed`);
+        } else {
+          console.log("❌ Cleanup failed:", result.error);
+        }
+      }, 24 * 60 * 60 * 1000); // 24 hours
+    }, timeUntilNextRun);
+    
+    console.log(`🧹 Next cleanup scheduled for: ${nextRun.toLocaleString()}`);
+  };
+  
+  scheduleCleanup();
 });
