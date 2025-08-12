@@ -58,7 +58,7 @@ export default function QRGenerator() {
 
             {qrUrl && (
               <div className="text-center space-y-4">
-                <img src={qrUrl || "/placeholder.svg"} alt="QR Code" className="mx-auto border rounded-lg" />
+                <img src={qrUrl || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDMwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjE1MCIgeT0iMTUwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5NDk2OUEiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlFSIENvZGU8L3RleHQ+Cjwvc3ZnPg=="} alt="QR Code" className="mx-auto border rounded-lg" />
                 <Button onClick={downloadQR} className="flex items-center gap-2">
                   <Download className="w-4 h-4" />
                   Download QR Code

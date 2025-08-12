@@ -53,5 +53,5 @@ const TableSchema = new Schema<ITable>(
   }
 );
 
-export default mongoose.models.Table ||
+export default (mongoose.models as any)["Table"] ||
   mongoose.model<ITable>("Table", TableSchema);

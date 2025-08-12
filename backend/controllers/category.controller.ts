@@ -34,14 +34,14 @@ export const createCategory = async (req: Request, res: Response) => {
 
     const savedCategory = await newCategory.save();
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: "Категори амжилттай нэмэгдлээ",
       data: savedCategory,
     });
   } catch (error) {
     console.error("Error creating category:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: "Категори нэмэхэд алдаа гарлаа: " + (error as Error).message,
     });
@@ -53,13 +53,13 @@ export const getAllCategories = async (req: Request, res: Response) => {
   try {
     const categories = await Category.find().sort({ order: 1 });
 
-    res.json({
+    return res.json({
       success: true,
       data: categories,
     });
   } catch (error) {
     console.error("Error fetching categories:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: "Категориудыг авахад алдаа гарлаа: " + (error as Error).message,
     });
@@ -69,7 +69,7 @@ export const getAllCategories = async (req: Request, res: Response) => {
 // GET /api/categories/:id - Get single category
 export const getCategoryById = async (req: Request, res: Response) => {
   try {
-    const category = await Category.findById(req.params.id);
+    const category = await Category.findById(req.params["id"]);
 
     if (!category) {
       return res.status(404).json({
@@ -78,13 +78,13 @@ export const getCategoryById = async (req: Request, res: Response) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: category,
     });
   } catch (error) {
     console.error("Error fetching category:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: "Категори авахад алдаа гарлаа",
     });

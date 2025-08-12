@@ -39,7 +39,7 @@ export const getAllMenuItems = async (req: Request, res: Response) => {
       MenuItem.countDocuments(query),
     ]);
 
-    res.json({
+    return res.json({
       success: true,
       data: menuItems,
       total,
@@ -48,7 +48,7 @@ export const getAllMenuItems = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Error fetching menu items:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error:
         "MongoDB-с өгөгдөл авахад алдаа гарлаа. Алдааны дэлгэрэнгүй мэдээлэл: " +
@@ -72,13 +72,13 @@ export const getMenuItemById = async (req: Request, res: Response) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: menuItem,
     });
   } catch (error) {
     console.error("Error fetching menu item:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: "Failed to fetch menu item",
     });
@@ -166,14 +166,14 @@ export const createMenuItem = async (req: Request, res: Response) => {
       "name nameEn nameMn"
     );
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       data: populatedItem,
       message: "Бараа амжилттай нэмэгдлээ",
     });
   } catch (error) {
     console.error("Error creating menu item:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: "Бараа үүсгэхэд алдаа гарлаа: " + (error as Error).message,
     });
@@ -256,14 +256,14 @@ export const updateMenuItem = async (req: Request, res: Response) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: menuItem,
       message: "Бараа амжилттай шинэчлэгдлээ",
     });
   } catch (error) {
     console.error("Error updating menu item:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: "Бараа засахад алдаа гарлаа: " + (error as Error).message,
     });
@@ -282,13 +282,13 @@ export const deleteMenuItem = async (req: Request, res: Response) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       message: "Бараа амжилттай устгагдлаа",
     });
   } catch (error) {
     console.error("Error deleting menu item:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: "Бараа устгахад алдаа гарлаа: " + (error as Error).message,
     });

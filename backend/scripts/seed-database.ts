@@ -4,21 +4,21 @@ import Category from "../models/model.category.js";
 import MenuItem from "../models/model.menuItem.js";
 import Table from "../models/model.table.js";
 
-dotenv.config({ path: ".env.local" });
-// Fallback to default MongoDB URI if .env.local doesn't exist
-if (!process.env.MONGODB_URI) {
-  process.env.MONGODB_URI = "mongodb://localhost:27017/qr-menu";
+dotenv.config();
+// Fallback to default MongoDB URI if .env doesn't exist
+if (!process.env["MONGODB_URI"]) {
+  process.env["MONGODB_URI"] = "mongodb://localhost:27017/qr-menu";
 }
 
 async function seedDatabase() {
   try {
-    await mongoose.connect(process.env.MONGODB_URI!);
+    await mongoose.connect(process.env["MONGODB_URI"]!);
     console.log("Connected to MongoDB");
 
     // Clear existing data
     await Category.deleteMany({});
     await MenuItem.deleteMany({});
-    await Table.deleteMany({});
+    await (Table as any).deleteMany({});
     console.log("Cleared existing data");
 
     // Seed Categories
@@ -98,7 +98,7 @@ async function seedDatabase() {
         descriptionEn: "Steamed young soybeans with sea salt",
         descriptionMn: "Далайн давстай жигнэсэн залуу шар буурцаг",
         price: 6.5,
-        category: categories[0]._id,
+        category: categories[0]?._id || "",
         image: "/edamame-beans.png",
         ingredients: ["soybeans", "sea salt"],
         allergens: ["soy"],
@@ -116,7 +116,7 @@ async function seedDatabase() {
         descriptionEn: "Pan-fried pork dumplings with ponzu sauce",
         descriptionMn: "Понзу соустай шарсан гахайн махны бууз",
         price: 8.9,
-        category: categories[0]._id,
+        category: categories[0]?._id || "",
         image: "/gyoza-dumplings.png",
         ingredients: ["pork", "cabbage", "garlic", "ginger", "ponzu sauce"],
         allergens: ["gluten", "soy"],
@@ -133,7 +133,7 @@ async function seedDatabase() {
         descriptionEn: "Traditional Japanese green tea",
         descriptionMn: "Уламжлалт Япон ногоон цай",
         price: 3.5,
-        category: categories[5]._id,
+        category: categories[5]?._id || "",
         image: "/green-tea.png",
         ingredients: ["green tea leaves", "hot water"],
         allergens: [],
@@ -151,7 +151,7 @@ async function seedDatabase() {
         descriptionEn: "Fresh brewed coffee",
         descriptionMn: "Шинээр бэлтгэсэн кофе",
         price: 4.0,
-        category: categories[5]._id,
+        category: categories[5]?._id || "",
         image: "/coffee.png",
         ingredients: ["coffee beans", "hot water"],
         allergens: [],
@@ -174,6 +174,7 @@ async function seedDatabase() {
         capacity: i <= 4 ? 2 : i <= 8 ? 4 : 6,
         status: "available",
         location: "indoor",
+        qrCode: `table-${i}-qr-code`,
       });
     }
     for (let i = 17; i <= 21; i++) {
@@ -182,10 +183,11 @@ async function seedDatabase() {
         capacity: 4,
         status: "available",
         location: "outdoor",
+        qrCode: `table-${i}-qr-code`,
       });
     }
 
-    await Table.insertMany(tables);
+    await (Table as any).insertMany(tables);
     console.log("Seeded tables");
 
     console.log("Database seeded successfully!");

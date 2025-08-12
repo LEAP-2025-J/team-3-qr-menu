@@ -27,7 +27,7 @@ export const getAllOrders = async (req: Request, res: Response) => {
 
     const total = await Order.countDocuments(query);
 
-    res.json({
+    return res.json({
       success: true,
       data: orders,
       pagination: {
@@ -39,7 +39,7 @@ export const getAllOrders = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Error fetching orders:", error);
-    res.status(500).json({ success: false, error: "Failed to fetch orders" });
+    return res.status(500).json({ success: false, error: "Failed to fetch orders" });
   }
 };
 
@@ -57,13 +57,13 @@ export const getOrderById = async (req: Request, res: Response) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: order,
     });
   } catch (error) {
     console.error("Error fetching order:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: "Failed to fetch order",
     });
@@ -148,13 +148,13 @@ export const createOrder = async (req: Request, res: Response) => {
       .populate("table", "number")
       .populate("items.menuItem", "name nameEn price preparationTime");
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       data: populatedOrder,
     });
   } catch (error) {
     console.error("Error creating order:", error);
-    res.status(500).json({ success: false, error: "Failed to create order" });
+    return res.status(500).json({ success: false, error: "Failed to create order" });
   }
 };
 
@@ -184,13 +184,13 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: order,
     });
   } catch (error) {
     console.error("Error updating order:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: "Failed to update order",
     });

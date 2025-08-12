@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express"
-import Reservation from "../models/Reservation.js"
+import Reservation from "../models/model.reservation.js"
 
 const router = express.Router()
 

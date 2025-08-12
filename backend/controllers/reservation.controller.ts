@@ -22,7 +22,7 @@ export const getAllReservations = async (req: Request, res: Response) => {
       query.status = status;
     }
 
-    const reservations = await Reservation.find(query)
+    const reservations = await (Reservation as any).find(query)
       .populate("table", "number")
       .sort({ date: 1, time: 1 })
       .lean();

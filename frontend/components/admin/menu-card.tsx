@@ -32,12 +32,12 @@ export const MenuCard = ({ item, onEdit, onDelete }: MenuCardProps) => {
         {/* Хоолны зураг */}
         <div className="aspect-[3/2] overflow-hidden rounded-t-lg">
           <img
-            src={item.image || "/placeholder-food.svg"}
+            src={item.image || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xNTAgMTAwTDEyMCA4MEwxODAgODBMMTUwIDEwMFoiIGZpbGw9IiNEN0Q5RDEiLz4KPHRleHQgeD0iMTUwIiB5PSIxMjAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk0OTY5QSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Rm9vZCBJbWFnZTwvdGV4dD4KPC9zdmc+"}
             alt={item.nameEn}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
-              target.src = "/placeholder-food.svg";
+              target.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xNTAgMTAwTDEyMCA4MEwxODAgODBMMTUwIDEwMFoiIGZpbGw9IiNEN0Q5RDEiLz4KPHRleHQgeD0iMTUwIiB5PSIxMjAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk0OTY5QSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Rm9vZCBJbWFnZTwvdGV4dD4KPC9zdmc+";
             }}
           />
         </div>

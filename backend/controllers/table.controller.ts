@@ -4,7 +4,7 @@ import Table from "../models/model.table.js";
 // GET /api/tables - Get all tables
 export const getAllTables = async (req: Request, res: Response) => {
   try {
-    const tables = await Table.find({ isActive: true })
+    const tables = await (Table as any).find({ isActive: true })
       .populate("currentOrder", "orderNumber status total")
       .sort({ number: 1 })
       .lean();
@@ -26,7 +26,7 @@ export const createTable = async (req: Request, res: Response) => {
 
     // Generate QR code URL
     const qrCode = `${
-      process.env.FRONTEND_URL || "http://localhost:3000"
+      process.env["FRONTEND_URL"] || "http://localhost:3000"
     }?table=${number}`;
 
     const table = new Table({
