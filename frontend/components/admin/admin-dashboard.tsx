@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { AdminSidebar } from "./admin-sidebar";
 import { AdminHeader } from "./admin-header";
 import { TableLayout } from "./table-layout";
@@ -10,6 +11,8 @@ import { MenuManagement } from "./menu-management";
 import { SettingsForm } from "./settings-form";
 import { CategoryModal } from "./category-modal";
 import { OrderHistory } from "./order-history";
+import { ReservationModal } from "./reservation-modal";
+import { EditReservationModal } from "./edit-reservation-modal";
 import { useAdminData } from "@/hooks/use-admin-data";
 
 export function AdminDashboard() {
@@ -17,6 +20,9 @@ export function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
+  const [isEditReservationModalOpen, setIsEditReservationModalOpen] = useState(false);
+  const [selectedReservation, setSelectedReservation] = useState<any>(null);
 
   const {
     orders,
@@ -131,6 +137,144 @@ export function AdminDashboard() {
     }
   };
 
+  // Reservation management functions
+  const handleReservationStatusChange = async (id: string, status: string) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/reservations/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+
+      if (response.ok) {
+        fetchReservations();
+        fetchTables();
+      } else {
+        console.error("Failed to update reservation status");
+      }
+    } catch (error) {
+      console.error("Error updating reservation status:", error);
+    }
+  };
+
+  const handleReservationCancel = async (id: string) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/reservations/${id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (response.ok) {
+        fetchReservations();
+        fetchTables();
+      } else {
+        console.error("Failed to cancel reservation");
+      }
+    } catch (error) {
+      console.error("Error cancelling reservation:", error);
+    }
+  };
+
+  const handleReservationEdit = (reservation: any) => {
+    setSelectedReservation(reservation);
+    setIsEditReservationModalOpen(true);
+  };
+
+  const handleReservationDelete = async (id: string) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/reservations/${id}/delete`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (response.ok) {
+        fetchReservations();
+        fetchTables();
+      } else {
+        console.error("Failed to delete reservation");
+      }
+    } catch (error) {
+      console.error("Error deleting reservation:", error);
+    }
+  };
+
+  const handleReservationSubmit = async (reservationData: any) => {
+    try {
+      // Convert tableId to table to match the backend model
+      const { tableId, ...otherData } = reservationData;
+      const requestData = {
+        ...otherData,
+        table: tableId
+      };
+
+      const response = await fetch("http://localhost:5000/api/reservations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestData),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Update table status to reserved
+        await fetch(`http://localhost:5000/api/tables/${tableId}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ status: "reserved" }),
+        });
+
+        // Refresh data
+        fetchReservations();
+        fetchTables();
+        setIsReservationModalOpen(false);
+        return { success: true, message: "Reservation created successfully!" };
+      } else {
+        return { success: false, error: data.error || data.message || "Failed to create reservation" };
+      }
+    } catch (error) {
+      console.error("Error creating reservation:", error);
+      return { success: false, error: "Error creating reservation" };
+    }
+  };
+
+  const handleReservationEditSave = async (id: string, data: any) => {
+    try {
+      // Convert tableId to table to match the backend model
+      const { tableId, ...otherData } = data;
+      const requestData = {
+        ...otherData,
+        table: tableId
+      };
+
+      const response = await fetch(`http://localhost:5000/api/reservations/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestData),
+      });
+
+      const responseData = await response.json();
+
+      if (responseData.success) {
+        // Refresh data
+        fetchReservations();
+        fetchTables();
+        setIsEditReservationModalOpen(false);
+        return { success: true, message: "Reservation updated successfully!" };
+      } else {
+        return { success: false, error: responseData.error || responseData.message || "Failed to update reservation" };
+      }
+    } catch (error) {
+      console.error("Error updating reservation:", error);
+      return { success: false, error: "Error updating reservation" };
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen bg-gray-100">
@@ -176,9 +320,21 @@ export function AdminDashboard() {
                 <h2 className="text-3xl font-bold text-gray-900">
                   Reservations
                 </h2>
+                <Button 
+                  onClick={() => setIsReservationModalOpen(true)}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  + New Reservation
+                </Button>
               </div>
 
-              <ReservationsList reservations={reservations} />
+              <ReservationsList 
+                reservations={reservations}
+                onStatusChange={handleReservationStatusChange}
+                onCancel={handleReservationCancel}
+                onEdit={handleReservationEdit}
+                onDelete={handleReservationDelete}
+              />
             </TabsContent>
 
             {/* Menu Tab */}
@@ -214,6 +370,23 @@ export function AdminDashboard() {
         isOpen={isCategoryModalOpen}
         onClose={() => setIsCategoryModalOpen(false)}
         onSubmit={addCategory}
+      />
+
+      {/* Reservation Modal */}
+      <ReservationModal
+        isOpen={isReservationModalOpen}
+        onClose={() => setIsReservationModalOpen(false)}
+        onSubmit={handleReservationSubmit}
+        tables={tables}
+      />
+
+      {/* Edit Reservation Modal */}
+      <EditReservationModal
+        isOpen={isEditReservationModalOpen}
+        onClose={() => setIsEditReservationModalOpen(false)}
+        onSave={handleReservationEditSave}
+        reservation={selectedReservation}
+        tables={tables}
       />
     </div>
   );
