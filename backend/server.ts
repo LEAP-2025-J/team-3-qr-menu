@@ -11,6 +11,7 @@ import "./models/model.menuItem";
 import "./models/model.order";
 import "./models/model.table";
 import "./models/model.reservation";
+import "./models/model.restaurant";
 
 // Import routes
 import menuRoutes from "./routes/route.menu";
@@ -18,6 +19,7 @@ import orderRoutes from "./routes/route.orders";
 import tableRoutes from "./routes/route.tables";
 import reservationRoutes from "./routes/route.reservations";
 import categoryRoutes from "./routes/route.categories";
+import restaurantRoutes from "./routes/route.restaurant";
 
 dotenv.config();
 
@@ -65,6 +67,7 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/tables", tableRoutes);
 app.use("/api/reservations", reservationRoutes);
 app.use("/api/categories", categoryRoutes);
+app.use("/api/restaurant", restaurantRoutes);
 
 // Health check endpoint
 app.get("/api/health", (req: Request, res: Response) => {
