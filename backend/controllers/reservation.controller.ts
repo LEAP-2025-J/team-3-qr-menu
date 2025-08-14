@@ -51,9 +51,44 @@ export const createReservation = async (req: Request, res: Response) => {
       reservationData.date = new Date(reservationData.date);
     }
     
-    // Generate reservation number
-    const count = await Reservation.countDocuments();
-    reservationData.reservationNumber = `RES-${String(count + 1).padStart(4, "0")}`;
+    // Handle tableId to table mapping
+    if (reservationData.tableId) {
+      reservationData.table = reservationData.tableId;
+      delete reservationData.tableId;
+    }
+    
+    // Generate unique reservation number
+    let reservationNumber;
+    let attempts = 0;
+    const maxAttempts = 10;
+    
+    do {
+      attempts++;
+      const timestamp = Date.now().toString().slice(-6);
+      const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+      reservationNumber = `RES-${timestamp}-${random}`;
+      
+      // Check if this number already exists
+      const existing = await Reservation.exists({ reservationNumber });
+      if (!existing) break;
+    } while (attempts < maxAttempts);
+    
+    if (attempts >= maxAttempts) {
+      return res.status(500).json({
+        success: false,
+        error: "Failed to generate unique reservation number"
+      });
+    }
+    
+    reservationData.reservationNumber = reservationNumber;
+    
+    // Validate required fields
+    if (!reservationData.customerName || !reservationData.customerPhone || !reservationData.date || !reservationData.time || !reservationData.partySize) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing required fields: customerName, customerPhone, date, time, partySize"
+      });
+    }
     
     console.log("Processed reservation data:", reservationData);
     
@@ -69,10 +104,19 @@ export const createReservation = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error creating reservation:", error);
     console.error("Error details:", {
-      name: error.name,
-      message: error.message,
-      stack: error.stack
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
     });
+    
+    // Provide more specific error messages
+    if (error instanceof Error && error.name === 'ValidationError') {
+      return res.status(400).json({
+        success: false,
+        error: "Validation error: " + error.message
+      });
+    }
+    
     res
       .status(500)
       .json({ success: false, error: "Failed to create reservation" });
