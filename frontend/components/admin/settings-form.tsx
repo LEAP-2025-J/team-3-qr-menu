@@ -112,15 +112,37 @@ export function SettingsForm() {
         <CardContent className="space-y-3 flex-1">
           {/* Restaurant Names Section */}
           <div className="space-y-3">
-            <div className="p-3 border rounded-lg bg-gray-50 space-y-2">
-              <Label htmlFor="nameEn" className="text-sm font-semibold">Restaurant Name</Label>
-              <Input
-                id="nameEn"
-                value={settings.nameEn}
-                onChange={(e) => updateField("nameEn", e.target.value)}
-                placeholder="Sakura"
-                className="h-10"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="p-3 border rounded-lg bg-gray-50 space-y-2">
+                <Label htmlFor="nameEn" className="text-sm font-semibold">Restaurant Name (English)</Label>
+                <Input
+                  id="nameEn"
+                  value={settings.nameEn}
+                  onChange={(e) => updateField("nameEn", e.target.value)}
+                  placeholder="Sakura"
+                  className="h-10"
+                />
+              </div>
+              <div className="p-3 border rounded-lg bg-gray-50 space-y-2">
+                <Label htmlFor="nameMn" className="text-sm font-semibold">Restaurant Name (Mongolian)</Label>
+                <Input
+                  id="nameMn"
+                  value={settings.nameMn}
+                  onChange={(e) => updateField("nameMn", e.target.value)}
+                  placeholder="Сакура"
+                  className="h-10"
+                />
+              </div>
+              <div className="p-3 border rounded-lg bg-gray-50 space-y-2">
+                <Label htmlFor="name" className="text-sm font-semibold">Restaurant Name (Japanese)</Label>
+                <Input
+                  id="name"
+                  value={settings.name}
+                  onChange={(e) => updateField("name", e.target.value)}
+                  placeholder="桜 Sakura"
+                  className="h-10"
+                />
+              </div>
             </div>
             
             <div className="p-3 border rounded-lg bg-gray-50 space-y-2">
