@@ -18,8 +18,8 @@ export const getAllOrders = async (req: Request, res: Response) => {
     }
 
     const orders = await Order.find(query)
-      .populate("table", "number")
-      .populate("items.menuItem", "name nameEn price")
+      .populate("table", "number location")
+      .populate("items.menuItem", "name nameEn nameMn nameJp price")
       .sort({ createdAt: -1 })
       .limit(Number(limit))
       .skip((Number(page) - 1) * Number(limit))
@@ -39,7 +39,10 @@ export const getAllOrders = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Error fetching orders:", error);
-    res.status(500).json({ success: false, error: "Failed to fetch orders" });
+    res.status(500).json({
+      success: false,
+      error: "Захиалгын мэдээллийг авахад алдаа гарлаа",
+    });
   }
 };
 
@@ -47,13 +50,13 @@ export const getAllOrders = async (req: Request, res: Response) => {
 export const getOrderById = async (req: Request, res: Response) => {
   try {
     const order = await Order.findById(req.params["id"])
-      .populate("table", "number")
-      .populate("items.menuItem", "name nameEn price image");
+      .populate("table", "number location")
+      .populate("items.menuItem", "name nameEn nameMn nameJp price image");
 
     if (!order) {
       return res.status(404).json({
         success: false,
-        error: "Order not found",
+        error: "Захиалга олдсонгүй",
       });
     }
 
@@ -65,7 +68,7 @@ export const getOrderById = async (req: Request, res: Response) => {
     console.error("Error fetching order:", error);
     res.status(500).json({
       success: false,
-      error: "Failed to fetch order",
+      error: "Захиалга авахад алдаа гарлаа",
     });
   }
 };
@@ -73,13 +76,35 @@ export const getOrderById = async (req: Request, res: Response) => {
 // POST /api/orders - Create new order
 export const createOrder = async (req: Request, res: Response) => {
   try {
+    console.log("Order creation request body:", req.body);
+    console.log("Request body type:", typeof req.body);
+    console.log("Request body keys:", Object.keys(req.body));
+
     const { tableId, items, customerName, customerPhone, specialRequests } =
       req.body;
+
+    console.log("Extracted data:", {
+      tableId,
+      items,
+      customerName,
+      customerPhone,
+      specialRequests,
+    });
 
     // Validate table exists and is available
     const table = await (Table as any).findById(tableId);
     if (!table) {
-      return res.status(404).json({ success: false, error: "Table not found" });
+      return res.status(404).json({
+        success: false,
+        error: "Ширээ олдсонгүй",
+      });
+    }
+
+    if (table.status !== "empty") {
+      return res.status(400).json({
+        success: false,
+        error: "Ширээ захиалгатай байна",
+      });
     }
 
     // Calculate totals
@@ -92,14 +117,14 @@ export const createOrder = async (req: Request, res: Response) => {
       if (!menuItem) {
         return res.status(404).json({
           success: false,
-          error: `Menu item ${item.menuItemId} not found`,
+          error: `Хоол ${item.menuItemId} олдсонгүй`,
         });
       }
 
       if (!menuItem.isAvailable) {
         return res
           .status(400)
-          .json({ success: false, error: `${menuItem.name} is not available` });
+          .json({ success: false, error: `${menuItem.name} боломжгүй байна` });
       }
 
       const itemTotal = menuItem.price * item.quantity;
@@ -119,12 +144,20 @@ export const createOrder = async (req: Request, res: Response) => {
     }
 
     const tax = subtotal * 0.1; // 10% tax
-    const total = subtotal + tax;
+    const calculatedTotal = subtotal + tax;
+
+    // Frontend-ээс ирсэн total-г ашиглах, эсвэл тооцоолсон total-г ашиглах
+    const total = req.body.total || calculatedTotal;
 
     // Calculate estimated time
     const estimatedTime = maxPrepTime + orderItems.length * 2; // Base time + 2 min per item
 
+    // Generate order number
+    const orderCount = await Order.countDocuments();
+    const orderNumber = `ORD-${String(orderCount + 1).padStart(4, "0")}`;
+
     const order = new Order({
+      orderNumber,
       table: tableId,
       items: orderItems,
       subtotal,
@@ -134,27 +167,40 @@ export const createOrder = async (req: Request, res: Response) => {
       customerPhone,
       specialRequests,
       estimatedTime,
+      status: "pending",
     });
 
     await order.save();
 
-    // Update table status
+    // Update table status to reserved
     await (Table as any).findByIdAndUpdate(tableId, {
-      status: "occupied",
+      status: "reserved",
       currentOrder: order._id,
     });
 
     const populatedOrder = await Order.findById(order._id)
-      .populate("table", "number")
-      .populate("items.menuItem", "name nameEn price preparationTime");
+      .populate("table", "number location")
+      .populate(
+        "items.menuItem",
+        "name nameEn nameMn nameJp price preparationTime"
+      );
 
     res.status(201).json({
       success: true,
+      message: "Захиалга амжилттай үүсгэгдлээ",
       data: populatedOrder,
     });
   } catch (error) {
     console.error("Error creating order:", error);
-    res.status(500).json({ success: false, error: "Failed to create order" });
+    console.error("Error details:", {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined,
+    });
+    res.status(500).json({
+      success: false,
+      error: "Захиалга үүсгэхэд алдаа гарлаа",
+    });
   }
 };
 
@@ -167,32 +213,33 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
       req.params["id"],
       { status },
       { new: true, runValidators: true }
-    ).populate("table", "number");
+    ).populate("table", "number location");
 
     if (!order) {
       return res.status(404).json({
         success: false,
-        error: "Order not found",
+        error: "Захиалга олдсонгүй",
       });
     }
 
-    // Update table status if order is completed
-    if (status === "completed") {
+    // Update table status based on order status
+    if (status === "completed" || status === "cancelled") {
       await (Table as any).findByIdAndUpdate(order.table._id, {
-        status: "cleaning",
+        status: "empty",
         currentOrder: null,
       });
     }
 
     res.json({
       success: true,
+      message: "Захиалгын статус амжилттай шинэчлэгдлээ",
       data: order,
     });
   } catch (error) {
     console.error("Error updating order:", error);
     res.status(500).json({
       success: false,
-      error: "Failed to update order",
+      error: "Захиалгын статус шинэчлэхэд алдаа гарлаа",
     });
   }
 };

@@ -28,12 +28,15 @@ interface MenuItem {
   name: string;
   nameEn: string;
   nameMn: string;
+  nameJp: string;
   description: string;
+  descriptionEn: string;
+  descriptionMn: string;
+  descriptionJp: string;
   price: number;
   category: { name: string; nameEn: string };
   image?: string;
   isAvailable: boolean;
-  isSpicy: boolean;
   preparationTime: number;
 }
 
@@ -68,12 +71,15 @@ export const MenuModal = ({
   const [formData, setFormData] = useState({
     nameEn: "",
     nameMn: "",
+    nameJp: "",
     description: "",
+    descriptionEn: "",
+    descriptionMn: "",
+    descriptionJp: "",
     price: 0,
     categoryNameEn: "",
     image: "",
     isAvailable: true,
-    isSpicy: false,
     preparationTime: 15,
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -90,12 +96,15 @@ export const MenuModal = ({
       setFormData({
         nameEn: currentItem?.nameEn || "",
         nameMn: currentItem?.nameMn || "",
+        nameJp: currentItem?.nameJp || "",
         description: currentItem?.description || "",
+        descriptionEn: currentItem?.descriptionEn || "",
+        descriptionMn: currentItem?.descriptionMn || "",
+        descriptionJp: currentItem?.descriptionJp || "",
         price: currentItem?.price || 0,
         categoryNameEn: currentItem?.category?.nameEn || "",
         image: currentItem?.image || "",
         isAvailable: currentItem?.isAvailable ?? true,
-        isSpicy: currentItem?.isSpicy ?? false,
         preparationTime: currentItem?.preparationTime || 15,
       });
       setSelectedFile(null);
@@ -128,11 +137,15 @@ export const MenuModal = ({
       const formDataToSend = new FormData();
       formDataToSend.append("nameEn", formData.nameEn);
       formDataToSend.append("nameMn", formData.nameMn);
+      formDataToSend.append("nameJp", formData.nameJp);
       formDataToSend.append("description", formData.description);
+      formDataToSend.append("descriptionEn", formData.descriptionEn);
+      formDataToSend.append("descriptionMn", formData.descriptionMn);
+      formDataToSend.append("descriptionJp", formData.descriptionJp);
       formDataToSend.append("price", formData.price.toString());
       formDataToSend.append("categoryNameEn", formData.categoryNameEn);
       formDataToSend.append("isAvailable", formData.isAvailable.toString());
-      formDataToSend.append("isSpicy", formData.isSpicy.toString());
+
       formDataToSend.append(
         "preparationTime",
         formData.preparationTime.toString()
@@ -194,7 +207,7 @@ export const MenuModal = ({
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div>
               <Label htmlFor="nameEn">Нэр (Англи)</Label>
               <Input
@@ -219,19 +232,72 @@ export const MenuModal = ({
                 required
               />
             </div>
+            <div>
+              <Label htmlFor="nameJp">Нэр (Япон)</Label>
+              <Input
+                id="nameJp"
+                value={formData.nameJp}
+                onChange={(e) =>
+                  setFormData({ ...formData, nameJp: e.target.value })
+                }
+                placeholder="Japanese name"
+                required
+              />
+            </div>
           </div>
 
-          <div>
-            <Label htmlFor="description">Тайлбар</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              placeholder="Барааны тайлбар"
-              rows={3}
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="description">Тайлбар (Англи)</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                placeholder="English description"
+                rows={3}
+              />
+            </div>
+            <div>
+              <Label htmlFor="descriptionMn">Тайлбар (Монгол)</Label>
+              <Textarea
+                id="descriptionMn"
+                value={formData.descriptionMn}
+                onChange={(e) =>
+                  setFormData({ ...formData, descriptionMn: e.target.value })
+                }
+                placeholder="Монгол тайлбар"
+                rows={3}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            {/* <div>
+              <Label htmlFor="descriptionEn">Тайлбар (Англи дэлгэрэнгүй)</Label>
+              <Textarea
+                id="descriptionEn"
+                value={formData.descriptionEn}
+                onChange={(e) =>
+                  setFormData({ ...formData, descriptionEn: e.target.value })
+                }
+                placeholder="Detailed English description"
+                rows={3}
+              />
+            </div> */}
+            <div>
+              <Label htmlFor="descriptionJp">Тайлбар (Япон)</Label>
+              <Textarea
+                id="descriptionJp"
+                value={formData.descriptionJp}
+                onChange={(e) =>
+                  setFormData({ ...formData, descriptionJp: e.target.value })
+                }
+                placeholder="Japanese description"
+                rows={3}
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -289,7 +355,7 @@ export const MenuModal = ({
                   <img
                     src={imagePreview}
                     alt="Preview"
-                    className="w-20 h-20 object-cover rounded-md"
+                    className="object-cover w-20 h-20 rounded-md"
                   />
                 </div>
               )}
@@ -321,16 +387,6 @@ export const MenuModal = ({
                 }
               />
               <Label htmlFor="isAvailable">Боломжтой</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="isSpicy"
-                checked={formData.isSpicy}
-                onCheckedChange={(checked) =>
-                  setFormData({ ...formData, isSpicy: checked })
-                }
-              />
-              <Label htmlFor="isSpicy">Халуун</Label>
             </div>
           </div>
 

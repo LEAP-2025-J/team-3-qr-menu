@@ -1,19 +1,19 @@
-import express from "express"
+import express from "express";
 import {
   getAllTables,
   createTable,
-  updateTable
-} from "../controllers/table.controller.js"
+  updateTableStatus,
+} from "../controllers/table.controller.js";
 
-const router = express.Router()
+const router = express.Router();
 
 // GET /api/tables - Get all tables
-router.get("/", getAllTables)
+router.get("/", getAllTables);
 
 // POST /api/tables - Create new table
-router.post("/", createTable)
+router.post("/", createTable);
 
-// PATCH /api/tables/:id - Update table
-router.patch("/:id", updateTable)
+// PUT /api/tables/:id/status - Update table status
+router.put("/:id/status", updateTableStatus);
 
-export default router 
+export default router;

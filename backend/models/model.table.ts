@@ -3,7 +3,7 @@ import mongoose, { Document, Schema } from "mongoose";
 export interface ITable extends Document {
   number: number;
   capacity: number;
-  status: "available" | "occupied" | "reserved" | "cleaning" | "maintenance";
+  status: "empty" | "reserved" | "cleaning" | "maintenance";
   currentOrder?: mongoose.Types.ObjectId;
   qrCode: string;
   location?: string;
@@ -27,8 +27,8 @@ const TableSchema = new Schema<ITable>(
     },
     status: {
       type: String,
-      enum: ["available", "occupied", "reserved", "cleaning", "maintenance"],
-      default: "available",
+      enum: ["empty", "reserved", "cleaning", "maintenance"],
+      default: "empty",
     },
     currentOrder: {
       type: Schema.Types.ObjectId,

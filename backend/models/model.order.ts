@@ -14,7 +14,7 @@ export interface IOrder extends Document {
   subtotal: number
   tax: number
   total: number
-  status: "pending" | "confirmed" | "preparing" | "ready" | "served" | "completed" | "cancelled"
+  status: "pending" | "preparing" | "serving" | "completed" | "cancelled" | "reserved" // 6 төрөл статус
   customerName?: string
   customerPhone?: string
   specialRequests?: string
@@ -85,7 +85,7 @@ const OrderSchema = new Schema<IOrder>(
     },
     status: {
       type: String,
-      enum: ["pending", "confirmed", "preparing", "ready", "served", "completed", "cancelled"],
+      enum: ["pending", "preparing", "serving", "completed", "cancelled", "reserved"], // 6 төрөл статус
       default: "pending",
     },
     customerName: {
