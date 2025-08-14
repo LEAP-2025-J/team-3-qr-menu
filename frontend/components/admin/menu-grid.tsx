@@ -12,12 +12,15 @@ interface MenuItem {
   name: string;
   nameEn: string;
   nameMn: string;
+  nameJp: string;
   description: string;
+  descriptionEn: string;
+  descriptionMn: string;
+  descriptionJp: string;
   price: number;
   category: { name: string; nameEn: string };
   image?: string;
   isAvailable: boolean;
-  isSpicy: boolean;
   preparationTime: number;
 }
 

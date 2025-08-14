@@ -25,26 +25,33 @@ export const getAllMenuItems = async (req: Request, res: Response) => {
       ];
     }
 
-    // Pagination
-    const pageNum = parseInt(page as string) || 1;
-    const limitNum = parseInt(limit as string) || 10;
-    const skip = (pageNum - 1) * limitNum;
+    // Pagination - идэвхгүй болгосон (бүх item-ийг буцаана)
+    // const pageNum = parseInt(page as string) || 1;
+    // const limitNum = parseInt(limit as string) || 10;
+    // const skip = (pageNum - 1) * limitNum;
 
     const [menuItems, total] = await Promise.all([
       MenuItem.find(query)
         .populate("category", "name nameEn nameMn")
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limitNum),
+        .sort({ createdAt: -1 }),
+        // .skip(skip)
+        // .limit(limitNum),
       MenuItem.countDocuments(query),
     ]);
+
+    console.log("=== GET MENU ITEMS DEBUG ===");
+    console.log("Query:", query);
+    console.log("Total items found:", total);
+    console.log("Items returned:", menuItems.length);
+    console.log("Items order values:", menuItems.map(item => ({ name: item.nameEn, order: item.order })));
+    console.log("=============================");
 
     res.json({
       success: true,
       data: menuItems,
       total,
-      page: pageNum,
-      totalPages: Math.ceil(total / limitNum),
+      // page: pageNum,
+      // totalPages: Math.ceil(total / limitNum),
     });
   } catch (error) {
     console.error("Error fetching menu items:", error);
@@ -131,31 +138,33 @@ export const createMenuItem = async (req: Request, res: Response) => {
       }
     }
 
+    // Хамгийн их order утгыг олох
+    const maxOrderItem = await MenuItem.findOne().sort({ order: -1 });
+    const nextOrder = maxOrderItem ? maxOrderItem.order + 1 : 1;
+    console.log("Current max order:", maxOrderItem?.order || 0);
+    console.log("Next order will be:", nextOrder);
+
     // MenuItem-ийн data бэлтгэх
     const menuItemData = {
       name: body.nameEn, // name талбарт nameEn-ийг хадгалах
       nameEn: body.nameEn,
       nameMn: body.nameMn,
+      nameJp: body.nameJp,
       description: body.description || body.nameEn, // description талбарт description эсвэл nameEn
-      descriptionEn: body.description || body.nameEn, // descriptionEn талбарт description эсвэл nameEn
-      descriptionMn: body.description || body.nameMn, // descriptionMn талбарт description эсвэл nameMn
+      descriptionEn: body.descriptionEn || body.description || body.nameEn, // descriptionEn талбарт descriptionEn эсвэл description эсвэл nameEn
+      descriptionMn: body.descriptionMn || body.description || body.nameMn, // descriptionMn талбарт descriptionMn эсвэл description эсвэл nameMn
+      descriptionJp: body.descriptionJp || body.description || body.nameJp, // descriptionJp талбарт descriptionJp эсвэл description эсвэл nameJp
       price: parseFloat(body.price) || 0, // string-ийг number болгож хөрвүүлэх
       category: category._id, // ObjectId хадгалах
       image: imageUrl,
       imagePublicId: imagePublicId, // Cloudinary public_id хадгалах
       ingredients: body.ingredients || [],
-      allergens: body.allergens || [],
-      isSpicy: body.isSpicy === "true" || body.isSpicy === true, // string эсвэл boolean болгож хөрвүүлэх
-      isVegetarian: body.isVegetarian === "true" || body.isVegetarian === true,
-      isVegan: body.isVegan === "true" || body.isVegan === true,
-      isGlutenFree: body.isGlutenFree === "true" || body.isGlutenFree === true,
       isAvailable:
         body.isAvailable === "true" ||
         body.isAvailable === true ||
         body.isAvailable === undefined, // string эсвэл boolean болгож хөрвүүлэх
       preparationTime: parseInt(body.preparationTime) || 15, // string-ийг number болгож хөрвүүлэх
-      calories: body.calories ? parseInt(body.calories) : undefined,
-      order: body.order ? parseInt(body.order) : 0,
+      order: nextOrder,
     };
 
     const menuItem = new MenuItem(menuItemData);
@@ -224,22 +233,18 @@ export const updateMenuItem = async (req: Request, res: Response) => {
       name: body.nameEn, // name талбарт nameEn-ийг хадгалах
       nameEn: body.nameEn,
       nameMn: body.nameMn,
+      nameJp: body.nameJp,
       description: body.description || body.nameEn, // description талбарт description эсвэл nameEn
-      descriptionEn: body.description || body.nameEn, // descriptionEn талбарт description эсвэл nameEn
-      descriptionMn: body.description || body.nameMn, // descriptionMn талбарт description эсвэл nameMn
+      descriptionEn: body.descriptionEn || body.description || body.nameEn, // descriptionEn талбарт descriptionEn эсвэл description эсвэл nameEn
+      descriptionMn: body.descriptionMn || body.description || body.nameMn, // descriptionMn талбарт descriptionMn эсвэл description эсвэл nameMn
+      descriptionJp: body.descriptionJp || body.description || body.nameJp, // descriptionJp талбарт descriptionJp эсвэл description эсвэл nameJp
       price: body.price,
       category: category._id, // ObjectId хадгалах
       image: imageUrl,
       imagePublicId: imagePublicId, // Cloudinary public_id хадгалах
       ingredients: body.ingredients || [],
-      allergens: body.allergens || [],
-      isSpicy: body.isSpicy || false,
-      isVegetarian: body.isVegetarian || false,
-      isVegan: body.isVegan || false,
-      isGlutenFree: body.isGlutenFree || false,
       isAvailable: body.isAvailable !== undefined ? body.isAvailable : true,
       preparationTime: body.preparationTime || 15,
-      calories: body.calories,
       order: body.order || 0,
     };
 

@@ -1,28 +1,24 @@
-import mongoose, { Document, Schema } from "mongoose"
+import mongoose, { Document, Schema } from "mongoose";
 
 export interface IMenuItem extends Document {
-  name: string
-  nameEn: string
-  nameMn: string
-  description: string
-  descriptionEn: string
-  descriptionMn: string
-  price: number
-  category: mongoose.Types.ObjectId
-  image?: string
-  imagePublicId?: string
-  ingredients: string[]
-  allergens: string[]
-  isSpicy: boolean
-  isVegetarian: boolean
-  isVegan: boolean
-  isGlutenFree: boolean
-  isAvailable: boolean
-  preparationTime: number
-  calories?: number
-  order: number
-  createdAt: Date
-  updatedAt: Date
+  name: string;
+  nameEn: string;
+  nameMn: string;
+  nameJp: string;
+  description: string;
+  descriptionEn: string;
+  descriptionMn: string;
+  descriptionJp: string;
+  price: number;
+  category: mongoose.Types.ObjectId;
+  image?: string;
+  imagePublicId?: string;
+  ingredients: string[];
+  isAvailable: boolean;
+  preparationTime: number;
+  order: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const MenuItemSchema = new Schema<IMenuItem>(
@@ -42,6 +38,11 @@ const MenuItemSchema = new Schema<IMenuItem>(
       required: [true, "Mongolian name is required"],
       trim: true,
     },
+    nameJp: {
+      type: String,
+      required: [true, "Japanese name is required"],
+      trim: true,
+    },
     description: {
       type: String,
       required: [true, "Description is required"],
@@ -55,6 +56,11 @@ const MenuItemSchema = new Schema<IMenuItem>(
     descriptionMn: {
       type: String,
       required: [true, "Mongolian description is required"],
+      trim: true,
+    },
+    descriptionJp: {
+      type: String,
+      required: [true, "Japanese description is required"],
       trim: true,
     },
     price: {
@@ -81,29 +87,6 @@ const MenuItemSchema = new Schema<IMenuItem>(
         trim: true,
       },
     ],
-    allergens: [
-      {
-        type: String,
-        enum: ["gluten", "dairy", "eggs", "fish", "shellfish", "nuts", "peanuts", "soy", "sesame"],
-        trim: true,
-      },
-    ],
-    isSpicy: {
-      type: Boolean,
-      default: false,
-    },
-    isVegetarian: {
-      type: Boolean,
-      default: false,
-    },
-    isVegan: {
-      type: Boolean,
-      default: false,
-    },
-    isGlutenFree: {
-      type: Boolean,
-      default: false,
-    },
     isAvailable: {
       type: Boolean,
       default: true,
@@ -113,10 +96,6 @@ const MenuItemSchema = new Schema<IMenuItem>(
       required: [true, "Preparation time is required"],
       min: [1, "Preparation time must be at least 1 minute"],
     },
-    calories: {
-      type: Number,
-      min: [0, "Calories must be positive"],
-    },
     order: {
       type: Number,
       default: 0,
@@ -124,12 +103,12 @@ const MenuItemSchema = new Schema<IMenuItem>(
   },
   {
     timestamps: true,
-  },
-)
+  }
+);
 
 // Indexes for better query performance
-MenuItemSchema.index({ category: 1, isAvailable: 1 })
-MenuItemSchema.index({ name: "text", description: "text" })
-MenuItemSchema.index({ order: 1 })
+MenuItemSchema.index({ category: 1, isAvailable: 1 });
+MenuItemSchema.index({ name: "text", description: "text" });
+MenuItemSchema.index({ order: 1 });
 
-export default mongoose.model<IMenuItem>("MenuItem", MenuItemSchema) 
+export default mongoose.model<IMenuItem>("MenuItem", MenuItemSchema);

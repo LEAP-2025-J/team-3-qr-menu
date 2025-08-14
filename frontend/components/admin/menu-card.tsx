@@ -10,12 +10,15 @@ interface MenuItem {
   name: string;
   nameEn: string;
   nameMn: string;
+  nameJp: string;
   description: string;
+  descriptionEn: string;
+  descriptionMn: string;
+  descriptionJp: string;
   price: number;
   category: { name: string; nameEn: string };
   image?: string;
   isAvailable: boolean;
-  isSpicy: boolean;
   preparationTime: number;
 }
 
@@ -27,33 +30,26 @@ interface MenuCardProps {
 
 export const MenuCard = ({ item, onEdit, onDelete }: MenuCardProps) => {
   return (
-    <Card className="pt-0 pb-0 hover:shadow-lg transition-all duration-300 hover:scale-105 group">
+    <Card className="pt-0 pb-0 transition-all duration-300 hover:shadow-lg hover:scale-105 group">
       <div className="relative">
         {/* Хоолны зураг */}
         <div className="aspect-[3/2] overflow-hidden rounded-t-lg">
-          {item.image ? (
-            <img
-              src={item.image}
-              alt={item.nameEn}
-              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-            />
-          ) : (
-            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-              <span className="text-gray-400 text-sm">No Image</span>
-            </div>
-          )}
+          <img
+            src={item.image || "/placeholder-food.svg"}
+            alt={item.nameEn}
+            className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-110"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.src = "/placeholder-food.svg";
+            }}
+          />
         </div>
 
         {/* Status badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-1">
+        <div className="absolute flex flex-col gap-1 top-3 left-3">
           {!item.isAvailable && (
             <Badge variant="secondary" className="text-xs">
               Unavailable
-            </Badge>
-          )}
-          {item.isSpicy && (
-            <Badge variant="destructive" className="text-xs">
-              🌶️ Spicy
             </Badge>
           )}
         </div>
@@ -64,10 +60,10 @@ export const MenuCard = ({ item, onEdit, onDelete }: MenuCardProps) => {
           {/* Хоолны нэр */}
           <div>
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-lg text-gray-900 line-clamp-1">
-                {item.nameEn}
+              <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">
+                {item.nameMn}
               </h3>
-              <Badge className="bg-green-600 text-white text-sm font-semibold">
+              <Badge className="text-sm font-semibold text-white bg-green-600">
                 ${item.price.toFixed(2)}
               </Badge>
             </div>
@@ -76,13 +72,13 @@ export const MenuCard = ({ item, onEdit, onDelete }: MenuCardProps) => {
           {/* Тайлбар */}
           {item.description && (
             <p className="text-sm text-gray-500 line-clamp-2">
-              {item.description}
+              {item.descriptionMn}
             </p>
           )}
 
           {/* Монгол нэр + хугацаа */}
           <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-600 line-clamp-1">{item.nameMn}</p>
+            <p className="text-sm text-gray-600 line-clamp-1">{item.nameJp}</p>
             <span className="text-xs text-gray-500">
               ⏱️ {item.preparationTime} min
             </span>
@@ -94,7 +90,7 @@ export const MenuCard = ({ item, onEdit, onDelete }: MenuCardProps) => {
               size="sm"
               variant="outline"
               onClick={() => onEdit(item)}
-              className="h-7 px-2"
+              className="px-2 h-7"
             >
               <Edit className="w-3 h-3 mr-1" />
               Edit
@@ -103,7 +99,7 @@ export const MenuCard = ({ item, onEdit, onDelete }: MenuCardProps) => {
               size="sm"
               variant="destructive"
               onClick={() => onDelete(item._id)}
-              className="h-7 px-2"
+              className="px-2 h-7"
             >
               <Trash2 className="w-3 h-3" />
             </Button>
