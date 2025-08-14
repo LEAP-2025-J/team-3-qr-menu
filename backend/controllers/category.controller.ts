@@ -69,7 +69,7 @@ export const getAllCategories = async (req: Request, res: Response) => {
 // GET /api/categories/:id - Get single category
 export const getCategoryById = async (req: Request, res: Response) => {
   try {
-    const category = await Category.findById(req.params.id);
+    const category = await Category.findById(req.params['id']);
 
     if (!category) {
       return res.status(404).json({

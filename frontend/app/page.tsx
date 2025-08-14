@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button"
 import { CategorySkeleton } from "@/components/ui/loading-skeleton"
 import CloudinaryImage from "@/components/CloudinaryImage"
+import { useToast } from "@/hooks/use-toast"
 
 const getCategoryIcon = (categoryName: string) => {
   const category = categoryName.toLowerCase()
@@ -32,6 +33,7 @@ const categoryIcons = {
 }
 
 export default function QRMenu() {
+  const { toast } = useToast()
   const [activeTab, setActiveTab] = useState("appetizers")
   const [tableNumber, setTableNumber] = useState<string | null>(null)
   const [menuItems, setMenuItems] = useState<any[]>([])
@@ -40,7 +42,8 @@ export default function QRMenu() {
   const [cart, setCart] = useState<{ id: string; nameEn: string; nameMn: string; nameJa: string; price: number; quantity: number; image?: string }[]>([])
   const [fetchingData, setFetchingData] = useState(false)
   const [cartOpen, setCartOpen] = useState(false)
-  const [restaurantName, setRestaurantName] = useState("Haku")
+  const [restaurantName, setRestaurantName] = useState("Sakura")
+  const [restaurantData, setRestaurantData] = useState<any>(null)
   const [currentLanguage, setCurrentLanguage] = useState<'en' | 'mn' | 'ja'>('en')
   const cartLoaded = useRef(false)
 
@@ -51,6 +54,23 @@ export default function QRMenu() {
       case 'ja': return ja
       default: return en
     }
+  }
+
+  // Function to update restaurant name based on language
+  const updateRestaurantName = (restaurant: any) => {
+    let newName: string
+    switch (currentLanguage) {
+      case 'mn':
+        newName = restaurant.nameMn
+        break
+      case 'ja':
+        newName = restaurant.name
+        break
+      default:
+        newName = restaurant.nameEn
+    }
+    console.log(`Updating restaurant name to: ${newName} (language: ${currentLanguage})`)
+    setRestaurantName(newName)
   }
 
   // Check if current time is before 7pm for discount
@@ -122,19 +142,30 @@ export default function QRMenu() {
     
     setFetchingData(true)
     
-    // Fetch both menu items and categories
+    // Fetch menu items, categories, and restaurant settings
     Promise.all([
       fetch("http://localhost:5000/api/menu"),
-      fetch("http://localhost:5000/api/categories")
+      fetch("http://localhost:5000/api/categories"),
+      fetch("http://localhost:5000/api/restaurant")
     ])
       .then(responses => Promise.all(responses.map(res => res.json())))
-      .then(([menuData, categoriesData]) => {
+      .then(([menuData, categoriesData, restaurantData]) => {
         if (menuData.success) {
           setMenuItems(menuData.data)
         }
         
         if (categoriesData.success) {
           setCategories(categoriesData.data)
+        }
+        
+        if (restaurantData.success) {
+          // Store restaurant data and update name
+          const restaurant = restaurantData.data
+          console.log('Restaurant data loaded:', restaurant)
+          setRestaurantData(restaurant)
+          updateRestaurantName(restaurant)
+        } else {
+          console.error('Failed to load restaurant data:', restaurantData)
         }
         
         // Calculate remaining time to ensure minimum loading duration
@@ -150,7 +181,14 @@ export default function QRMenu() {
         console.error("Error fetching data:", error)
         setLoadingMenu(false)
       })
-  }, [])
+  }, [currentLanguage])
+
+  // Effect to update restaurant name when language changes
+  useEffect(() => {
+    if (restaurantData) {
+      updateRestaurantName(restaurantData)
+    }
+  }, [currentLanguage, restaurantData])
 
   // Group menu items by category and sort by category order (matching admin panel)
   const groupedMenu = useMemo(() => {
@@ -226,10 +264,12 @@ export default function QRMenu() {
       {/* Header */}
       <div className="text-center p-4 md:p-6" style={{ backgroundColor: '#FFD09B' }}>
         <h1 className="text-2xl md:text-4xl font-bold mb-2" style={{ color: '#8B4513' }}>{restaurantName}</h1>
-        <p className="text-gray-700 mb-4 text-sm md:text-base">Experience the perfect blend of tradition and innovation</p>
+        <p className="text-gray-700 mb-4 text-sm md:text-base">
+          {restaurantData?.descriptionEn || 'Experience the perfect blend of tradition and innovation'}
+        </p>
         
         {/* Language Selector */}
-        <div className="flex justify-center mb-4">
+        <div className="flex justify-center items-center gap-4 mb-4">
           <div className="flex bg-white rounded-lg p-1 shadow-md">
             {[
               { code: 'en', name: 'English', flag: '🇺🇸' },
@@ -525,7 +565,7 @@ export default function QRMenu() {
             )}
           </p>
           <div className="mt-4 text-xs">
-            <p>WiFi: Haku_Guest | Password: sushi2024</p>
+            <p>WiFi: {restaurantName}_Guest | Password: sushi2024</p>
           </div>
         </div>
       </div>
@@ -541,17 +581,27 @@ export default function QRMenu() {
             <div>
               <h4 className="font-semibold mb-3 md:mb-4" style={{ color: '#8B4513' }}>Hours</h4>
               <div className="text-gray-700 text-xs md:text-sm space-y-1">
-                <div>Mon-Thu: 11:00 AM - 10:00 PM</div>
-                <div>Fri-Sat: 11:00 AM - 12:00 PM</div>
-                <div>Sunday: 12:00 PM - 9:00 PM</div>
+                {restaurantData?.operatingHours ? (
+                  restaurantData.operatingHours.map((hours: any, index: number) => (
+                    <div key={index}>
+                      {hours.day}: {hours.openTime} - {hours.closeTime}
+                    </div>
+                  ))
+                ) : (
+                  <>
+                    <div>Mon-Thu: 11:00 AM - 10:00 PM</div>
+                    <div>Fri-Sat: 11:00 AM - 12:00 PM</div>
+                    <div>Sunday: 12:00 PM - 9:00 PM</div>
+                  </>
+                )}
               </div>
             </div>
             <div>
               <h4 className="font-semibold mb-3 md:mb-4" style={{ color: '#8B4513' }}>Location</h4>
               <div className="text-gray-700 text-xs md:text-sm">
-                <div>123 Fusion Street</div>
+                <div>{restaurantData?.addressEn || '123 Fusion Street'}</div>
                 <div>Downtown District</div>
-                <div>Phone: (555) 123-4567</div>
+                <div>Phone: {restaurantData?.phone || '(555) 123-4567'}</div>
               </div>
             </div>
             <div>
