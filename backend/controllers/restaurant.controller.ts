@@ -9,18 +9,22 @@ export const getRestaurantSettings = async (req: Request, res: Response) => {
     // If no restaurant exists, create default one
     if (!restaurant) {
       restaurant = new (Restaurant as any)({
-        name: "桜 Sakura",
-        nameEn: "Sakura",
-        nameMn: "Сакура",
-        address: "123 Main Street, City, State 12345",
-        addressEn: "123 Main Street, City, State 12345",
-        addressMn: "123 Үндсэн гудамж, Хот, Улс 12345",
-        description: "Authentic Japanese cuisine in the heart of the city",
-        descriptionEn: "Authentic Japanese cuisine in the heart of the city",
-        descriptionMn: "Хотын төвд байрлах жинхэнэ Япон хоол",
-        phone: "(555) 123-4567",
-        email: "info@sakura-restaurant.com",
-        website: "https://sakura-restaurant.com"
+        name: `${restaurant.nameMn} Sakura`,
+        nameEn: `${restaurant.nameEn} Sakura`,
+        nameMn: `${restaurant.nameMn} Sakura`,
+        address: `${restaurant.address}`,
+        addressEn: `${restaurant.addressEn}`,
+        addressMn: `${restaurant.addressMn}`,
+        description: `${restaurant.description}`,
+        descriptionEn: `${restaurant.descriptionEn}`,
+        descriptionMn: `${restaurant.descriptionMn}`,
+        phone: `${restaurant.phone}`,
+        email: `${restaurant.email}`,
+        website: `${restaurant.website}`,
+        operatingHours: `${restaurant.operatingHours}`,
+        taxRate: `${restaurant.taxRate}`,
+        currency: `${restaurant.currency}`,
+        timezone: `${restaurant.timezone}`
       })
       await restaurant.save()
     }

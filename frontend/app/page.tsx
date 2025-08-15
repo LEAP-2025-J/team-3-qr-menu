@@ -71,7 +71,7 @@ export default function QRMenu() {
   >([]);
   const [fetchingData, setFetchingData] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
-  const [restaurantName, setRestaurantName] = useState("Sakura");
+  const [restaurantName, setRestaurantName] = useState("Хаку");
   const [restaurantData, setRestaurantData] = useState<any>(null);
   const [currentLanguage, setCurrentLanguage] = useState<"en" | "mn" | "ja">(
     "mn"
@@ -114,6 +114,20 @@ export default function QRMenu() {
       `Updating restaurant name to: ${newName} (language: ${currentLanguage})`
     );
     setRestaurantName(newName);
+  };
+
+  // Function to get restaurant description based on current language
+  const getRestaurantDescription = () => {
+    if (!restaurantData) return "Хотын төвд байрлах жинхэнэ Япон хоол";
+    
+    switch (currentLanguage) {
+      case "en":
+        return restaurantData.descriptionEn || "Experience the perfect blend of tradition and innovation";
+      case "ja":
+        return restaurantData.description || "街の中心で本格的な日本料理をお楽しみください";
+      default:
+        return restaurantData.descriptionMn || "Хотын төвд байрлах жинхэнэ Япон хоол";
+    }
   };
 
   // Check if current time is before 7pm for discount
@@ -769,8 +783,7 @@ export default function QRMenu() {
           {restaurantName}
         </h1>
         <p className="mb-4 text-sm text-gray-700 md:text-base">
-          {restaurantData?.descriptionEn ||
-            "Experience the perfect blend of tradition and innovation"}
+          {getRestaurantDescription()}
         </p>
 
         {/* Language Selector */}

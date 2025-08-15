@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button"
 
 interface TableSelectorProps {
   onTableSelect: (tableNumber: number) => void
+  restaurantName: string
 }
 
-export default function TableSelector({ onTableSelect }: TableSelectorProps) {
+export default function TableSelector({ onTableSelect, restaurantName }: TableSelectorProps) {
   const [selectedTable, setSelectedTable] = useState<number | null>(null)
 
   const tables = Array.from({ length: 20 }, (_, i) => i + 1)
@@ -22,7 +23,9 @@ export default function TableSelector({ onTableSelect }: TableSelectorProps) {
     <div className="min-h-screen bg-gradient-to-b from-red-50 to-white flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl text-red-600">桜 Sakura</CardTitle>
+          <CardTitle className="text-2xl text-red-600">
+            {restaurantName}
+          </CardTitle>
           <p className="text-gray-600">Please select your table number</p>
         </CardHeader>
         <CardContent>
