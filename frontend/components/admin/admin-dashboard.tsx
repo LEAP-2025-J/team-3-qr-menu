@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 import { AdminSidebar } from "./admin-sidebar";
 import { AdminHeader } from "./admin-header";
 import { TableLayout } from "./table-layout";
@@ -21,7 +22,8 @@ export function AdminDashboard() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
-  const [isEditReservationModalOpen, setIsEditReservationModalOpen] = useState(false);
+  const [isEditReservationModalOpen, setIsEditReservationModalOpen] =
+    useState(false);
   const [selectedReservation, setSelectedReservation] = useState<any>(null);
 
   const {
@@ -54,7 +56,7 @@ export function AdminDashboard() {
   ) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/tables/${tableId}`,
+        `http://192.168.0.102:5000/api/tables/${tableId}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -88,14 +90,16 @@ export function AdminDashboard() {
     console.log("Print order:", orderId);
   };
 
+  const handleRefresh = async () => {
+    await Promise.all([fetchOrders(), fetchTables(), fetchReservations()]);
+  };
+
   const handleCreateOrder = async (orderData: {
     tableId: string;
     items: any[];
     total: number;
   }) => {
     try {
-      console.log("API-д илгээх өгөгдөл:", orderData);
-
       const requestBody = {
         tableId: orderData.tableId,
         items: orderData.items.map((item) => ({
@@ -108,10 +112,8 @@ export function AdminDashboard() {
         status: "pending",
       };
 
-      console.log("API request body:", requestBody);
-
       // Захиалга үүсгэх API дуудах
-      const response = await fetch("http://localhost:5000/api/orders", {
+      const response = await fetch("http://192.168.0.102:5000/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
@@ -121,14 +123,14 @@ export function AdminDashboard() {
 
       if (response.ok) {
         const responseData = await response.json();
-        console.log("API response data:", responseData);
 
         // Ширээний мэдээллийг шинэчлэх
         await fetchTables();
+        // Захиалгын жагсаалтыг бас шинэчлэх
+        await fetchOrders();
         return { success: true };
       } else {
         const errorData = await response.json();
-        console.error("API алдаа:", errorData);
         return { success: false };
       }
     } catch (error) {
@@ -140,11 +142,14 @@ export function AdminDashboard() {
   // Reservation management functions
   const handleReservationStatusChange = async (id: string, status: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/reservations/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
-      });
+      const response = await fetch(
+        `http://localhost:5000/api/reservations/${id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status }),
+        }
+      );
 
       if (response.ok) {
         fetchReservations();
@@ -159,10 +164,13 @@ export function AdminDashboard() {
 
   const handleReservationCancel = async (id: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/reservations/${id}`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-      });
+      const response = await fetch(
+        `http://localhost:5000/api/reservations/${id}`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
 
       if (response.ok) {
         fetchReservations();
@@ -182,10 +190,13 @@ export function AdminDashboard() {
 
   const handleReservationDelete = async (id: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/reservations/${id}/delete`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-      });
+      const response = await fetch(
+        `http://localhost:5000/api/reservations/${id}/delete`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
 
       if (response.ok) {
         fetchReservations();
@@ -204,7 +215,7 @@ export function AdminDashboard() {
       const { tableId, ...otherData } = reservationData;
       const requestData = {
         ...otherData,
-        table: tableId
+        table: tableId,
       };
 
       const response = await fetch("http://localhost:5000/api/reservations", {
@@ -233,7 +244,10 @@ export function AdminDashboard() {
         setIsReservationModalOpen(false);
         return { success: true, message: "Reservation created successfully!" };
       } else {
-        return { success: false, error: data.error || data.message || "Failed to create reservation" };
+        return {
+          success: false,
+          error: data.error || data.message || "Failed to create reservation",
+        };
       }
     } catch (error) {
       console.error("Error creating reservation:", error);
@@ -247,16 +261,19 @@ export function AdminDashboard() {
       const { tableId, ...otherData } = data;
       const requestData = {
         ...otherData,
-        table: tableId
+        table: tableId,
       };
 
-      const response = await fetch(`http://localhost:5000/api/reservations/${id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestData),
-      });
+      const response = await fetch(
+        `http://localhost:5000/api/reservations/${id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestData),
+        }
+      );
 
       const responseData = await response.json();
 
@@ -267,7 +284,13 @@ export function AdminDashboard() {
         setIsEditReservationModalOpen(false);
         return { success: true, message: "Reservation updated successfully!" };
       } else {
-        return { success: false, error: responseData.error || responseData.message || "Failed to update reservation" };
+        return {
+          success: false,
+          error:
+            responseData.error ||
+            responseData.message ||
+            "Failed to update reservation",
+        };
       }
     } catch (error) {
       console.error("Error updating reservation:", error);
@@ -279,8 +302,8 @@ export function AdminDashboard() {
     return (
       <div className="flex min-h-screen bg-gray-100">
         <div className="flex-1 p-6">
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-gray-300 rounded w-1/4"></div>
+          <div className="space-y-4 animate-pulse">
+            <div className="w-1/4 h-8 bg-gray-300 rounded"></div>
             <div className="h-64 bg-gray-300 rounded"></div>
           </div>
         </div>
@@ -320,7 +343,7 @@ export function AdminDashboard() {
                 <h2 className="text-3xl font-bold text-gray-900">
                   Reservations
                 </h2>
-                <Button 
+                <Button
                   onClick={() => setIsReservationModalOpen(true)}
                   className="bg-blue-600 hover:bg-blue-700"
                 >
@@ -328,7 +351,7 @@ export function AdminDashboard() {
                 </Button>
               </div>
 
-              <ReservationsList 
+              <ReservationsList
                 reservations={reservations}
                 onStatusChange={handleReservationStatusChange}
                 onCancel={handleReservationCancel}

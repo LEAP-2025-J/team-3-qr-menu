@@ -1,10 +1,17 @@
 import { Request, Response } from "express";
 import Table from "../models/model.table";
 
-// GET /api/tables - Get all tables
+// GET /api/tables - Get all tables or specific table by number
 export const getAllTables = async (req: Request, res: Response) => {
   try {
-    const tables = await Table.find({ isActive: true })
+    const { number } = req.query;
+
+    let query: any = { isActive: true };
+    if (number) {
+      query = { ...query, number: parseInt(number as string) };
+    }
+
+    const tables = await Table.find(query)
       .populate({
         path: "currentOrder",
         populate: {
@@ -14,6 +21,25 @@ export const getAllTables = async (req: Request, res: Response) => {
       })
       .sort({ location: 1, number: 1 })
       .lean();
+
+    // Debug log for table 8
+    if (number === "8" || !number) {
+      const table8 = tables.find((t: any) => t.number === 8);
+      if (table8) {
+        console.log("8-р ширээний мэдээлэл:", {
+          _id: table8._id,
+          number: table8.number,
+          status: table8.status,
+          currentOrder: table8.currentOrder
+            ? {
+                _id: table8.currentOrder._id,
+                orderNumber: table8.currentOrder.orderNumber,
+                table: table8.currentOrder.table,
+              }
+            : null,
+        });
+      }
+    }
 
     res.json({
       success: true,
@@ -123,16 +149,15 @@ export const updateTable = async (req: Request, res: Response) => {
     const { id } = req.params;
     const updateData = req.body;
 
-    const table = await Table.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true, runValidators: true }
-    );
+    const table = await Table.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!table) {
-      return res.status(404).json({ 
-        success: false, 
-        error: "Table not found" 
+      return res.status(404).json({
+        success: false,
+        error: "Table not found",
       });
     }
 
@@ -143,5 +168,56 @@ export const updateTable = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error updating table:", error);
     res.status(500).json({ success: false, error: "Failed to update table" });
+  }
+};
+
+// PATCH /api/tables/:id/clear-order - Clear table's currentOrder
+export const clearTableOrder = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const table = await Table.findByIdAndUpdate(
+      id,
+      {
+        status: "empty",
+        currentOrder: null,
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    ).populate({
+      path: "currentOrder",
+      populate: {
+        path: "items.menuItem",
+        select: "name nameEn nameMn nameJp price",
+      },
+    });
+
+    if (!table) {
+      return res.status(404).json({
+        success: false,
+        error: "Table not found",
+      });
+    }
+
+    console.log(`Ширээний currentOrder цэвэрлэгдлээ:`, {
+      tableId: table._id,
+      tableNumber: table.number,
+      status: table.status,
+      currentOrder: table.currentOrder,
+    });
+
+    res.json({
+      success: true,
+      message: "Ширээний захиалга амжилттай цэвэрлэгдлээ",
+      data: table,
+    });
+  } catch (error) {
+    console.error("Error clearing table order:", error);
+    res.status(500).json({
+      success: false,
+      error: "Ширээний захиалга цэвэрлэхэд алдаа гарлаа",
+    });
   }
 };

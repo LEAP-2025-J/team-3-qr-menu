@@ -34,17 +34,10 @@ export const getAllMenuItems = async (req: Request, res: Response) => {
       MenuItem.find(query)
         .populate("category", "name nameEn nameMn")
         .sort({ createdAt: -1 }),
-        // .skip(skip)
-        // .limit(limitNum),
+      // .skip(skip)
+      // .limit(limitNum),
       MenuItem.countDocuments(query),
     ]);
-
-    console.log("=== GET MENU ITEMS DEBUG ===");
-    console.log("Query:", query);
-    console.log("Total items found:", total);
-    console.log("Items returned:", menuItems.length);
-    console.log("Items order values:", menuItems.map(item => ({ name: item.nameEn, order: item.order })));
-    console.log("=============================");
 
     res.json({
       success: true,
@@ -97,13 +90,6 @@ export const createMenuItem = async (req: Request, res: Response) => {
   try {
     const body = req.body;
 
-    // Debug logging
-    console.log("=== CREATE MENU ITEM DEBUG ===");
-    console.log("Request body:", body);
-    console.log("Request file:", req.file);
-    console.log("Request headers:", req.headers);
-    console.log("===============================");
-
     // Validation
     if (!body.nameEn || !body.nameMn || !body.price || !body.categoryNameEn) {
       return res.status(400).json({
@@ -141,8 +127,6 @@ export const createMenuItem = async (req: Request, res: Response) => {
     // Хамгийн их order утгыг олох
     const maxOrderItem = await MenuItem.findOne().sort({ order: -1 });
     const nextOrder = maxOrderItem ? maxOrderItem.order + 1 : 1;
-    console.log("Current max order:", maxOrderItem?.order || 0);
-    console.log("Next order will be:", nextOrder);
 
     // MenuItem-ийн data бэлтгэх
     const menuItemData = {

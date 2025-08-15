@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { API_CONFIG } from "@/config/api";
 
 // Types
 export interface Order {
@@ -109,7 +110,9 @@ export function useAdminData() {
   // Fetch data functions
   const fetchOrders = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/orders?limit=20");
+      const response = await fetch(
+        `${API_CONFIG.BACKEND_URL}/api/orders?limit=20`
+      );
       const data = await response.json();
       if (data.success) {
         setOrders(data.data);
@@ -141,7 +144,7 @@ export function useAdminData() {
 
   const fetchTables = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/tables");
+      const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/tables`);
       const data = await response.json();
       if (data.success) {
         setTables(data.data);
@@ -155,7 +158,7 @@ export function useAdminData() {
     try {
       const today = new Date().toISOString().split("T")[0];
       const response = await fetch(
-        `http://localhost:5000/api/reservations?date=${today}`
+        `${API_CONFIG.BACKEND_URL}/api/reservations?date=${today}`
       );
       const data = await response.json();
       if (data.success) {
@@ -175,13 +178,10 @@ export function useAdminData() {
 
   const fetchMenuItems = async () => {
     try {
-      console.log("Fetching menu items...");
-      const response = await fetch("http://localhost:5000/api/menu");
+      const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/menu`);
       const data = await response.json();
-      console.log("Menu items response:", data);
       if (data.success) {
         setMenuItems(data.data);
-        console.log("Menu items updated:", data.data.length, "items");
       }
     } catch (error) {
       console.error("Error fetching menu items:", error);
@@ -190,7 +190,7 @@ export function useAdminData() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/categories");
+      const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/categories`);
       const data = await response.json();
       if (data.success) {
         setCategories(data.data);
@@ -203,7 +203,7 @@ export function useAdminData() {
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/orders/${orderId}`,
+        `${API_CONFIG.BACKEND_URL}/api/orders/${orderId}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -223,8 +223,7 @@ export function useAdminData() {
   // Menu item functions
   const addMenuItem = async (menuData: any) => {
     try {
-      console.log("Adding menu item...");
-      const response = await fetch("http://localhost:5000/api/menu", {
+      const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/menu`, {
         method: "POST",
         body: menuData, // FormData ашиглах
       });
@@ -234,9 +233,7 @@ export function useAdminData() {
       }
 
       const result = await response.json();
-      console.log("Add menu item result:", result);
       if (result.success) {
-        console.log("Menu item added successfully, refreshing...");
         fetchMenuItems();
         return { success: true, message: result.message };
       } else {
@@ -250,7 +247,7 @@ export function useAdminData() {
 
   const updateMenuItem = async (id: string, menuData: any) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/menu/${id}`, {
+      const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/menu/${id}`, {
         method: "PUT",
         body: menuData,
       });
@@ -269,7 +266,7 @@ export function useAdminData() {
 
   const deleteMenuItem = async (id: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/menu/${id}`, {
+      const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/menu/${id}`, {
         method: "DELETE",
       });
 
@@ -288,7 +285,7 @@ export function useAdminData() {
   // Category functions
   const addCategory = async (categoryData: any) => {
     try {
-      const response = await fetch("http://localhost:5000/api/categories", {
+      const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/categories`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(categoryData),
@@ -321,6 +318,15 @@ export function useAdminData() {
     };
 
     initializeData();
+
+    // Polling механизмийг бүрэн зогсоох (refresh ажилладаг болгосны дараа)
+    // const interval = setInterval(() => {
+    //   fetchOrders();
+    //   fetchTables();
+    //   fetchReservations();
+    // }, 30000); // 30 секунд
+
+    // return () => clearInterval(interval);
   }, []);
 
   return {
