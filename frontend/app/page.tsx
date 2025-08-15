@@ -1,6 +1,5 @@
 "use client";
 
-<<<<<<< HEAD
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -26,19 +25,6 @@ import { CategorySkeleton } from "@/components/ui/loading-skeleton";
 import CloudinaryImage from "@/components/CloudinaryImage";
 import { useToast } from "@/hooks/use-toast";
 import { API_CONFIG } from "@/config/api";
-=======
-import React, { useState, useEffect, useRef, useMemo } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ChefHat, Fish, Soup, Beef, Coffee, Clock, Calendar } from 'lucide-react'
-import { useSearchParams, usePathname } from 'next/navigation'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { CategorySkeleton } from "@/components/ui/loading-skeleton"
-import CloudinaryImage from "@/components/CloudinaryImage"
-import { useToast } from "@/hooks/use-toast"
->>>>>>> 3293b6a (reservation tableruu shiljuulsen)
 
 const getCategoryIcon = (categoryName: string) => {
   const category = categoryName.toLowerCase();
