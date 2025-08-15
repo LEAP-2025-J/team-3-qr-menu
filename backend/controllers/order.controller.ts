@@ -80,8 +80,13 @@ export const createOrder = async (req: Request, res: Response) => {
     console.log("Request body type:", typeof req.body);
     console.log("Request body keys:", Object.keys(req.body));
 
-    const { tableId, items, customerName, customerPhone, specialRequests } =
-      req.body;
+    const {
+      tableId,
+      items,
+      customerName = "",
+      customerPhone = "",
+      specialRequests = "",
+    } = req.body;
 
     console.log("Extracted data:", {
       tableId,
@@ -100,12 +105,13 @@ export const createOrder = async (req: Request, res: Response) => {
       });
     }
 
-    if (table.status !== "empty") {
-      return res.status(400).json({
-        success: false,
-        error: "Ширээ захиалгатай байна",
-      });
-    }
+    // Ширээний статусыг шалгахгүй байх (QR menu-гээс ирэх захиалгын хувьд)
+    // if (table.status !== "empty") {
+    //   return res.status(400).json({
+    //     success: false,
+    //     error: "Ширээ захиалгатай байна",
+    //   });
+    // }
 
     // Calculate totals
     let subtotal = 0;
@@ -197,9 +203,25 @@ export const createOrder = async (req: Request, res: Response) => {
       stack: error instanceof Error ? error.stack : undefined,
       name: error instanceof Error ? error.name : undefined,
     });
+
+    // Илүү дэлгэрэнгүй error message өгөх
+    let errorMessage = "Захиалга үүсгэхэд алдаа гарлаа";
+    let errorDetails = {};
+
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      errorDetails = {
+        name: error.name,
+        stack:
+          process.env["NODE_ENV"] === "development" ? error.stack : undefined,
+      };
+    }
+
     res.status(500).json({
       success: false,
-      error: "Захиалга үүсгэхэд алдаа гарлаа",
+      error: errorMessage,
+      details: errorDetails,
+      timestamp: new Date().toISOString(),
     });
   }
 };
@@ -224,9 +246,25 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 
     // Update table status based on order status
     if (status === "completed" || status === "cancelled") {
-      await (Table as any).findByIdAndUpdate(order.table._id, {
-        status: "empty",
-        currentOrder: null,
+      console.log(
+        `Захиалгын статус ${status} болсон - ширээний currentOrder цэвэрлэж байна`
+      );
+      console.log(`Ширээний ID: ${order.table._id}`);
+
+      const updatedTable = await (Table as any).findByIdAndUpdate(
+        order.table._id,
+        {
+          status: "empty",
+          currentOrder: null,
+        },
+        { new: true }
+      );
+
+      console.log(`Ширээ шинэчлэгдсэн:`, {
+        tableId: updatedTable._id,
+        tableNumber: updatedTable.number,
+        status: updatedTable.status,
+        currentOrder: updatedTable.currentOrder,
       });
     }
 

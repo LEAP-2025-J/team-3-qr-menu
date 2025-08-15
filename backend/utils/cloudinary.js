@@ -5,13 +5,6 @@ import dotenv from "dotenv";
 // Load environment variables
 dotenv.config();
 
-// Debug environment variables
-console.log("=== CLOUDINARY ENV DEBUG ===");
-console.log("CLOUDINARY_CLOUD_NAME:", process.env.CLOUDINARY_CLOUD_NAME);
-console.log("CLOUDINARY_API_KEY:", process.env.CLOUDINARY_API_KEY);
-console.log("CLOUDINARY_API_SECRET:", process.env.CLOUDINARY_API_SECRET);
-console.log("===========================");
-
 // Cloudinary configuration
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -44,7 +37,7 @@ export const uploadToCloudinary = async (filePath, folder = "qr-menu") => {
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
-    
+
     console.error("Cloudinary upload error:", error);
     return {
       success: false,

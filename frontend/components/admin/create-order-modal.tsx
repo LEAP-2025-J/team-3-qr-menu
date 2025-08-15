@@ -157,19 +157,11 @@ export function CreateOrderModal({
         specialInstructions: item.specialInstructions,
       }));
 
-      console.log("Захиалгын өгөгдөл:", {
-        tableId,
-        items: formattedItems,
-        total,
-      });
-
       const result = await onSubmit({
         tableId,
         items: formattedItems,
         total,
       });
-
-      console.log("Захиалгын үр дүн:", result);
 
       if (result.success) {
         setCart([]);

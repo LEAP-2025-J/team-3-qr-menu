@@ -1,29 +1,35 @@
-import mongoose, { Document, Schema } from "mongoose"
+import mongoose, { Document, Schema } from "mongoose";
 
 export interface IOrderItem {
-  menuItem: mongoose.Types.ObjectId
-  quantity: number
-  price: number
-  specialInstructions?: string
+  menuItem: mongoose.Types.ObjectId;
+  quantity: number;
+  price: number;
+  specialInstructions?: string;
 }
 
 export interface IOrder extends Document {
-  orderNumber: string
-  table: mongoose.Types.ObjectId
-  items: IOrderItem[]
-  subtotal: number
-  tax: number
-  total: number
-  status: "pending" | "preparing" | "serving" | "completed" | "cancelled" | "reserved" // 6 төрөл статус
-  customerName?: string
-  customerPhone?: string
-  specialRequests?: string
-  estimatedTime?: number
-  actualTime?: number
-  paymentStatus: "pending" | "paid" | "failed"
-  paymentMethod?: "cash" | "card" | "mobile"
-  createdAt: Date
-  updatedAt: Date
+  orderNumber: string;
+  table: mongoose.Types.ObjectId;
+  items: IOrderItem[];
+  subtotal: number;
+  tax: number;
+  total: number;
+  status:
+    | "pending"
+    | "preparing"
+    | "serving"
+    | "completed"
+    | "cancelled"
+    | "reserved"; // 6 төрөл статус
+  customerName?: string;
+  customerPhone?: string;
+  specialRequests?: string;
+  estimatedTime?: number;
+  actualTime?: number;
+  paymentStatus: "pending" | "paid" | "failed";
+  paymentMethod?: "cash" | "card" | "mobile";
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const OrderItemSchema = new Schema<IOrderItem>({
@@ -46,7 +52,7 @@ const OrderItemSchema = new Schema<IOrderItem>({
     type: String,
     trim: true,
   },
-})
+});
 
 const OrderSchema = new Schema<IOrder>(
   {
@@ -85,7 +91,14 @@ const OrderSchema = new Schema<IOrder>(
     },
     status: {
       type: String,
-      enum: ["pending", "preparing", "serving", "completed", "cancelled", "reserved"], // 6 төрөл статус
+      enum: [
+        "pending",
+        "preparing",
+        "serving",
+        "completed",
+        "cancelled",
+        "reserved",
+      ], // 6 төрөл статус
       default: "pending",
     },
     customerName: {
@@ -120,22 +133,22 @@ const OrderSchema = new Schema<IOrder>(
   },
   {
     timestamps: true,
-  },
-)
+  }
+);
 
 // Generate order number before saving
 OrderSchema.pre("save", async function (next) {
   if (this.isNew) {
-    const count = await mongoose.models.Order.countDocuments()
-    this.orderNumber = `ORD-${String(count + 1).padStart(4, "0")}`
+    const count = await mongoose.models.Order.countDocuments();
+    this.orderNumber = `ORD-${String(count + 1).padStart(4, "0")}`;
   }
-  next()
-})
+  next();
+});
 
 // Indexes for better query performance
-OrderSchema.index({ table: 1, status: 1 })
-OrderSchema.index({ orderNumber: 1 })
-OrderSchema.index({ createdAt: -1 })
-OrderSchema.index({ status: 1 })
+OrderSchema.index({ table: 1, status: 1 });
+OrderSchema.index({ orderNumber: 1 });
+OrderSchema.index({ createdAt: -1 });
+OrderSchema.index({ status: 1 });
 
-export default mongoose.model<IOrder>("Order", OrderSchema) 
+export default mongoose.model<IOrder>("Order", OrderSchema);

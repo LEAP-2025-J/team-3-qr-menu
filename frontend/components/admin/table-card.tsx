@@ -198,7 +198,7 @@ export function TableCard({
     orderId: string,
     status: Order["status"]
   ) => {
-    const res = await fetch(`http://localhost:5000/api/orders/${orderId}`, {
+    const res = await fetch(`http://192.168.0.102:5000/api/orders/${orderId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
@@ -324,8 +324,12 @@ export function TableCard({
               .map(
                 (item) => `
               <tr>
-                <td>${item.menuItem.nameMn || item.menuItem.name}</td>
-                <td>${item.menuItem.nameJp || "日本語名なし"}</td>
+                                 <td>${
+                                   item.menuItem?.nameMn ||
+                                   item.menuItem?.name ||
+                                   "Unknown Item"
+                                 }</td>
+                 <td>${item.menuItem?.nameJp || "日本語名なし"}</td>
                 <td>${item.quantity}</td>
                 <td>$${item.price.toLocaleString()}</td>
               </tr>
@@ -408,9 +412,11 @@ export function TableCard({
                   >
                     <div className="flex-1">
                       <div className="text-lg font-bold">
-                        {item.menuItem.nameMn || item.menuItem.name}
+                        {item.menuItem?.nameMn ||
+                          item.menuItem?.name ||
+                          "Unknown Item"}
                       </div>
-                      {item.menuItem.nameJp && (
+                      {item.menuItem?.nameJp && (
                         <div className="text-xs text-gray-500">
                           {item.menuItem.nameJp}
                         </div>
@@ -525,10 +531,12 @@ export function TableCard({
                     <div key={index} className="flex justify-between text-sm">
                       <div className="flex-1">
                         <div className="text-lg font-bold">
-                          {item.menuItem.nameMn || item.menuItem.name}
+                          {item.menuItem?.nameMn ||
+                            item.menuItem?.name ||
+                            "Unknown Item"}
                         </div>
                         <div className="text-xs text-gray-500">
-                          {item.menuItem.nameJp || "日本語名なし"}
+                          {item.menuItem?.nameJp || "日本語名なし"}
                         </div>
                       </div>
                       <div className="font-bold">{item.quantity}</div>

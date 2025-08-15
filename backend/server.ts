@@ -26,15 +26,6 @@ import { cleanupOldReservations } from "./controllers/reservation.controller.js"
 
 dotenv.config();
 
-// Debug environment variables
-console.log("=== ENVIRONMENT VARIABLES DEBUG ===");
-console.log("MONGODB_URI:", process.env["MONGODB_URI"]);
-console.log("CLOUDINARY_CLOUD_NAME:", process.env["CLOUDINARY_CLOUD_NAME"]);
-console.log("CLOUDINARY_API_KEY:", process.env["CLOUDINARY_API_KEY"]);
-console.log("PORT:", process.env["PORT"]);
-console.log("NODE_ENV:", process.env["NODE_ENV"]);
-console.log("===================================");
-
 const app = express();
 const PORT = process.env["PORT"] || 5000;
 
@@ -42,7 +33,12 @@ const PORT = process.env["PORT"] || 5000;
 app.use(helmet());
 app.use(
   cors({
-    origin: process.env["FRONTEND_URL"] || "http://localhost:3000",
+    origin: [
+      process.env["FRONTEND_URL"] || "http://192.168.20.179:3000",
+      "http://192.168.20.179:3000",
+      "http://localhost:3000",
+      "http://127.0.0.1:3000",
+    ],
     credentials: true,
   })
 );
@@ -50,7 +46,7 @@ app.use(
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: 500, // limit each IP to 500 requests per windowMs (нэмэгдүүлсэн)
 });
 app.use("/api/", limiter);
 
@@ -99,48 +95,53 @@ app.use("*", (req: Request, res: Response) => {
   });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🌐 Server accessible at: http://0.0.0.0:${PORT}`);
   console.log(
     `📱 Frontend URL: ${process.env["FRONTEND_URL"] || "http://localhost:3000"}`
   );
-  
+
   // Schedule automatic cleanup every day at 2 AM
   const scheduleCleanup = () => {
     const now = new Date();
     const nextRun = new Date(now);
     nextRun.setHours(2, 0, 0, 0); // 2 AM
-    
+
     // If it's already past 2 AM today, schedule for tomorrow
     if (now.getHours() >= 2) {
       nextRun.setDate(nextRun.getDate() + 1);
     }
-    
+
     const timeUntilNextRun = nextRun.getTime() - now.getTime();
-    
+
     setTimeout(async () => {
       console.log("🧹 Starting automatic reservation cleanup...");
       const result = await cleanupOldReservations();
       if (result.success) {
-        console.log(`✅ Cleanup completed: ${result.deleted.completed} completed, ${result.deleted.cancelled} cancelled, ${result.deleted.noShow} no-show reservations removed`);
+        console.log(
+          `✅ Cleanup completed: ${result.deleted.completed} completed, ${result.deleted.cancelled} cancelled, ${result.deleted.noShow} no-show reservations removed`
+        );
       } else {
         console.log("❌ Cleanup failed:", result.error);
       }
-      
+
       // Schedule next cleanup (every 24 hours)
       setInterval(async () => {
         console.log("🧹 Starting automatic reservation cleanup...");
         const result = await cleanupOldReservations();
         if (result.success) {
-          console.log(`✅ Cleanup completed: ${result.deleted.completed} completed, ${result.deleted.cancelled} cancelled, ${result.deleted.noShow} no-show reservations removed`);
+          console.log(
+            `✅ Cleanup completed: ${result.deleted.completed} completed, ${result.deleted.cancelled} cancelled, ${result.deleted.noShow} no-show reservations removed`
+          );
         } else {
           console.log("❌ Cleanup failed:", result.error);
         }
       }, 24 * 60 * 60 * 1000); // 24 hours
     }, timeUntilNextRun);
-    
+
     console.log(`🧹 Next cleanup scheduled for: ${nextRun.toLocaleString()}`);
   };
-  
+
   scheduleCleanup();
 });
