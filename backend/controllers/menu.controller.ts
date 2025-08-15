@@ -91,11 +91,6 @@ export const createMenuItem = async (req: Request, res: Response) => {
   try {
     const body = req.body;
 
-<<<<<<< HEAD
-=======
-
-
->>>>>>> 3293b6a (reservation tableruu shiljuulsen)
     // Validation
     if (!body.nameEn || !body.nameMn || !body.price || !body.categoryNameEn) {
       return res.status(400).json({
@@ -154,10 +149,6 @@ export const createMenuItem = async (req: Request, res: Response) => {
     // Хамгийн их order утгыг олох
     const maxOrderItem = await MenuItem.findOne().sort({ order: -1 });
     const nextOrder = maxOrderItem ? maxOrderItem.order + 1 : 1;
-<<<<<<< HEAD
-=======
-
->>>>>>> 3293b6a (reservation tableruu shiljuulsen)
 
     // MenuItem-ийн data бэлтгэх
     const menuItemData = {

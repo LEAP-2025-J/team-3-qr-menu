@@ -3,38 +3,33 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-<<<<<<< HEAD
-import { RefreshCw } from "lucide-react";
-import { AdminSidebar } from "./admin-sidebar";
-import { AdminHeader } from "./admin-header";
-import { TableLayout } from "./table-layout";
-import { ReservationsList } from "./reservations-list";
-import { MenuManagement } from "./menu-management";
-import { SettingsForm } from "./settings-form";
-import { CategoryModal } from "./category-modal";
-import { OrderHistory } from "./order-history";
-import { ReservationModal } from "./reservation-modal";
-import { EditReservationModal } from "./edit-reservation-modal";
-=======
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Clock, Users, Utensils, Table as TableIcon, TrendingUp, DollarSign, ShoppingCart } from "lucide-react";
-import { AdminHeader } from "./admin-header"
-import { AdminSidebar } from "./admin-sidebar"
-import { DashboardStats } from "./dashboard-stats"
-import { MenuManagement } from "./menu-management"
-import { OrdersList } from "./orders-list"
-import { ReservationsList } from "./reservations-list"
-import { TableLayout } from "./table-layout"
-import { SettingsForm } from "./settings-form"
-import { ReservationModal } from "./reservation-modal"
-import { EditReservationModal } from "./edit-reservation-modal"
-import { CreateOrderModal } from "./create-order-modal"
->>>>>>> 3293b6a (reservation tableruu shiljuulsen)
+import {
+  Calendar,
+  Clock,
+  Users,
+  Utensils,
+  Table as TableIcon,
+  TrendingUp,
+  DollarSign,
+  ShoppingCart,
+} from "lucide-react";
+import { AdminHeader } from "./admin-header";
+import { AdminSidebar } from "./admin-sidebar";
+import { DashboardStats } from "./dashboard-stats";
+import { MenuManagement } from "./menu-management";
+import { OrdersList } from "./orders-list";
+import { ReservationsList } from "./reservations-list";
+import { TableLayout } from "./table-layout";
+import { SettingsForm } from "./settings-form";
+import { ReservationModal } from "./reservation-modal";
+import { EditReservationModal } from "./edit-reservation-modal";
+import { CreateOrderModal } from "./create-order-modal";
 import { useAdminData } from "@/hooks/use-admin-data";
-import { useToast } from "@/hooks/use-toast"
-import { Toaster } from "@/components/ui/toaster"
-import { CategoryModal } from "./category-modal"
+import { useToast } from "@/hooks/use-toast";
+import { Toaster } from "@/components/ui/toaster";
+import { CategoryModal } from "./category-modal";
 
 export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("orders");
@@ -162,14 +157,20 @@ export function AdminDashboard() {
   };
 
   // Global error handler for API responses
-  const handleApiResponse = async (response: Response, errorMessage: string) => {
+  const handleApiResponse = async (
+    response: Response,
+    errorMessage: string
+  ) => {
     try {
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
           return { success: true, data, message: data.message };
         } else {
-          return { success: false, error: data.error || data.message || errorMessage };
+          return {
+            success: false,
+            error: data.error || data.message || errorMessage,
+          };
         }
       } else {
         // Try to parse error response as JSON, fallback to text if it fails
@@ -181,11 +182,11 @@ export function AdminDashboard() {
           const rawText = await response.text();
           errorData = { error: rawText || errorMessage };
         }
-        
-        return { 
-          success: false, 
+
+        return {
+          success: false,
           error: errorData.error || errorData.message || errorMessage,
-          status: response.status 
+          status: response.status,
         };
       }
     } catch (error) {
@@ -206,8 +207,11 @@ export function AdminDashboard() {
         }
       );
 
-      const result = await handleApiResponse(response, "Failed to update reservation status");
-      
+      const result = await handleApiResponse(
+        response,
+        "Failed to update reservation status"
+      );
+
       if (result.success) {
         fetchReservations();
         fetchTables();
@@ -243,8 +247,11 @@ export function AdminDashboard() {
         }
       );
 
-      const result = await handleApiResponse(response, "Failed to cancel reservation");
-      
+      const result = await handleApiResponse(
+        response,
+        "Failed to cancel reservation"
+      );
+
       if (result.success) {
         fetchReservations();
         fetchTables();
@@ -285,8 +292,11 @@ export function AdminDashboard() {
         }
       );
 
-      const result = await handleApiResponse(response, "Failed to delete reservation");
-      
+      const result = await handleApiResponse(
+        response,
+        "Failed to delete reservation"
+      );
+
       if (result.success) {
         fetchReservations();
         fetchTables();
@@ -351,19 +361,16 @@ export function AdminDashboard() {
         });
         return { success: true, message: "Reservation created successfully!" };
       } else {
-<<<<<<< HEAD
+        toast({
+          title: "Failed to create reservation",
+          description:
+            data.error || data.message || "Failed to create reservation.",
+          variant: "destructive",
+        });
         return {
           success: false,
           error: data.error || data.message || "Failed to create reservation",
         };
-=======
-        toast({
-          title: "Failed to create reservation",
-          description: data.error || data.message || "Failed to create reservation.",
-          variant: "destructive",
-        });
-        return { success: false, error: data.error || data.message || "Failed to create reservation" };
->>>>>>> 3293b6a (reservation tableruu shiljuulsen)
       }
     } catch (error) {
       console.error("Error creating reservation:", error);
@@ -409,7 +416,14 @@ export function AdminDashboard() {
         });
         return { success: true, message: "Reservation updated successfully!" };
       } else {
-<<<<<<< HEAD
+        toast({
+          title: "Failed to update reservation",
+          description:
+            responseData.error ||
+            responseData.message ||
+            "Failed to update reservation.",
+          variant: "destructive",
+        });
         return {
           success: false,
           error:
@@ -417,14 +431,6 @@ export function AdminDashboard() {
             responseData.message ||
             "Failed to update reservation",
         };
-=======
-        toast({
-          title: "Failed to update reservation",
-          description: responseData.error || responseData.message || "Failed to update reservation.",
-          variant: "destructive",
-        });
-        return { success: false, error: responseData.error || responseData.message || "Failed to update reservation" };
->>>>>>> 3293b6a (reservation tableruu shiljuulsen)
       }
     } catch (error) {
       console.error("Error updating reservation:", error);
@@ -477,32 +483,6 @@ export function AdminDashboard() {
               />
             </TabsContent>
 
-<<<<<<< HEAD
-            {/* Reservations Tab */}
-            <TabsContent value="reservations" className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold text-gray-900">
-                  Reservations
-                </h2>
-                <Button
-                  onClick={() => setIsReservationModalOpen(true)}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  + New Reservation
-                </Button>
-              </div>
-
-              <ReservationsList
-                reservations={reservations}
-                onStatusChange={handleReservationStatusChange}
-                onCancel={handleReservationCancel}
-                onEdit={handleReservationEdit}
-                onDelete={handleReservationDelete}
-              />
-            </TabsContent>
-
-=======
->>>>>>> 3293b6a (reservation tableruu shiljuulsen)
             {/* Menu Tab */}
             <TabsContent value="menu" className="space-y-6">
               <MenuManagement

@@ -21,12 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CreateOrderModal } from "./create-order-modal";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Захиалгын item интерфейс
 interface OrderItem {
@@ -345,17 +340,14 @@ export function TableCard({
               .map(
                 (item) => `
               <tr>
-<<<<<<< HEAD
-                                 <td>${
-                                   item.menuItem?.nameMn ||
-                                   item.menuItem?.name ||
-                                   "Unknown Item"
-                                 }</td>
-                 <td>${item.menuItem?.nameJp || "日本語名なし"}</td>
-=======
-                <td>${item.menuItem ? (item.menuItem.nameMn || item.menuItem.name) : 'Unknown Item'}</td>
-                <td>${item.menuItem ? (item.menuItem.nameJp || "日本語名なし") : 'N/A'}</td>
->>>>>>> 3293b6a (reservation tableruu shiljuulsen)
+                <td>${
+                  item.menuItem
+                    ? item.menuItem.nameMn || item.menuItem.name
+                    : "Unknown Item"
+                }</td>
+                <td>${
+                  item.menuItem ? item.menuItem.nameJp || "日本語名なし" : "N/A"
+                }</td>
                 <td>${item.quantity}</td>
                 <td>$${item.price.toLocaleString()}</td>
               </tr>
@@ -406,25 +398,23 @@ export function TableCard({
         <div className="px-6 pt-2">
           <Tabs defaultValue="orders" className="w-full">
             <TabsList className="grid w-full grid-cols-2 bg-gray-100 p-1 rounded-lg">
-              <TabsTrigger 
-                value="orders" 
+              <TabsTrigger
+                value="orders"
                 className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm data-[state=active]:border-0 data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-600 rounded-md transition-all"
               >
                 Orders
               </TabsTrigger>
-              <TabsTrigger 
-                value="reservations" 
+              <TabsTrigger
+                value="reservations"
                 className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm data-[state=active]:border-0 data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-600 rounded-md transition-all"
               >
                 Reservations
               </TabsTrigger>
             </TabsList>
-            
+
             {/* Table header - right under tabs */}
             <div className="flex items-center justify-between pt-2 pb-2">
-              <p className="text-lg font-semibold">
-                Ширээ {table.number}
-              </p>
+              <p className="text-lg font-semibold">Ширээ {table.number}</p>
               <div className="flex gap-2">
                 {table.currentOrder && (
                   <Badge
@@ -432,32 +422,12 @@ export function TableCard({
                       table.currentOrder.status
                     )}`}
                   >
-<<<<<<< HEAD
-                    <div className="flex-1">
-                      <div className="text-lg font-bold">
-                        {item.menuItem?.nameMn ||
-                          item.menuItem?.name ||
-                          "Unknown Item"}
-                      </div>
-                      {item.menuItem?.nameJp && (
-                        <div className="text-xs text-gray-500">
-                          {item.menuItem.nameJp}
-                        </div>
-                      )}
-                      {item.specialInstructions && (
-                        <div className="text-xs italic text-blue-600">
-                          {item.specialInstructions}
-                        </div>
-                      )}
-                    </div>
-                    <div className="text-lg font-bold">{item.quantity}</div>
-=======
                     {getOrderStatusText(table.currentOrder.status)}
                   </Badge>
                 )}
               </div>
             </div>
-            
+
             {/* Orders Tab */}
             <TabsContent value="orders" className="space-y-2">
               {/* Захиалгын мэдээлэл */}
@@ -471,51 +441,53 @@ export function TableCard({
                     <span className="text-lg font-bold">
                       {formatTime(table.currentOrder.createdAt)}
                     </span>
->>>>>>> 3293b6a (reservation tableruu shiljuulsen)
                   </div>
 
                   {/* Хоолны жагсаалт */}
                   <div className="space-y-2">
                     {(() => {
                       // Log warning for debugging
-                      const invalidItems = table.currentOrder.items.filter(item => !item.menuItem);
+                      const invalidItems = table.currentOrder.items.filter(
+                        (item) => !item.menuItem
+                      );
                       if (invalidItems.length > 0) {
-                  
                       }
-                      
-                      return table.currentOrder.items
-                        .filter(item => item.menuItem) // Only show items with valid menuItem
-                        .map((item, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between text-sm"
-                        >
-                          <div className="flex-1">
-                            <div className="text-lg font-bold">
-                              {item.menuItem.nameMn || item.menuItem.name}
-                            </div>
-                            {item.menuItem.nameJp && (
-                              <div className="text-xs text-gray-500">
-                                {item.menuItem.nameJp}
-                              </div>
-                            )}
-                            {item.specialInstructions && (
-                              <div className="text-xs italic text-blue-600">
-                                {item.specialInstructions}
-                              </div>
-                            )}
-                          </div>
-                          <div className="text-lg font-bold">{item.quantity}</div>
-                        </div>
-                      ));
-                    })()}
-                    
 
+                      return table.currentOrder.items
+                        .filter((item) => item.menuItem) // Only show items with valid menuItem
+                        .map((item, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between text-sm"
+                          >
+                            <div className="flex-1">
+                              <div className="text-lg font-bold">
+                                {item.menuItem.nameMn || item.menuItem.name}
+                              </div>
+                              {item.menuItem.nameJp && (
+                                <div className="text-xs text-gray-500">
+                                  {item.menuItem.nameJp}
+                                </div>
+                              )}
+                              {item.specialInstructions && (
+                                <div className="text-xs italic text-blue-600">
+                                  {item.specialInstructions}
+                                </div>
+                              )}
+                            </div>
+                            <div className="text-lg font-bold">
+                              {item.quantity}
+                            </div>
+                          </div>
+                        ));
+                    })()}
                   </div>
 
                   {/* Нийт мөнгө */}
                   <div className="flex items-center justify-between pt-1">
-                    <span className="text-sm font-medium text-gray-700">Нийт:</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      Нийт:
+                    </span>
                     <span className="text-lg font-bold text-gray-900">
                       ${table.currentOrder.total.toLocaleString()}
                     </span>
@@ -561,7 +533,7 @@ export function TableCard({
                 </div>
               )}
             </TabsContent>
-            
+
             {/* Reservations Tab */}
             <TabsContent value="reservations" className="space-y-2">
               {table.currentReservation ? (
@@ -573,13 +545,19 @@ export function TableCard({
                       Захиалга #{table.currentReservation.reservationNumber}
                     </span>
                     <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-xs">
-                      {table.currentReservation.status === "pending" ? "Хүлээгдэж буй" :
-                       table.currentReservation.status === "confirmed" ? "Баталгаажсан" :
-                       table.currentReservation.status === "seated" ? "Сууж байна" :
-                       table.currentReservation.status === "completed" ? "Дууссан" :
-                       table.currentReservation.status === "cancelled" ? "Цуцлагдсан" :
-                       table.currentReservation.status === "no-show" ? "Ирээгүй" :
-                       table.currentReservation.status}
+                      {table.currentReservation.status === "pending"
+                        ? "Хүлээгдэж буй"
+                        : table.currentReservation.status === "confirmed"
+                        ? "Баталгаажсан"
+                        : table.currentReservation.status === "seated"
+                        ? "Сууж байна"
+                        : table.currentReservation.status === "completed"
+                        ? "Дууссан"
+                        : table.currentReservation.status === "cancelled"
+                        ? "Цуцлагдсан"
+                        : table.currentReservation.status === "no-show"
+                        ? "Ирээгүй"
+                        : table.currentReservation.status}
                     </Badge>
                   </div>
 
@@ -590,23 +568,33 @@ export function TableCard({
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">Утас:</span>
-                      <span className="font-medium">{table.currentReservation.customerPhone}</span>
+                      <span className="font-medium">
+                        {table.currentReservation.customerPhone}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">Огноо:</span>
-                      <span className="font-medium">{formatDate(table.currentReservation.date)}</span>
+                      <span className="font-medium">
+                        {formatDate(table.currentReservation.date)}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">Цаг:</span>
-                      <span className="font-medium">{table.currentReservation.time}</span>
+                      <span className="font-medium">
+                        {table.currentReservation.time}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">Хүний тоо:</span>
-                      <span className="font-medium">{table.currentReservation.partySize} хүн</span>
+                      <span className="font-medium">
+                        {table.currentReservation.partySize} хүн
+                      </span>
                     </div>
                     {table.currentReservation.specialRequests && (
                       <div className="pt-1 border-t border-gray-200">
-                        <div className="text-xs text-gray-600 mb-1">Тусгай хүсэлт:</div>
+                        <div className="text-xs text-gray-600 mb-1">
+                          Тусгай хүсэлт:
+                        </div>
                         <div className="text-xs italic text-blue-600 bg-blue-50 p-2 rounded">
                           {table.currentReservation.specialRequests}
                         </div>
@@ -658,8 +646,6 @@ export function TableCard({
             </TabsContent>
           </Tabs>
         </div>
-
-        
       </Card>
 
       {/* Хэвлэх Modal */}
@@ -702,22 +688,22 @@ export function TableCard({
                 <h4 className="font-medium mb-2">Захиалсан хоол:</h4>
                 <div className="space-y-2">
                   {table.currentOrder.items
-                    .filter(item => item.menuItem) // Only show items with valid menuItem
+                    .filter((item) => item.menuItem) // Only show items with valid menuItem
                     .map((item, index) => (
-                    <div key={index} className="flex justify-between text-sm">
-                      <div className="flex-1">
-                        <div className="text-lg font-bold">
-                          {item.menuItem?.nameMn ||
-                            item.menuItem?.name ||
-                            "Unknown Item"}
+                      <div key={index} className="flex justify-between text-sm">
+                        <div className="flex-1">
+                          <div className="text-lg font-bold">
+                            {item.menuItem?.nameMn ||
+                              item.menuItem?.name ||
+                              "Unknown Item"}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {item.menuItem?.nameJp || "日本語名なし"}
+                          </div>
                         </div>
-                        <div className="text-xs text-gray-500">
-                          {item.menuItem?.nameJp || "日本語名なし"}
-                        </div>
+                        <div className="font-bold">{item.quantity}</div>
                       </div>
-                      <div className="font-bold">{item.quantity}</div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               </div>
 
