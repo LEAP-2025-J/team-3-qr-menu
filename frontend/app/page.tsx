@@ -71,7 +71,7 @@ export default function QRMenu() {
   >([]);
   const [fetchingData, setFetchingData] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
-  const [restaurantName, setRestaurantName] = useState("");
+  const [restaurantName, setRestaurantName] = useState("Хаку");
   const [restaurantData, setRestaurantData] = useState<any>(null);
   const [currentLanguage, setCurrentLanguage] = useState<"en" | "mn" | "ja">(
     "mn"
@@ -118,7 +118,7 @@ export default function QRMenu() {
 
   // Function to get restaurant description based on current language
   const getRestaurantDescription = () => {
-    if (!restaurantData) return "Experience the perfect blend of tradition and innovation";
+    if (!restaurantData) return "Хотын төвд байрлах жинхэнэ Япон хоол";
     
     switch (currentLanguage) {
       case "en":
