@@ -42,7 +42,7 @@ export default function QRMenu() {
   const [cart, setCart] = useState<{ id: string; nameEn: string; nameMn: string; nameJa: string; price: number; quantity: number; image?: string }[]>([])
   const [fetchingData, setFetchingData] = useState(false)
   const [cartOpen, setCartOpen] = useState(false)
-  const [restaurantName, setRestaurantName] = useState("Sakura")
+  const [restaurantName, setRestaurantName] = useState("")
   const [restaurantData, setRestaurantData] = useState<any>(null)
   const [currentLanguage, setCurrentLanguage] = useState<'en' | 'mn' | 'ja'>('en')
   const cartLoaded = useRef(false)
