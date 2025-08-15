@@ -36,13 +36,14 @@
      └── ... (other menu items)
      ```
 
-2. **Update the script paths:**
-   - Edit `scripts/upload-images.js`
-   - Update the `imagesToUpload` array with your actual file paths
+2. **Upload via Cloudinary Dashboard:**
+   - Go to your Cloudinary Media Library
+   - Create a folder called "menu"
+   - Upload your food images with descriptive names
 
-3. **Run the upload script:**
+3. **Use the connection script:**
    ```bash
-   node scripts/upload-images.js
+   node scripts/connect-cloudinary-images.js
    ```
 
 ## Method 3: Manual Upload via Dashboard

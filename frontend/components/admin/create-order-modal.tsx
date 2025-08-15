@@ -25,7 +25,7 @@ interface MenuItem {
   nameJp?: string;
   description?: string;
   price: number;
-  category: string;
+  category: { name: string; nameEn: string; nameMn?: string };
   image?: string;
 }
 
@@ -70,7 +70,7 @@ export function CreateOrderModal({
 
   // Категориудыг цэвэрлэх
   const categories = Array.from(
-    new Set(menuItems.map((item) => item.category))
+    new Set(menuItems.map((item) => item.category.name))
   ).filter(
     (category) =>
       category && typeof category === "string" && category.trim() !== ""
@@ -80,7 +80,7 @@ export function CreateOrderModal({
   const filteredMenuItems =
     selectedCategory === "all"
       ? menuItems
-      : menuItems.filter((item) => item.category === selectedCategory);
+      : menuItems.filter((item) => item.category.name === selectedCategory);
 
   // Cart-д item нэмэх
   const addToCart = (menuItem: MenuItem) => {

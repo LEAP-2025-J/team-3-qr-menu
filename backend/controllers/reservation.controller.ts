@@ -90,6 +90,75 @@ export const createReservation = async (req: Request, res: Response) => {
       });
     }
     
+    // Check for existing reservations on the same table at the same time
+    if (reservationData.table) {
+      // Convert time to minutes for easier comparison
+      const [hours, minutes] = reservationData.time.split(':').map(Number);
+      const requestedTimeMinutes = hours * 60 + minutes;
+      
+      // Check for reservations on the same table on the same date
+      const existingReservations = await Reservation.find({
+        table: reservationData.table,
+        date: {
+          $gte: new Date(reservationData.date.getFullYear(), reservationData.date.getMonth(), reservationData.date.getDate()),
+          $lt: new Date(reservationData.date.getFullYear(), reservationData.date.getMonth(), reservationData.date.getDate() + 1)
+        },
+        status: { $nin: ['cancelled', 'no-show', 'completed'] } // Don't count cancelled/completed reservations
+      });
+      
+      // Check for conflicts (same time or within 2 hours)
+      for (const existing of existingReservations) {
+        const [existingHours, existingMinutes] = existing.time.split(':').map(Number);
+        const existingTimeMinutes = existingHours * 60 + existingMinutes;
+        
+        const timeDifference = Math.abs(requestedTimeMinutes - existingTimeMinutes);
+        
+        if (timeDifference < 120) { // Less than 2 hours apart
+          return res.status(409).json({
+            success: false,
+            error: `Table already has a reservation at ${existing.time} on ${reservationData.date.toLocaleDateString()}. Reservations must be at least 2 hours apart. Please choose a different time or table.`
+          });
+        }
+      }
+      
+      // Check if table has active orders around the same time
+      // Import Order model at the top of the file if not already imported
+      try {
+        const Order = (await import("../models/model.order.js")).default;
+        const activeOrders = await Order.find({
+          table: reservationData.table,
+          status: { $in: ['pending', 'preparing', 'serving'] },
+          createdAt: {
+            $gte: new Date(reservationData.date.getFullYear(), reservationData.date.getMonth(), reservationData.date.getDate()),
+            $lt: new Date(reservationData.date.getFullYear(), reservationData.date.getMonth(), reservationData.date.getDate() + 1)
+          }
+        });
+        
+        if (activeOrders.length > 0) {
+          // Check if reservation time is at least 3 hours after current time
+          const now = new Date();
+          const reservationDateTime = new Date(reservationData.date);
+          const [hours, minutes] = reservationData.time.split(':').map(Number);
+          reservationDateTime.setHours(hours, minutes, 0, 0);
+          
+          const timeDifference = reservationDateTime.getTime() - now.getTime();
+          const hoursDifference = timeDifference / (1000 * 60 * 60);
+          
+          if (hoursDifference < 3) {
+            return res.status(409).json({
+              success: false,
+              error: `Table currently has active orders. Reservations must be at least 3 hours in advance. Please choose a later time or different table.`
+            });
+          }
+          
+          // If reservation is 3+ hours later, allow it but show a warning
+          console.log(`Allowing reservation for table with active orders - reservation is ${hoursDifference.toFixed(1)} hours later`);
+        }
+      } catch (importError) {
+        console.log("Order model not available, skipping order conflict check");
+      }
+    }
+    
     console.log("Processed reservation data:", reservationData);
     
     const reservation = new Reservation(reservationData);
@@ -211,8 +280,17 @@ export const deleteReservation = async (req: Request, res: Response) => {
 
     // If reservation has a table, update table status back to available
     if (reservation.table) {
-      // Note: You'll need to implement table status update here
-      // This depends on your table management system
+      try {
+        // Import Table model dynamically to avoid circular dependencies
+        const Table = (await import("../models/model.table.js")).default;
+        await Table.findByIdAndUpdate(
+          reservation.table,
+          { status: "empty" },
+          { new: true }
+        );
+      } catch (importError) {
+        console.log("Table model not available, skipping table status update");
+      }
     }
 
     await Reservation.findByIdAndDelete(id);

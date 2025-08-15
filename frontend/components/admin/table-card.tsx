@@ -21,6 +21,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CreateOrderModal } from "./create-order-modal";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 
 // Захиалгын item интерфейс
 interface OrderItem {
@@ -53,6 +59,20 @@ interface Order {
   createdAt: string;
 }
 
+// Reservation interface
+interface Reservation {
+  _id: string;
+  reservationNumber: string;
+  customerName: string;
+  customerPhone: string;
+  date: string;
+  time: string;
+  partySize: number;
+  status: string;
+  table?: { number: number };
+  specialRequests?: string;
+}
+
 // Ширээний интерфейс
 interface Table {
   _id: string;
@@ -62,6 +82,7 @@ interface Table {
   location: "main-hall" | "terrace";
   qrCode?: string;
   currentOrder?: Order;
+  currentReservation?: Reservation;
 }
 
 // Menu item интерфейс
@@ -73,7 +94,7 @@ interface MenuItem {
   nameJp?: string;
   description?: string;
   price: number;
-  category: string;
+  category: { name: string; nameEn: string; nameMn?: string };
   image?: string;
 }
 
@@ -324,12 +345,17 @@ export function TableCard({
               .map(
                 (item) => `
               <tr>
+<<<<<<< HEAD
                                  <td>${
                                    item.menuItem?.nameMn ||
                                    item.menuItem?.name ||
                                    "Unknown Item"
                                  }</td>
                  <td>${item.menuItem?.nameJp || "日本語名なし"}</td>
+=======
+                <td>${item.menuItem ? (item.menuItem.nameMn || item.menuItem.name) : 'Unknown Item'}</td>
+                <td>${item.menuItem ? (item.menuItem.nameJp || "日本語名なし") : 'N/A'}</td>
+>>>>>>> 3293b6a (reservation tableruu shiljuulsen)
                 <td>${item.quantity}</td>
                 <td>$${item.price.toLocaleString()}</td>
               </tr>
@@ -364,52 +390,49 @@ export function TableCard({
   return (
     <>
       <Card
-        className={`w-full transition-all duration-200 hover:shadow-md pt-2 pb-2 gap-2 flex flex-col px-0 ${
-          table.status === "reserved"
-            ? "border-red-200 bg-red-50"
-            : "border-green-200 bg-green-50"
+        className={`w-96 h-auto transition-all duration-200 hover:shadow-md pt-2 pb-2 gap-2 flex flex-col px-0 ${
+          table.currentOrder && table.currentReservation
+            ? "border-purple-200 bg-purple-50" // Both exist
+            : table.currentOrder
+            ? "border-green-200 bg-green-50" // Only order
+            : table.currentReservation
+            ? "border-blue-200 bg-blue-50" // Only reservation
+            : table.status === "reserved"
+            ? "border-red-200 bg-red-50" // Reserved but no current data
+            : "border-green-200 bg-green-50" // Empty
         }`}
       >
-        <CardHeader className="pb-0 mb-0">
-          <div className="flex items-center justify-between">
-            <p className="pb-0 mb-0 text-lg font-semibold">
-              Ширээ {table.number}
-            </p>
-            {table.currentOrder && (
-              <Badge
-                className={`text-xs mt-0 ${getOrderStatusColor(
-                  table.currentOrder.status
-                )}`}
+        {/* Tabs for Orders and Reservations - at the very top */}
+        <div className="px-6 pt-2">
+          <Tabs defaultValue="orders" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 bg-gray-100 p-1 rounded-lg">
+              <TabsTrigger 
+                value="orders" 
+                className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm data-[state=active]:border-0 data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-600 rounded-md transition-all"
               >
-                {getOrderStatusText(table.currentOrder.status)}
-              </Badge>
-            )}
-          </div>
-        </CardHeader>
-
-        <CardContent
-          className={table.currentOrder ? "space-y-2 flex-1" : "pb-1 flex-1"}
-        >
-          {/* Захиалгын мэдээлэл */}
-          {table.currentOrder && (
-            <div className="mt-0 space-y-2">
-              {/* Захиалгын гарчиг */}
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-gray-700 ">
-                  #{table.currentOrder.orderNumber}
-                </span>
-                <span className="text-lg font-bold">
-                  {formatTime(table.currentOrder.createdAt)}
-                </span>
-              </div>
-
-              {/* Хоолны жагсаалт */}
-              <div className="space-y-2">
-                {table.currentOrder.items.map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between text-sm"
+                Orders
+              </TabsTrigger>
+              <TabsTrigger 
+                value="reservations" 
+                className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm data-[state=active]:border-0 data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-600 rounded-md transition-all"
+              >
+                Reservations
+              </TabsTrigger>
+            </TabsList>
+            
+            {/* Table header - right under tabs */}
+            <div className="flex items-center justify-between pt-2 pb-2">
+              <p className="text-lg font-semibold">
+                Ширээ {table.number}
+              </p>
+              <div className="flex gap-2">
+                {table.currentOrder && (
+                  <Badge
+                    className={`text-xs ${getOrderStatusColor(
+                      table.currentOrder.status
+                    )}`}
                   >
+<<<<<<< HEAD
                     <div className="flex-1">
                       <div className="text-lg font-bold">
                         {item.menuItem?.nameMn ||
@@ -428,64 +451,215 @@ export function TableCard({
                       )}
                     </div>
                     <div className="text-lg font-bold">{item.quantity}</div>
+=======
+                    {getOrderStatusText(table.currentOrder.status)}
+                  </Badge>
+                )}
+              </div>
+            </div>
+            
+            {/* Orders Tab */}
+            <TabsContent value="orders" className="space-y-2">
+              {/* Захиалгын мэдээлэл */}
+              {table.currentOrder && (
+                <div className="mt-0 space-y-2 p-3 bg-green-50 rounded-lg">
+                  {/* Захиалгын гарчиг */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-gray-700 ">
+                      #{table.currentOrder.orderNumber}
+                    </span>
+                    <span className="text-lg font-bold">
+                      {formatTime(table.currentOrder.createdAt)}
+                    </span>
+>>>>>>> 3293b6a (reservation tableruu shiljuulsen)
                   </div>
-                ))}
-              </div>
 
-              {/* Нийт мөнгө */}
-              <div className="flex items-center justify-between pt-1">
-                <span className="text-sm font-medium text-gray-700">Нийт:</span>
-                <span className="text-lg font-bold text-gray-900">
-                  ${table.currentOrder.total.toLocaleString()}
-                </span>
-              </div>
+                  {/* Хоолны жагсаалт */}
+                  <div className="space-y-2">
+                    {(() => {
+                      // Log warning for debugging
+                      const invalidItems = table.currentOrder.items.filter(item => !item.menuItem);
+                      if (invalidItems.length > 0) {
+                  
+                      }
+                      
+                      return table.currentOrder.items
+                        .filter(item => item.menuItem) // Only show items with valid menuItem
+                        .map((item, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between text-sm"
+                        >
+                          <div className="flex-1">
+                            <div className="text-lg font-bold">
+                              {item.menuItem.nameMn || item.menuItem.name}
+                            </div>
+                            {item.menuItem.nameJp && (
+                              <div className="text-xs text-gray-500">
+                                {item.menuItem.nameJp}
+                              </div>
+                            )}
+                            {item.specialInstructions && (
+                              <div className="text-xs italic text-blue-600">
+                                {item.specialInstructions}
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-lg font-bold">{item.quantity}</div>
+                        </div>
+                      ));
+                    })()}
+                    
 
-              {/* Үйлдлийн товчнууд */}
-              <div className="flex gap-1 pb-2 mb-1">
-                {table.currentOrder.status !== "completed" &&
-                  table.currentOrder.status !== "cancelled" && (
+                  </div>
+
+                  {/* Нийт мөнгө */}
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-sm font-medium text-gray-700">Нийт:</span>
+                    <span className="text-lg font-bold text-gray-900">
+                      ${table.currentOrder.total.toLocaleString()}
+                    </span>
+                  </div>
+
+                  {/* Үйлдлийн товчнууд */}
+                  <div className="flex gap-1 pb-2 mb-1">
+                    {table.currentOrder.status !== "completed" &&
+                      table.currentOrder.status !== "cancelled" && (
+                        <Button
+                          size="sm"
+                          className="flex-1 bg-green-600 hover:bg-green-700"
+                          onClick={handleAdvanceStatus}
+                          disabled={isUpdating}
+                        >
+                          {getPrimaryActionLabel(table.currentOrder.status)}
+                        </Button>
+                      )}
                     <Button
                       size="sm"
-                      className="flex-1 bg-green-600 hover:bg-green-700"
-                      onClick={handleAdvanceStatus}
+                      variant="destructive"
+                      className="flex-1"
+                      onClick={() => onCancelOrder?.(table.currentOrder!._id)}
                       disabled={isUpdating}
                     >
-                      {getPrimaryActionLabel(table.currentOrder.status)}
+                      Цуцлах
                     </Button>
-                  )}
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  className="flex-1"
-                  onClick={() => onCancelOrder?.(table.currentOrder!._id)}
-                >
-                  <X className="w-4 h-4 mr-1" />
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setShowPrintModal(true)}
-                >
-                  <Printer className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          )}
+                  </div>
+                </div>
+              )}
 
-          {/* Хоосон ширээний үйлдлийн товчнууд */}
-          {!table.currentOrder && (
-            <div className="flex gap-2 pt-4 mt-auto">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full"
-                onClick={() => setShowCreateOrderModal(true)}
-              >
-                Захиалга үүсгэх
-              </Button>
-            </div>
-          )}
-        </CardContent>
+              {/* Хоосон ширээний үйлдлийн товчнууд */}
+              {!table.currentOrder && (
+                <div className="flex gap-2 pt-4 mt-auto">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => setShowCreateOrderModal(true)}
+                  >
+                    Захиалга үүсгэх
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
+            
+            {/* Reservations Tab */}
+            <TabsContent value="reservations" className="space-y-2">
+              {table.currentReservation ? (
+                // Reservation exists
+                <div className="space-y-2 p-3 bg-blue-50 rounded-lg">
+                  {/* Reservation header */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-blue-700">
+                      Захиалга #{table.currentReservation.reservationNumber}
+                    </span>
+                    <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-xs">
+                      {table.currentReservation.status === "pending" ? "Хүлээгдэж буй" :
+                       table.currentReservation.status === "confirmed" ? "Баталгаажсан" :
+                       table.currentReservation.status === "seated" ? "Сууж байна" :
+                       table.currentReservation.status === "completed" ? "Дууссан" :
+                       table.currentReservation.status === "cancelled" ? "Цуцлагдсан" :
+                       table.currentReservation.status === "no-show" ? "Ирээгүй" :
+                       table.currentReservation.status}
+                    </Badge>
+                  </div>
+
+                  {/* Customer info */}
+                  <div className="space-y-2">
+                    <div className="text-lg font-bold text-gray-900">
+                      {table.currentReservation.customerName}
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Утас:</span>
+                      <span className="font-medium">{table.currentReservation.customerPhone}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Огноо:</span>
+                      <span className="font-medium">{formatDate(table.currentReservation.date)}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Цаг:</span>
+                      <span className="font-medium">{table.currentReservation.time}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Хүний тоо:</span>
+                      <span className="font-medium">{table.currentReservation.partySize} хүн</span>
+                    </div>
+                    {table.currentReservation.specialRequests && (
+                      <div className="pt-1 border-t border-gray-200">
+                        <div className="text-xs text-gray-600 mb-1">Тусгай хүсэлт:</div>
+                        <div className="text-xs italic text-blue-600 bg-blue-50 p-2 rounded">
+                          {table.currentReservation.specialRequests}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Reservation actions */}
+                  <div className="flex gap-1 pt-2">
+                    <Button
+                      size="sm"
+                      className="flex-1 bg-blue-600 hover:bg-blue-700"
+                      onClick={() => {
+                        // Handle reservation status update
+                        console.log("Update reservation status");
+                      }}
+                    >
+                      Статус өөрчлөх
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        // Handle edit reservation
+                        console.log("Edit reservation");
+                      }}
+                    >
+                      Засах
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                // No reservation
+                <div className="text-center text-gray-500 py-4">
+                  <div className="text-sm">No reservation</div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="mt-2"
+                    onClick={() => {
+                      // Handle add reservation
+                      console.log("Add reservation");
+                    }}
+                  >
+                    + Add Reservation
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        
       </Card>
 
       {/* Хэвлэх Modal */}
@@ -527,7 +701,9 @@ export function TableCard({
               <div>
                 <h4 className="font-medium mb-2">Захиалсан хоол:</h4>
                 <div className="space-y-2">
-                  {table.currentOrder.items.map((item, index) => (
+                  {table.currentOrder.items
+                    .filter(item => item.menuItem) // Only show items with valid menuItem
+                    .map((item, index) => (
                     <div key={index} className="flex justify-between text-sm">
                       <div className="flex-1">
                         <div className="text-lg font-bold">

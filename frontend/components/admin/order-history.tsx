@@ -81,7 +81,9 @@ export function OrderHistory({ orders, onUpdateStatus }: OrderHistoryProps) {
 
           <CardContent className="pt-0">
             <div className="space-y-2">
-              {order.items.map((item, index) => (
+              {order.items
+                .filter(item => item.menuItem) // Only show items with valid menuItem
+                .map((item, index) => (
                 <div key={index} className="flex justify-between text-sm">
                   <span>
                     {item.menuItem.nameEn} x {item.quantity}
@@ -89,6 +91,8 @@ export function OrderHistory({ orders, onUpdateStatus }: OrderHistoryProps) {
                   <span>¥{item.price.toLocaleString()}</span>
                 </div>
               ))}
+              
+
             </div>
 
             <div className="flex items-center justify-between pt-2 mt-2 border-t border-gray-200">

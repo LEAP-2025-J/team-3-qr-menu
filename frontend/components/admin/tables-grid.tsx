@@ -43,6 +43,7 @@ interface Table {
   location: "main-hall" | "terrace";
   qrCode?: string;
   currentOrder?: Order;
+  currentReservation?: any;
 }
 
 // Menu item интерфейс
@@ -54,7 +55,7 @@ interface MenuItem {
   nameJp?: string;
   description?: string;
   price: number;
-  category: string;
+  category: { name: string; nameEn: string; nameMn?: string };
   image?: string;
 }
 
@@ -62,6 +63,7 @@ interface MenuItem {
 interface TablesGridProps {
   tables: Table[];
   menuItems: MenuItem[];
+  reservations: any[];
   onStatusChange?: (tableId: string, status: "empty" | "reserved") => void;
   onViewQR?: (tableId: string) => void;
   onCompleteOrder?: (orderId: string) => void;
@@ -78,6 +80,7 @@ interface TablesGridProps {
 export function TablesGrid({
   tables,
   menuItems,
+  reservations,
   onStatusChange,
   onViewQR,
   onCompleteOrder,
@@ -118,11 +121,11 @@ export function TablesGrid({
       </div>
 
       {/* Ширээний grid - бодит байрлалд */}
-      <div className="flex gap-8">
+      <div className="flex gap-20">
         {/* Зүүн тал - 3 багана, контентын өндөр */}
         <div
-          className="grid grid-cols-3 gap-4 auto-rows-auto"
-          style={{ gridTemplateColumns: "repeat(3, minmax(240px, 240px))" }}
+          className="grid grid-cols-3 gap-16 auto-rows-auto"
+          style={{ gridTemplateColumns: "repeat(3, minmax(280px, 320px))" }}
         >
           {/* Мөр 1: Ширээ 1, 2, 3 */}
           {getTableByNumber(1) && (
@@ -309,8 +312,8 @@ export function TablesGrid({
 
         {/* Баруун тал - 2 багана, контентын өндөр */}
         <div
-          className="grid grid-cols-2 gap-4 auto-rows-auto"
-          style={{ gridTemplateColumns: "repeat(2, minmax(240px, 240px))" }}
+          className="grid grid-cols-2 gap-16 auto-rows-auto"
+          style={{ gridTemplateColumns: "repeat(2, minmax(280px, 320px))" }}
         >
           {/* Мөр 1: Ширээ 7, Ширээ 8 */}
           {getTableByNumber(7) && (

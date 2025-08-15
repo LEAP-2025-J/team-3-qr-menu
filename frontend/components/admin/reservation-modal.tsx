@@ -25,9 +25,10 @@ interface ReservationModalProps {
   onClose: () => void
   onSubmit: (reservationData: any) => Promise<{ success: boolean; message?: string; error?: string }>
   tables: Table[]
+  existingReservations?: any[] // Add this to check for conflicts
 }
 
-export function ReservationModal({ isOpen, onClose, onSubmit, tables }: ReservationModalProps) {
+export function ReservationModal({ isOpen, onClose, onSubmit, tables, existingReservations = [] }: ReservationModalProps) {
   const [formData, setFormData] = useState({
     customerName: "",
     customerPhone: "",
@@ -38,15 +39,56 @@ export function ReservationModal({ isOpen, onClose, onSubmit, tables }: Reservat
     specialRequests: ""
   })
   const [loading, setLoading] = useState(false)
+  const [validationError, setValidationError] = useState("")
   const [availableTimes] = useState([
     "11:00", "11:30", "12:00", "12:30", "13:00", "13:30", "14:00", "14:30",
     "17:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00"
   ])
 
+  // Function to check for table conflicts
+  const checkTableConflict = (tableId: string, date: Date, time: string) => {
+    if (!tableId || !date || !time) return null;
+    
+    const selectedDate = new Date(date);
+    const [hours, minutes] = time.split(':').map(Number);
+    const requestedTimeMinutes = hours * 60 + minutes;
+    
+    // Check existing reservations for conflicts
+    const conflictingReservation = existingReservations.find(res => {
+      if (res.table && res.table._id === tableId) {
+        const resDate = new Date(res.date);
+        if (resDate.toDateString() === selectedDate.toDateString()) {
+          const [resHours, resMinutes] = res.time.split(':').map(Number);
+          const resTimeMinutes = resHours * 60 + resMinutes;
+          const timeDifference = Math.abs(requestedTimeMinutes - resTimeMinutes);
+          
+          // Check if reservations are less than 2 hours apart
+          return timeDifference < 120 && res.status !== 'cancelled' && res.status !== 'no-show' && res.status !== 'completed';
+        }
+      }
+      return false;
+    });
+    
+    return conflictingReservation;
+  };
+
+  // Real-time conflict checking
+  const currentConflict = checkTableConflict(formData.tableId, formData.date, formData.time);
+  const isTimeSlotAvailable = !currentConflict;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setValidationError("")
+    
     if (!formData.customerName || !formData.customerPhone || !formData.date || !formData.time || !formData.tableId) {
-      alert("Please fill in all required fields")
+      setValidationError("Please fill in all required fields")
+      return
+    }
+
+    // Check for table conflicts before submitting
+    const conflict = checkTableConflict(formData.tableId, formData.date, formData.time);
+    if (conflict) {
+      setValidationError(`Table already has a reservation at ${conflict.time} on ${new Date(conflict.date).toLocaleDateString()}. Reservations must be at least 2 hours apart.`)
       return
     }
 
@@ -71,10 +113,10 @@ export function ReservationModal({ isOpen, onClose, onSubmit, tables }: Reservat
           specialRequests: ""
         })
       } else {
-        alert(result.error || "Failed to create reservation")
+        setValidationError(result.error || "Failed to create reservation")
       }
     } catch (error) {
-      alert("Error creating reservation")
+      setValidationError("Error creating reservation")
     } finally {
       setLoading(false)
     }
@@ -175,13 +217,28 @@ export function ReservationModal({ isOpen, onClose, onSubmit, tables }: Reservat
                   <SelectValue placeholder="Select time" />
                 </SelectTrigger>
                 <SelectContent>
-                  {availableTimes.map((time) => (
-                    <SelectItem key={time} value={time}>
-                      {time}
-                    </SelectItem>
-                  ))}
+                  {availableTimes.map((time) => {
+                    const hasConflict = formData.tableId && formData.date ? 
+                      checkTableConflict(formData.tableId, formData.date, time) : false;
+                    
+                    return (
+                      <SelectItem 
+                        key={time} 
+                        value={time}
+                        className={hasConflict ? "text-red-500 line-through" : ""}
+                        disabled={hasConflict}
+                      >
+                        {time} {hasConflict && "(Unavailable)"}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
+              {currentConflict && (
+                <p className="text-xs text-orange-600">
+                  ⚠️ This time conflicts with existing reservation at {currentConflict.time}
+                </p>
+              )}
             </div>
           </div>
 
@@ -237,6 +294,57 @@ export function ReservationModal({ isOpen, onClose, onSubmit, tables }: Reservat
               className="text-base sm:text-sm"
             />
           </div>
+
+          {/* Validation Error Display */}
+          {validationError && !validationError.includes("Table currently has active orders") && (
+            <div className="bg-white border-2 border-red-400 rounded-lg p-4 shadow-sm">
+              <div className="flex items-center gap-2">
+                <span className="text-red-600 text-lg">⚠️</span>
+                <p className="text-red-600 font-medium text-sm">{validationError}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Backend Error Display - More Prominent */}
+          {validationError && (validationError.includes("Failed to create reservation") || validationError.includes("Table currently has active orders")) && (
+            <div className="bg-white border-2 border-red-500 rounded-lg p-4 shadow-md">
+              <div className="flex items-center gap-3">
+                <span className="text-red-700 text-xl">🚫</span>
+                <div>
+                  <p className="text-red-700 font-bold text-sm">Reservation Creation Failed</p>
+                  <p className="text-red-600 text-sm mt-1">{validationError}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Availability Status */}
+          {formData.tableId && formData.date && formData.time && (
+            <div className={`border rounded-md p-3 ${
+              isTimeSlotAvailable 
+                ? 'bg-green-50 border-green-200' 
+                : 'bg-red-50 border-red-200'
+            }`}>
+              <div className="flex items-center gap-2">
+                <span className={`w-3 h-3 rounded-full ${
+                  isTimeSlotAvailable ? 'bg-green-500' : 'bg-red-500'
+                }`}></span>
+                <span className={`text-sm font-medium ${
+                  isTimeSlotAvailable ? 'text-green-800' : 'text-red-800'
+                }`}>
+                  {isTimeSlotAvailable ? 'Time slot available' : 'Time slot unavailable'}
+                </span>
+              </div>
+              {currentConflict && (
+                <div className="bg-white border border-red-300 rounded-md p-2 mt-2">
+                  <p className="text-red-600 text-xs font-medium">
+                    ⚠️ Conflicts with: {currentConflict.customerName} at {currentConflict.time} 
+                    (Status: {currentConflict.status})
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Table Status Summary */}
           <Card className="text-xs sm:text-sm">

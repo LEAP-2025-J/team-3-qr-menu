@@ -54,6 +54,7 @@ interface Table {
   location: "main-hall" | "terrace";
   qrCode?: string;
   currentOrder?: Order;
+  currentReservation?: any;
 }
 
 // Menu item интерфейс
@@ -65,7 +66,7 @@ interface MenuItem {
   nameJp?: string;
   description?: string;
   price: number;
-  category: string;
+  category: { name: string; nameEn: string; nameMn?: string };
   image?: string;
 }
 
@@ -73,6 +74,7 @@ interface MenuItem {
 interface TableLayoutProps {
   tables: Table[];
   menuItems: MenuItem[];
+  reservations: any[];
   onStatusChange?: (tableId: string, status: "empty" | "reserved") => void;
   onViewQR?: (tableId: string) => void;
   onRefresh?: () => void;
@@ -89,6 +91,7 @@ interface TableLayoutProps {
 export function TableLayout({
   tables,
   menuItems,
+  reservations,
   onStatusChange,
   onViewQR,
   onRefresh,
@@ -102,8 +105,10 @@ export function TableLayout({
   // Статистик тооцоолох
   const stats = {
     totalTables: tables.length,
-    emptyTables: tables.filter((t) => t.status === "empty").length,
-    reservedTables: tables.filter((t) => t.status === "reserved").length,
+    emptyTables: tables.filter((t) => t.status === "empty" && !t.currentOrder && !t.currentReservation).length,
+    reservedTables: tables.filter((t) => t.currentReservation).length,
+    orderTables: tables.filter((t) => t.currentOrder).length,
+    bothOrderAndReservation: tables.filter((t) => t.currentOrder && t.currentReservation).length,
     pendingOrders: tables.filter((t) => t.currentOrder?.status === "pending")
       .length,
     preparingOrders: tables.filter(
@@ -115,7 +120,7 @@ export function TableLayout({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 w-full">
       {/* Гарчиг */}
       <div className="flex items-center justify-between">
         <div>
@@ -174,16 +179,16 @@ export function TableLayout({
         <Card className="gap-2 p-2 h-18 ">
           <div className="flex items-center justify-between mb-0">
             <span className="text-xs font-medium text-gray-600">
-              Хүлээгдэж буй
+              Захиалга
             </span>
             <Clock className="w-3 h-3 text-gray-400" />
           </div>
           <div className="flex items-center justify-between">
-            <div className="text-lg font-bold leading-tight text-yellow-600">
-              {stats.pendingOrders}
+            <div className="text-lg font-bold leading-tight text-blue-600">
+              {stats.orderTables}
             </div>
             <p className="text-xs leading-tight text-gray-500">
-              Бэлтгэж буй: {stats.preparingOrders}
+              {stats.bothOrderAndReservation} давхар, {stats.pendingOrders} хүлээгдэж
             </p>
           </div>
         </Card>
@@ -212,7 +217,7 @@ export function TableLayout({
           </div>
           <div className="flex items-center justify-between">
             <div className="text-lg font-bold leading-tight">
-              {Math.round((stats.reservedTables / stats.totalTables) * 100)}%
+              {Math.round(((stats.orderTables + stats.reservedTables) / stats.totalTables) * 100)}%
             </div>
             <p className="text-xs leading-tight text-gray-500">
               Ширээний ашиглалт
@@ -226,6 +231,7 @@ export function TableLayout({
         <TablesGrid
           tables={tables}
           menuItems={menuItems}
+          reservations={reservations}
           onStatusChange={onStatusChange}
           onViewQR={onViewQR}
           onCompleteOrder={onCompleteOrder}
@@ -287,8 +293,8 @@ export function TableLayout({
               {table.currentOrder && (
                 <div className="pt-2 mt-2 border-t border-gray-200">
                   <div className="flex items-center gap-4 text-sm">
-                    <span>Захиалга #{table.currentOrder.orderNumber}</span>
-                    <Badge className="text-xs">
+                    <span className="text-green-700">Захиалга #{table.currentOrder.orderNumber}</span>
+                    <Badge className="text-xs bg-green-100 text-green-800">
                       {table.currentOrder.status === "pending"
                         ? "Хүлээгдэж буй"
                         : table.currentOrder.status === "preparing"
@@ -301,12 +307,39 @@ export function TableLayout({
                         ? "Цуцлагдсан"
                         : "Захиалгатай"}
                     </Badge>
-                    <span>
+                    <span className="text-green-700">
                       Нийт: ¥{table.currentOrder.total.toLocaleString()}
                     </span>
                     {table.currentOrder.customerName && (
-                      <span>Хэрэглэгч: {table.currentOrder.customerName}</span>
+                      <span className="text-green-700">Хэрэглэгч: {table.currentOrder.customerName}</span>
                     )}
+                  </div>
+                </div>
+              )}
+              
+              {/* Reservation display in list view */}
+              {table.currentReservation && (
+                <div className="pt-2 mt-2 border-t border-gray-200">
+                  <div className="flex items-center gap-4 text-sm">
+                    <span className="text-blue-700">Захиалга #{table.currentReservation.reservationNumber}</span>
+                    <Badge className="text-xs bg-blue-100 text-blue-800">
+                      {table.currentReservation.status === "pending" ? "Хүлээгдэж буй" :
+                       table.currentReservation.status === "confirmed" ? "Баталгаажсан" :
+                       table.currentReservation.status === "seated" ? "Сууж байна" :
+                       table.currentReservation.status === "completed" ? "Дууссан" :
+                       table.currentReservation.status === "cancelled" ? "Цуцлагдсан" :
+                       table.currentReservation.status === "no-show" ? "Ирээгүй" :
+                       table.currentReservation.status}
+                    </Badge>
+                    <span className="text-blue-700">
+                      {table.currentReservation.date} at {table.currentReservation.time}
+                    </span>
+                    <span className="text-blue-700">
+                      {table.currentReservation.partySize} хүн
+                    </span>
+                    <span className="text-blue-700">
+                      {table.currentReservation.customerName}
+                    </span>
                   </div>
                 </div>
               )}

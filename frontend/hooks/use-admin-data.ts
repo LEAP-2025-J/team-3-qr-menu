@@ -46,6 +46,17 @@ export interface Table {
     }>;
     createdAt: string;
   };
+  currentReservation?: {
+    _id: string;
+    reservationNumber: string;
+    customerName: string;
+    customerPhone: string;
+    date: string;
+    time: string;
+    partySize: number;
+    status: string;
+    table?: { number: number };
+  };
 }
 
 export interface Reservation {
@@ -147,7 +158,39 @@ export function useAdminData() {
       const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/tables`);
       const data = await response.json();
       if (data.success) {
-        setTables(data.data);
+        // Get current reservations to populate currentReservation field
+        const reservationsResponse = await fetch(
+          `http://localhost:5000/api/reservations?date=all&status=all`
+        );
+        const reservationsData = await reservationsResponse.json();
+        
+        let currentReservations: any[] = [];
+        if (reservationsData.success) {
+          currentReservations = reservationsData.data;
+        }
+
+        // Populate currentReservation field for each table
+        const tablesWithReservations = data.data.map((table: any) => {
+          // Find reservation for this table
+          const tableReservation = currentReservations.find((res: any) => {
+            // Check if reservation has table reference and it matches current table
+            if (res.table && res.table._id) {
+              return res.table._id === table._id;
+            }
+            // Also check if table is just the ID string
+            if (res.table && typeof res.table === 'string') {
+              return res.table === table._id;
+            }
+            return false;
+          });
+          
+          return {
+            ...table,
+            currentReservation: tableReservation || undefined
+          };
+        });
+        
+        setTables(tablesWithReservations);
       }
     } catch (error) {
       console.error("Error fetching tables:", error);
@@ -156,9 +199,9 @@ export function useAdminData() {
 
   const fetchReservations = async () => {
     try {
-      const today = new Date().toISOString().split("T")[0];
       const response = await fetch(
-        `${API_CONFIG.BACKEND_URL}/api/reservations?date=${today}`
+        
+        `http://${API_CONFIG.BACKEND_URL}/api/reservations?date=all&status=all`
       );
       const data = await response.json();
       if (data.success) {
@@ -170,6 +213,9 @@ export function useAdminData() {
               res.status === "confirmed" || res.status === "pending"
           ).length,
         }));
+        
+        // Also refresh tables to update currentReservation fields
+        fetchTables();
       }
     } catch (error) {
       console.error("Error fetching reservations:", error);
@@ -253,14 +299,16 @@ export function useAdminData() {
       });
 
       if (response.ok) {
+        const result = await response.json();
         fetchMenuItems();
-        return { success: true };
+        return { success: true, message: result.message };
       } else {
-        return { success: false };
+        const errorData = await response.json();
+        return { success: false, error: errorData.error || "Failed to update menu item" };
       }
     } catch (error) {
       console.error("Error updating menu item:", error);
-      return { success: false };
+      return { success: false, error: "Error updating menu item" };
     }
   };
 
@@ -271,14 +319,16 @@ export function useAdminData() {
       });
 
       if (response.ok) {
+        const result = await response.json();
         fetchMenuItems();
-        return { success: true };
+        return { success: true, message: result.message };
       } else {
-        return { success: false };
+        const errorData = await response.json();
+        return { success: false, error: errorData.error || "Failed to delete menu item" };
       }
     } catch (error) {
       console.error("Error deleting menu item:", error);
-      return { success: false };
+      return { success: false, error: "Error deleting menu item" };
     }
   };
 

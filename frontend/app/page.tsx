@@ -1,5 +1,6 @@
 "use client";
 
+<<<<<<< HEAD
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +26,19 @@ import { CategorySkeleton } from "@/components/ui/loading-skeleton";
 import CloudinaryImage from "@/components/CloudinaryImage";
 import { useToast } from "@/hooks/use-toast";
 import { API_CONFIG } from "@/config/api";
+=======
+import React, { useState, useEffect, useRef, useMemo } from "react"
+import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ChefHat, Fish, Soup, Beef, Coffee, Clock, Calendar } from 'lucide-react'
+import { useSearchParams, usePathname } from 'next/navigation'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { CategorySkeleton } from "@/components/ui/loading-skeleton"
+import CloudinaryImage from "@/components/CloudinaryImage"
+import { useToast } from "@/hooks/use-toast"
+>>>>>>> 3293b6a (reservation tableruu shiljuulsen)
 
 const getCategoryIcon = (categoryName: string) => {
   const category = categoryName.toLowerCase();
@@ -49,8 +63,25 @@ const categoryIcons = {
 };
 
 export default function QRMenu() {
+<<<<<<< HEAD
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("appetizers");
+=======
+  const { toast } = useToast()
+  const [activeTab, setActiveTab] = useState("appetizers")
+  const [tableNumber, setTableNumber] = useState<string | null>(null)
+  const [menuItems, setMenuItems] = useState<any[]>([])
+  const [categories, setCategories] = useState<any[]>([])
+  const [loadingMenu, setLoadingMenu] = useState(true)
+  const [cart, setCart] = useState<{ id: string; nameEn: string; nameMn: string; nameJa: string; price: number; quantity: number; image?: string }[]>([])
+  const [fetchingData, setFetchingData] = useState(false)
+  const [cartOpen, setCartOpen] = useState(false)
+  const [restaurantName, setRestaurantName] = useState("Sakura")
+  const [restaurantData, setRestaurantData] = useState<any>(null)
+  const [currentLanguage, setCurrentLanguage] = useState<'en' | 'mn' | 'ja'>('en')
+  const cartLoaded = useRef(false)
+  const pathname = usePathname()
+>>>>>>> 3293b6a (reservation tableruu shiljuulsen)
 
   // Backend API URL - config файлаас авна
   const API_BASE_URL = API_CONFIG.BACKEND_URL;
@@ -1012,6 +1043,7 @@ export default function QRMenu() {
           </>
         )}
         {/* Floating Cart Button */}
+<<<<<<< HEAD
         <Button
           className="fixed z-50 px-4 py-2 text-sm rounded-full shadow-lg bottom-4 md:bottom-8 right-4 md:right-8 md:px-6 md:py-3 md:text-base"
           style={{
@@ -1024,6 +1056,17 @@ export default function QRMenu() {
           {getText("View Cart", "Сагс харах", "カートを見る")} (
           {cart.reduce((sum, i) => sum + i.quantity, 0)})
         </Button>
+=======
+        {pathname !== '/admin' && (
+          <Button
+            className="fixed bottom-4 md:bottom-8 right-4 md:right-8 z-50 shadow-lg px-4 md:px-6 py-2 md:py-3 rounded-full text-sm md:text-base"
+            style={{ display: cart.length ? "block" : "none", backgroundColor: '#FFB0B0', color: '#8B4513' }}
+            onClick={() => setCartOpen(true)}
+          >
+            {getText('View Cart', 'Сагс харах', 'カートを見る')} ({cart.reduce((sum, i) => sum + i.quantity, 0)})
+          </Button>
+        )}
+>>>>>>> 3293b6a (reservation tableruu shiljuulsen)
         {/* Cart Modal */}
         <Dialog open={cartOpen} onOpenChange={setCartOpen}>
           <DialogContent className="max-w-lg w-[95vw] md:max-w-lg max-h-[80vh] overflow-hidden">

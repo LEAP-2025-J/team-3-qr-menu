@@ -118,12 +118,16 @@ export function OrdersList({ orders, onUpdateStatus }: OrdersListProps) {
             <div className="mt-4 p-3 bg-gray-50 rounded-lg">
               <h4 className="font-medium mb-2">Order Items:</h4>
               <div className="space-y-1">
-                {order.items.map((item, index) => (
+                {order.items
+                  .filter(item => item.menuItem) // Only show items with valid menuItem
+                  .map((item, index) => (
                   <div key={index} className="flex justify-between text-sm">
                     <span>{item.quantity}x {item.menuItem.nameEn}</span>
                     <span>${(item.price * item.quantity).toFixed(2)}</span>
                   </div>
                 ))}
+                
+
               </div>
             </div>
           </CardContent>

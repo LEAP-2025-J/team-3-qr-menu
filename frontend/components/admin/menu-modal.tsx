@@ -151,13 +151,11 @@ export const MenuModal = ({
         formData.preparationTime.toString()
       );
 
-      // Хэрэв шинэ файл сонгосон бол нэмэх
-      if (selectedFile) {
-        formDataToSend.append("image", selectedFile);
-      } else if (formData.image) {
-        // Хэрэв URL байвал image талбарт хадгалах
-        formDataToSend.append("image", formData.image);
-      }
+          // Хэрэв шинэ файл сонгосон бол нэмэх
+    if (selectedFile) {
+      formDataToSend.append("image", selectedFile);
+    }
+      // Note: Don't send existing image URL when editing - backend will keep existing image
 
       const result = await onSubmit(formDataToSend);
 
