@@ -13,6 +13,7 @@ export function SettingsForm() {
   const [settings, setSettings] = useState<RestaurantSettings | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [currentDescLang, setCurrentDescLang] = useState<'en' | 'ja' | 'mn'>('en')
   const { toast } = useToast()
 
   useEffect(() => {
@@ -63,6 +64,41 @@ export function SettingsForm() {
   const updateField = (field: keyof RestaurantSettings, value: any) => {
     if (!settings) return
     setSettings({ ...settings, [field]: value })
+  }
+
+  // Helper functions for description language switching
+  const getCurrentDescription = () => {
+    if (!settings) return ''
+    switch (currentDescLang) {
+      case 'en': return settings.descriptionEn || ''
+      case 'ja': return settings.description || ''
+      case 'mn': return settings.descriptionMn || ''
+      default: return settings.descriptionEn || ''
+    }
+  }
+
+  const updateCurrentDescription = (value: string) => {
+    if (!settings) return
+    switch (currentDescLang) {
+      case 'en':
+        setSettings({ ...settings, descriptionEn: value })
+        break
+      case 'ja':
+        setSettings({ ...settings, description: value })
+        break
+      case 'mn':
+        setSettings({ ...settings, descriptionMn: value })
+        break
+    }
+  }
+
+  const getDescriptionPlaceholder = () => {
+    switch (currentDescLang) {
+      case 'en': return "Authentic Japanese cuisine in the heart of the city"
+      case 'ja': return "街の中心で本格的な日本料理をお楽しみください"
+      case 'mn': return "Хотын төвд байрлах жинхэнэ Япон хоол"
+      default: return "Authentic Japanese cuisine in the heart of the city"
+    }
   }
 
   const updateOperatingHours = (index: number, field: string, value: any) => {
@@ -186,16 +222,49 @@ export function SettingsForm() {
           {/* Description Section */}
           <div className="space-y-3">
             <div className="p-3 border rounded-lg bg-gray-50 space-y-2">
-              <Label htmlFor="descriptionEn" className="text-sm font-semibold">Description</Label>
+              <div className="flex items-center justify-between mb-2">
+                <Label className="text-sm font-semibold">Description</Label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentDescLang('en')}
+                    className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                      currentDescLang === 'en' 
+                        ? 'bg-blue-500 text-white' 
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    English
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentDescLang('ja')}
+                    className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                      currentDescLang === 'ja' 
+                        ? 'bg-blue-500 text-white' 
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    日本語
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentDescLang('mn')}
+                    className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                      currentDescLang === 'mn' 
+                        ? 'bg-blue-500 text-white' 
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    Монгол
+                  </button>
+                </div>
+              </div>
+              
               <Textarea
-                id="descriptionEn"
-                value={settings.descriptionEn}
-                onChange={(e) => {
-                  // Update both description and descriptionEn fields
-                  updateField("description", e.target.value)
-                  updateField("descriptionEn", e.target.value)
-                }}
-                placeholder="Authentic Japanese cuisine in the heart of the city"
+                value={getCurrentDescription()}
+                onChange={(e) => updateCurrentDescription(e.target.value)}
+                placeholder={getDescriptionPlaceholder()}
                 rows={3}
                 className="min-h-[80px]"
               />
