@@ -1,18 +1,24 @@
-import mongoose, { type Document, Schema } from "mongoose"
+import mongoose, { type Document, Schema } from "mongoose";
 
 export interface IReservation extends Document {
-  reservationNumber: string
-  customerName: string
-  customerPhone: string
-  customerEmail?: string
-  date: Date
-  time: string
-  partySize: number
-  table?: mongoose.Types.ObjectId
-  status: "pending" | "confirmed" | "seated" | "completed" | "cancelled" | "no-show"
-  specialRequests?: string
-  createdAt: Date
-  updatedAt: Date
+  reservationNumber: string;
+  customerName: string;
+  customerPhone: string;
+  customerEmail?: string;
+  date: string;
+  time: string;
+  partySize: number;
+  table?: mongoose.Types.ObjectId;
+  status:
+    | "pending"
+    | "confirmed"
+    | "seated"
+    | "completed"
+    | "cancelled"
+    | "no-show";
+  specialRequests?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const ReservationSchema = new Schema<IReservation>(
@@ -38,8 +44,14 @@ const ReservationSchema = new Schema<IReservation>(
       lowercase: true,
     },
     date: {
-      type: Date,
+      type: String,
       required: [true, "Reservation date is required"],
+      validate: {
+        validator: function (v: string) {
+          return /^\d{4}-\d{2}-\d{2}$/.test(v);
+        },
+        message: "Date must be in YYYY-MM-DD format",
+      },
     },
     time: {
       type: String,
@@ -56,7 +68,14 @@ const ReservationSchema = new Schema<IReservation>(
     },
     status: {
       type: String,
-      enum: ["pending", "confirmed", "seated", "completed", "cancelled", "no-show"],
+      enum: [
+        "pending",
+        "confirmed",
+        "seated",
+        "completed",
+        "cancelled",
+        "no-show",
+      ],
       default: "pending",
     },
     specialRequests: {
@@ -66,15 +85,15 @@ const ReservationSchema = new Schema<IReservation>(
   },
   {
     timestamps: true,
-  },
-)
+  }
+);
 
 // Generate reservation number before saving
 // Removed pre-save hook to simplify the model
 
 // Index for better query performance
-ReservationSchema.index({ date: 1, time: 1 })
-ReservationSchema.index({ customerPhone: 1 })
-ReservationSchema.index({ status: 1 })
-
-export default mongoose.models.Reservation || mongoose.model<IReservation>("Reservation", ReservationSchema) 
+ReservationSchema.index({ date: 1, time: 1 });
+ReservationSchema.index({ customerPhone: 1 });
+ReservationSchema.index({ status: 1 });
+export default mongoose.models.Reservation ||
+  mongoose.model<IReservation>("Reservation", ReservationSchema);

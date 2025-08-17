@@ -34,7 +34,7 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
             onClick={() => onTabChange("orders")}
           >
             <ShoppingCart className="w-4 h-4 mr-3 flex-shrink-0" />
-            <span className="truncate">Ширээ</span>
+            <span className="truncate">Захиалгууд</span>
           </Button>
 
           <Button

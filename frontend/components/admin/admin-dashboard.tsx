@@ -30,6 +30,10 @@ import { useAdminData } from "@/hooks/use-admin-data";
 import { useToast } from "@/hooks/use-toast";
 import { Toaster } from "@/components/ui/toaster";
 import { CategoryModal } from "./category-modal";
+import { API_CONFIG } from "@/config/api";
+import { AdminDashboardSkeleton } from "./admin-dashboard-skeleton";
+import { MenuSkeleton } from "./menu-skeleton";
+import { SettingsSkeleton } from "./settings-skeleton";
 
 export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("orders");
@@ -73,7 +77,7 @@ export function AdminDashboard() {
   ) => {
     try {
       const response = await fetch(
-        `http://192.168.0.102:5000/api/tables/${tableId}`,
+        `${API_CONFIG.BACKEND_URL}/api/tables/${tableId}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -130,7 +134,7 @@ export function AdminDashboard() {
       };
 
       // Захиалга үүсгэх API дуудах
-      const response = await fetch("http://192.168.0.102:5000/api/orders", {
+      const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/orders`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
@@ -199,7 +203,7 @@ export function AdminDashboard() {
   const handleReservationStatusChange = async (id: string, status: string) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/reservations/${id}`,
+        `${API_CONFIG.BACKEND_URL}/api/reservations/${id}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -240,7 +244,7 @@ export function AdminDashboard() {
   const handleReservationCancel = async (id: string) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/reservations/${id}`,
+        `${API_CONFIG.BACKEND_URL}/api/reservations/${id}`,
         {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
@@ -285,7 +289,7 @@ export function AdminDashboard() {
   const handleReservationDelete = async (id: string) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/reservations/${id}/delete`,
+        `${API_CONFIG.BACKEND_URL}/api/reservations/${id}/delete`,
         {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
@@ -331,19 +335,22 @@ export function AdminDashboard() {
         table: tableId,
       };
 
-      const response = await fetch("http://localhost:5000/api/reservations", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestData),
-      });
+      const response = await fetch(
+        `${API_CONFIG.BACKEND_URL}/api/reservations`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestData),
+        }
+      );
 
       const data = await response.json();
 
       if (data.success) {
         // Update table status to reserved
-        await fetch(`http://localhost:5000/api/tables/${tableId}`, {
+        await fetch(`${API_CONFIG.BACKEND_URL}/api/tables/${tableId}`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
@@ -393,7 +400,7 @@ export function AdminDashboard() {
       };
 
       const response = await fetch(
-        `http://localhost:5000/api/reservations/${id}`,
+        `${API_CONFIG.BACKEND_URL}/api/reservations/${id}`,
         {
           method: "PATCH",
           headers: {
@@ -444,20 +451,11 @@ export function AdminDashboard() {
   };
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen bg-gray-100">
-        <div className="flex-1 p-6">
-          <div className="space-y-4 animate-pulse">
-            <div className="w-1/4 h-8 bg-gray-300 rounded"></div>
-            <div className="h-64 bg-gray-300 rounded"></div>
-          </div>
-        </div>
-      </div>
-    );
+    return <AdminDashboardSkeleton />;
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-white">
       {/* Sidebar */}
       <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
@@ -465,7 +463,7 @@ export function AdminDashboard() {
       <div className="flex-1 flex flex-col ml-[210px] min-w-0">
         <AdminHeader />
 
-        <main className="flex-1 p-8 w-full max-w-none">
+        <main className="flex-1 w-full p-8 max-w-none">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             {/* Tables Tab */}
             <TabsContent value="orders" className="space-y-8">
@@ -473,6 +471,7 @@ export function AdminDashboard() {
                 tables={tables}
                 menuItems={menuItems}
                 reservations={reservations}
+                loading={loading}
                 onStatusChange={handleTableStatusChange}
                 onViewQR={handleViewQR}
                 onRefresh={fetchTables}
@@ -485,27 +484,39 @@ export function AdminDashboard() {
 
             {/* Menu Tab */}
             <TabsContent value="menu" className="space-y-6">
-              <MenuManagement
-                menuItems={menuItems}
-                categories={categories}
-                searchQuery={searchQuery}
-                selectedCategory={selectedCategory}
-                onSearchChange={setSearchQuery}
-                onCategoryChange={setSelectedCategory}
-                onAddMenuItem={addMenuItem}
-                onUpdateMenuItem={updateMenuItem}
-                onDeleteMenuItem={deleteMenuItem}
-                onAddCategory={addCategory}
-              />
+              {loading ? (
+                <MenuSkeleton />
+              ) : (
+                <MenuManagement
+                  menuItems={menuItems}
+                  categories={categories}
+                  searchQuery={searchQuery}
+                  selectedCategory={selectedCategory}
+                  onSearchChange={setSearchQuery}
+                  onCategoryChange={setSelectedCategory}
+                  onAddMenuItem={addMenuItem}
+                  onUpdateMenuItem={updateMenuItem}
+                  onDeleteMenuItem={deleteMenuItem}
+                  onAddCategory={addCategory}
+                />
+              )}
             </TabsContent>
 
             {/* Settings Tab */}
             <TabsContent value="settings" className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold text-gray-900">Тохиргоо</h2>
-              </div>
+              {loading ? (
+                <SettingsSkeleton />
+              ) : (
+                <>
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-3xl font-bold text-gray-900">
+                      Тохиргоо
+                    </h2>
+                  </div>
 
-              <SettingsForm />
+                  <SettingsForm />
+                </>
+              )}
             </TabsContent>
           </Tabs>
         </main>

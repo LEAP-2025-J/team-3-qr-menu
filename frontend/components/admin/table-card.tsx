@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { QrCode, CheckCircle, X, Printer } from "lucide-react";
+import { QrCode, CheckCircle, X, Printer, Phone } from "lucide-react";
 import { useState } from "react";
 import {
   Dialog,
@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CreateOrderModal } from "./create-order-modal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { API_CONFIG } from "@/config/api";
 
 // Захиалгын item интерфейс
 interface OrderItem {
@@ -78,6 +79,7 @@ interface Table {
   qrCode?: string;
   currentOrder?: Order;
   currentReservation?: Reservation;
+  currentReservations?: Reservation[]; // Array of all reservations for this table
 }
 
 // Menu item интерфейс
@@ -97,6 +99,7 @@ interface MenuItem {
 interface TableCardProps {
   table: Table;
   menuItems: MenuItem[];
+  tables: Table[]; // Бүх ширээний жагсаалт
   onStatusChange?: (tableId: string, status: "empty" | "reserved") => void;
   onViewQR?: (tableId: string) => void;
   onCompleteOrder?: (orderId: string) => void;
@@ -172,6 +175,7 @@ const formatDate = (dateString: string) => {
 export function TableCard({
   table,
   menuItems,
+  tables,
   onStatusChange,
   onViewQR,
   onCompleteOrder,
@@ -214,7 +218,7 @@ export function TableCard({
     orderId: string,
     status: Order["status"]
   ) => {
-    const res = await fetch(`http://192.168.0.102:5000/api/orders/${orderId}`, {
+    const res = await fetch(`${API_CONFIG.BACKEND_URL}/api/orders/${orderId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
@@ -382,57 +386,64 @@ export function TableCard({
   return (
     <>
       <Card
-        className={`w-96 h-auto transition-all duration-200 hover:shadow-md pt-2 pb-2 gap-2 flex flex-col px-0 ${
+        className={`w-72 h-auto transition-all duration-200 hover:shadow-md pt-2 pb-0 gap-0 flex flex-col px-0 border-gray-200 bg-white ${
           table.currentOrder && table.currentReservation
-            ? "border-purple-200 bg-purple-50" // Both exist
+            ? "border-purple-200" // Both exist
             : table.currentOrder
-            ? "border-green-200 bg-green-50" // Only order
+            ? "border-green-200" // Only order
             : table.currentReservation
-            ? "border-blue-200 bg-blue-50" // Only reservation
+            ? "border-blue-200" // Only reservation
             : table.status === "reserved"
-            ? "border-red-200 bg-red-50" // Reserved but no current data
-            : "border-green-200 bg-green-50" // Empty
+            ? "border-red-200" // Reserved but no current data
+            : "border-red-200" // Empty - changed to red
         }`}
       >
-        {/* Tabs for Orders and Reservations - at the very top */}
-        <div className="px-6 pt-2">
-          <Tabs defaultValue="orders" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-gray-100 p-1 rounded-lg">
+        {/* Table header - at the very top */}
+        <div className="px-6 pt-3 pb-2">
+          <div className="flex items-center justify-between">
+            <p className="text-lg font-semibold">Ширээ {table.number}</p>
+            <div className="flex gap-2">
+              {table.currentOrder && (
+                <Badge
+                  className={`text-xs ${getOrderStatusColor(
+                    table.currentOrder.status
+                  )}`}
+                >
+                  {getOrderStatusText(table.currentOrder.status)}
+                </Badge>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs for Orders and Reservations - connected to card */}
+        <div className="h-full px-4 py-0">
+          <Tabs defaultValue="orders" className="w-full mb-0">
+            <TabsList className="flex w-full gap-0 bg-white border-b-0">
               <TabsTrigger
                 value="orders"
-                className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm data-[state=active]:border-0 data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-600 rounded-md transition-all"
+                className="flex-1 h-[40px] data-[state=active]:bg-blue-50 data-[state=active]:text-gray-900 data-[state=active]:shadow-[inset_0_-1px_0_0] data-[state=active]:shadow-gray-200 data-[state=inactive]:bg-white data-[state=inactive]:text-gray-600  transition-all font-medium"
               >
-                Orders
+                <QrCode className="w-4 h-4 mr-1" />
+                Захиалга
               </TabsTrigger>
               <TabsTrigger
                 value="reservations"
-                className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm data-[state=active]:border-0 data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-600 rounded-md transition-all"
+                className="flex-1 h-[40px] data-[state=active]:bg-red-50 data-[state=active]:text-gray-900 data-[state=active]:shadow-[inset_0_-1px_0_0] data-[state=active]:shadow-gray-200 data-[state=inactive]:bg-white data-[state=inactive]:text-gray-600  transition-all font-medium"
               >
-                Reservations
+                <Phone className="w-4 h-4 mr-1" />
+                Захиалга
               </TabsTrigger>
             </TabsList>
 
-            {/* Table header - right under tabs */}
-            <div className="flex items-center justify-between pt-2 pb-2">
-              <p className="text-lg font-semibold">Ширээ {table.number}</p>
-              <div className="flex gap-2">
-                {table.currentOrder && (
-                  <Badge
-                    className={`text-xs ${getOrderStatusColor(
-                      table.currentOrder.status
-                    )}`}
-                  >
-                    {getOrderStatusText(table.currentOrder.status)}
-                  </Badge>
-                )}
-              </div>
-            </div>
-
             {/* Orders Tab */}
-            <TabsContent value="orders" className="space-y-2">
+            <TabsContent
+              value="orders"
+              className="h-full p-0 m-0 space-y-2 bg-blue-50"
+            >
               {/* Захиалгын мэдээлэл */}
               {table.currentOrder && (
-                <div className="mt-0 space-y-2 p-3 bg-green-50 rounded-lg">
+                <div className="h-full p-3 m-0 space-y-2 bg-blue-50">
                   {/* Захиалгын гарчиг */}
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-medium text-gray-700 ">
@@ -499,7 +510,7 @@ export function TableCard({
                       table.currentOrder.status !== "cancelled" && (
                         <Button
                           size="sm"
-                          className="flex-1 bg-green-600 hover:bg-green-700"
+                          className="flex-1 text-black bg-green-100 hover:bg-green-200"
                           onClick={handleAdvanceStatus}
                           disabled={isUpdating}
                         >
@@ -508,8 +519,7 @@ export function TableCard({
                       )}
                     <Button
                       size="sm"
-                      variant="destructive"
-                      className="flex-1"
+                      className="flex-1 text-black bg-red-100 hover:bg-red-200"
                       onClick={() => onCancelOrder?.(table.currentOrder!._id)}
                       disabled={isUpdating}
                     >
@@ -528,6 +538,7 @@ export function TableCard({
                     className="w-full"
                     onClick={() => setShowCreateOrderModal(true)}
                   >
+                    <QrCode className="w-4 h-4 mr-2" />
                     Захиалга үүсгэх
                   </Button>
                 </div>
@@ -535,114 +546,123 @@ export function TableCard({
             </TabsContent>
 
             {/* Reservations Tab */}
-            <TabsContent value="reservations" className="space-y-2">
-              {table.currentReservation ? (
-                // Reservation exists
-                <div className="space-y-2 p-3 bg-blue-50 rounded-lg">
-                  {/* Reservation header */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-blue-700">
-                      Захиалга #{table.currentReservation.reservationNumber}
-                    </span>
-                    <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-xs">
-                      {table.currentReservation.status === "pending"
-                        ? "Хүлээгдэж буй"
-                        : table.currentReservation.status === "confirmed"
-                        ? "Баталгаажсан"
-                        : table.currentReservation.status === "seated"
-                        ? "Сууж байна"
-                        : table.currentReservation.status === "completed"
-                        ? "Дууссан"
-                        : table.currentReservation.status === "cancelled"
-                        ? "Цуцлагдсан"
-                        : table.currentReservation.status === "no-show"
-                        ? "Ирээгүй"
-                        : table.currentReservation.status}
-                    </Badge>
-                  </div>
+            <TabsContent
+              value="reservations"
+              className="h-full p-0 m-0 space-y-2 rounded-b-lg bg-red-50"
+            >
+              {(() => {
+                // Өнөөдрийн огноог UTC+8 timezone-тай болгож авах (Mongolia timezone)
+                const now = new Date();
+                const utc8Date = new Date(now.getTime() + 8 * 60 * 60 * 1000); // UTC+8
+                const todayString = utc8Date.toISOString().split("T")[0]; // YYYY-MM-DD формат
 
-                  {/* Customer info */}
-                  <div className="space-y-2">
-                    <div className="text-lg font-bold text-gray-900">
-                      {table.currentReservation.customerName}
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Утас:</span>
-                      <span className="font-medium">
-                        {table.currentReservation.customerPhone}
+                // Зөвхөн өнөөдрийн огноотой захиалгыг шалгах
+                const isTodayReservation =
+                  table.currentReservation &&
+                  table.currentReservation.date === todayString;
+
+                return isTodayReservation ? (
+                  // Reservation exists and is today
+                  <div className="h-full p-3 m-0 space-y-2 bg-red-50">
+                    {/* Reservation header */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-blue-700">
+                        Захиалга #{table.currentReservation.reservationNumber}
                       </span>
+                      <Badge className="text-xs text-blue-800 bg-blue-100 border-blue-200">
+                        {table.currentReservation.status === "pending"
+                          ? "Хүлээгдэж буй"
+                          : table.currentReservation.status === "confirmed"
+                          ? "Баталгаажсан"
+                          : table.currentReservation.status === "seated"
+                          ? "Сууж байна"
+                          : table.currentReservation.status === "completed"
+                          ? "Дууссан"
+                          : table.currentReservation.status === "cancelled"
+                          ? "Цуцлагдсан"
+                          : table.currentReservation.status === "no-show"
+                          ? "Ирээгүй"
+                          : table.currentReservation.status}
+                      </Badge>
                     </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Огноо:</span>
-                      <span className="font-medium">
-                        {formatDate(table.currentReservation.date)}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Цаг:</span>
-                      <span className="font-medium">
-                        {table.currentReservation.time}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Хүний тоо:</span>
-                      <span className="font-medium">
-                        {table.currentReservation.partySize} хүн
-                      </span>
-                    </div>
-                    {table.currentReservation.specialRequests && (
-                      <div className="pt-1 border-t border-gray-200">
-                        <div className="text-xs text-gray-600 mb-1">
-                          Тусгай хүсэлт:
-                        </div>
-                        <div className="text-xs italic text-blue-600 bg-blue-50 p-2 rounded">
-                          {table.currentReservation.specialRequests}
-                        </div>
+
+                    {/* Customer info */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Захиалагч:</span>
+                        {table.currentReservation.customerName}
                       </div>
-                    )}
-                  </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Утас:</span>
+                        <span className="font-medium">
+                          {table.currentReservation.customerPhone}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Огноо:</span>
+                        <span className="font-medium">
+                          {formatDate(table.currentReservation.date)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Цаг:</span>
+                        <span className="font-medium">
+                          {table.currentReservation.time}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Хүний тоо:</span>
+                        <span className="font-medium">
+                          {table.currentReservation.partySize} хүн
+                        </span>
+                      </div>
+                      {table.currentReservation.specialRequests && (
+                        <div className="pt-1 border-t border-gray-200">
+                          <div className="mb-1 text-xs text-gray-600">
+                            Тусгай хүсэлт:
+                          </div>
+                          <div className="p-2 text-xs italic text-blue-600 rounded bg-blue-50">
+                            {table.currentReservation.specialRequests}
+                          </div>
+                        </div>
+                      )}
+                    </div>
 
-                  {/* Reservation actions */}
-                  <div className="flex gap-1 pt-2">
-                    <Button
-                      size="sm"
-                      className="flex-1 bg-blue-600 hover:bg-blue-700"
-                      onClick={() => {
-                        // Handle reservation status update
-                        console.log("Update reservation status");
-                      }}
-                    >
-                      Статус өөрчлөх
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        // Handle edit reservation
-                        console.log("Edit reservation");
-                      }}
-                    >
-                      Засах
-                    </Button>
+                    {/* Reservation actions */}
+                    <div className="flex gap-1 pt-2">
+                      <Button
+                        size="sm"
+                        className="flex-1 text-black bg-blue-100 hover:bg-blue-200"
+                        onClick={() => {
+                          // Handle reservation status update
+                          console.log("Update reservation status");
+                        }}
+                      >
+                        Статус өөрчлөх
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          // Handle edit reservation
+                          console.log("Edit reservation");
+                        }}
+                      >
+                        Засах
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                // No reservation
-                <div className="text-center text-gray-500 py-4">
-                  <div className="text-sm">No reservation</div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="mt-2"
-                    onClick={() => {
-                      // Handle add reservation
-                      console.log("Add reservation");
-                    }}
-                  >
-                    + Add Reservation
-                  </Button>
-                </div>
-              )}
+                ) : (
+                  // No reservation or not today
+                  <div className="py-4 text-center text-gray-500">
+                    <div className="text-sm">
+                      {table.currentReservation
+                        ? "Өнөөдөр ширээ захиалга байхгүй"
+                        : "No reservation"}
+                    </div>
+                  </div>
+                );
+              })()}
             </TabsContent>
           </Tabs>
         </div>
@@ -685,7 +705,7 @@ export function TableCard({
 
               {/* Захиалсан хоолнууд */}
               <div>
-                <h4 className="font-medium mb-2">Захиалсан хоол:</h4>
+                <h4 className="mb-2 font-medium">Захиалсан хоол:</h4>
                 <div className="space-y-2">
                   {table.currentOrder.items
                     .filter((item) => item.menuItem) // Only show items with valid menuItem
@@ -712,7 +732,7 @@ export function TableCard({
                 (item) => item.specialInstructions
               ) && (
                 <div>
-                  <h4 className="font-medium mb-2">Тэмдэглэл:</h4>
+                  <h4 className="mb-2 font-medium">Тэмдэглэл:</h4>
                   <p className="text-sm text-gray-600">
                     {table.currentOrder.items
                       .map((item) => item.specialInstructions)
@@ -729,7 +749,7 @@ export function TableCard({
               </div>
 
               {/* Хэвлэх тохиргоо */}
-              <div className="space-y-3 pt-4 border-t">
+              <div className="pt-4 space-y-3 border-t">
                 <div>
                   <Label htmlFor="print-device" className="text-sm font-medium">
                     Хэвлэх төхөөрөмж:
