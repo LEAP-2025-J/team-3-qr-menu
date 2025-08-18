@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 import {
   ShoppingCart,
   Calendar,
@@ -15,6 +16,22 @@ interface AdminSidebarProps {
 }
 
 export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
+  const router = useRouter();
+
+  const handleSignOut = () => {
+    // Ask for confirmation before signing out
+    const isConfirmed = window.confirm("Та гарахдаа итгэлтэй байна уу? (Are you sure you want to sign out?)");
+    
+    if (isConfirmed) {
+      // Clear admin session
+      localStorage.removeItem("admin");
+      localStorage.removeItem("username");
+      
+      // Redirect to sign-in page
+      router.push("/sign-in");
+    }
+  };
+
   return (
     <aside className="fixed top-0 left-0 h-screen w-[210px] bg-white border-r border-gray-200 p-6 flex-shrink-0 z-50">
       <div className="flex flex-col h-full">
@@ -61,10 +78,7 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
           <Button
             variant="ghost"
             className="w-full justify-start text-left overflow-hidden text-red-600 hover:text-red-700 hover:bg-red-50"
-            onClick={() => {
-              // Sign-out logic will be implemented later
-              console.log("Sign out clicked");
-            }}
+            onClick={handleSignOut}
           >
             <LogOut className="w-4 h-4 mr-3 flex-shrink-0" />
             <span className="truncate">Гарах</span>

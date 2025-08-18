@@ -25,6 +25,7 @@ import { CategorySkeleton } from "@/components/ui/loading-skeleton";
 import CloudinaryImage from "@/components/CloudinaryImage";
 import { useToast } from "@/hooks/use-toast";
 import { API_CONFIG } from "@/config/api";
+import { useRouter } from "next/navigation";
 
 const getCategoryIcon = (categoryName: string) => {
   const category = categoryName.toLowerCase();
@@ -75,6 +76,7 @@ export default function QRMenu() {
   );
   const cartLoaded = useRef(false);
   const pathname = usePathname();
+  const router = useRouter();
 
   // Backend API URL - config файлаас авна
   const API_BASE_URL = API_CONFIG.BACKEND_URL;
@@ -834,6 +836,26 @@ export default function QRMenu() {
             </Badge>
           </div>
         )}
+        <div className="space-x-4">
+          <Button
+            onClick={() => router.push("/signin")}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            Admin Sign In
+          </Button>
+          <Button
+            onClick={() => router.push("/admin")}
+            className="bg-purple-600 hover:bg-purple-700"
+          >
+            Admin Dashboard
+          </Button>
+          <Button
+            onClick={() => router.push("/user")}
+            className="bg-green-600 hover:bg-green-700"
+          >
+            User Dashboard
+          </Button>
+        </div>
       </div>
 
       {/* Discount Banner */}
