@@ -836,26 +836,6 @@ export default function QRMenu() {
             </Badge>
           </div>
         )}
-        <div className="space-x-4">
-          <Button
-            onClick={() => router.push("/signin")}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            Admin Sign In
-          </Button>
-          <Button
-            onClick={() => router.push("/admin")}
-            className="bg-purple-600 hover:bg-purple-700"
-          >
-            Admin Dashboard
-          </Button>
-          <Button
-            onClick={() => router.push("/user")}
-            className="bg-green-600 hover:bg-green-700"
-          >
-            User Dashboard
-          </Button>
-        </div>
       </div>
 
       {/* Discount Banner */}
