@@ -1,8 +1,8 @@
 // API Configuration
 // IP хаягийг энд өөрчлөх хэрэгтэй
 export const API_CONFIG = {
-  BACKEND_URL: "http://192.168.20.180:5000",
-  FRONTEND_URL: "http://192.168.20.180:3000",
+  BACKEND_URL: "http://192.168.20.218:5000",
+  FRONTEND_URL: "http://192.168.20.218:3001",
 };
 
 // Backend API endpoints
