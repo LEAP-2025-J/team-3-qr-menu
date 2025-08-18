@@ -6,7 +6,7 @@ import {
   updateMenuItem,
   deleteMenuItem,
 } from "../controllers/menu.controller.js";
-import upload from "../middleware/upload.js";
+import { upload } from "../middleware/upload-simple.js";
 
 const router = express.Router();
 

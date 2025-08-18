@@ -46,6 +46,17 @@ export interface Table {
     }>;
     createdAt: string;
   };
+  currentReservation?: {
+    _id: string;
+    reservationNumber: string;
+    customerName: string;
+    customerPhone: string;
+    date: string;
+    time: string;
+    partySize: number;
+    status: string;
+    table?: { number: number };
+  };
 }
 
 export interface Reservation {
@@ -144,10 +155,72 @@ export function useAdminData() {
 
   const fetchTables = async () => {
     try {
+      console.log("fetchTables called");
+
       const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/tables`);
       const data = await response.json();
       if (data.success) {
-        setTables(data.data);
+        // Get current reservations to populate currentReservation field
+        const reservationsResponse = await fetch(
+          `${API_CONFIG.BACKEND_URL}/api/reservations?date=all&status=all`
+        );
+        const reservationsData = await reservationsResponse.json();
+
+        let currentReservations: any[] = [];
+        if (reservationsData.success) {
+          currentReservations = reservationsData.data;
+          console.log("Fetched reservations:", currentReservations.length);
+          currentReservations.forEach((res: any) => {
+            console.log(
+              `Reservation ${res.reservationNumber}: date=${res.date}, table=${res.table}`
+            );
+          });
+        }
+
+        // Populate currentReservations field for each table (array of all reservations)
+        const tablesWithReservations = data.data.map((table: any) => {
+          // Find all reservations for this table
+          const tableReservations = currentReservations.filter((res: any) => {
+            // Convert both to strings for comparison
+            const tableId = table._id.toString();
+            let reservationTableId = "";
+
+            if (res.table) {
+              if (res.table._id) {
+                reservationTableId = res.table._id.toString();
+              } else if (typeof res.table === "string") {
+                reservationTableId = res.table;
+              } else if (res.table.toString) {
+                reservationTableId = res.table.toString();
+              }
+            }
+
+            const matches = reservationTableId === tableId;
+            if (matches) {
+              console.log(
+                `Table ${table.number} matched with reservation ${res.reservationNumber}`
+              );
+            }
+            return matches;
+          });
+
+          return {
+            ...table,
+            currentReservations: tableReservations, // Array of all reservations
+            currentReservation: tableReservations[0] || undefined, // Keep for backward compatibility
+          };
+        });
+
+        console.log(
+          "Tables with reservations:",
+          tablesWithReservations.map((t) => ({
+            number: t.number,
+            hasReservation: !!t.currentReservation,
+            reservationNumber: t.currentReservation?.reservationNumber,
+          }))
+        );
+
+        setTables(tablesWithReservations);
       }
     } catch (error) {
       console.error("Error fetching tables:", error);
@@ -156,9 +229,8 @@ export function useAdminData() {
 
   const fetchReservations = async () => {
     try {
-      const today = new Date().toISOString().split("T")[0];
       const response = await fetch(
-        `${API_CONFIG.BACKEND_URL}/api/reservations?date=${today}`
+        `${API_CONFIG.BACKEND_URL}/api/reservations?date=all&status=all`
       );
       const data = await response.json();
       if (data.success) {
@@ -170,6 +242,9 @@ export function useAdminData() {
               res.status === "confirmed" || res.status === "pending"
           ).length,
         }));
+
+        // Also refresh tables to update currentReservation fields
+        fetchTables();
       }
     } catch (error) {
       console.error("Error fetching reservations:", error);
@@ -253,14 +328,19 @@ export function useAdminData() {
       });
 
       if (response.ok) {
+        const result = await response.json();
         fetchMenuItems();
-        return { success: true };
+        return { success: true, message: result.message };
       } else {
-        return { success: false };
+        const errorData = await response.json();
+        return {
+          success: false,
+          error: errorData.error || "Failed to update menu item",
+        };
       }
     } catch (error) {
       console.error("Error updating menu item:", error);
-      return { success: false };
+      return { success: false, error: "Error updating menu item" };
     }
   };
 
@@ -271,14 +351,19 @@ export function useAdminData() {
       });
 
       if (response.ok) {
+        const result = await response.json();
         fetchMenuItems();
-        return { success: true };
+        return { success: true, message: result.message };
       } else {
-        return { success: false };
+        const errorData = await response.json();
+        return {
+          success: false,
+          error: errorData.error || "Failed to delete menu item",
+        };
       }
     } catch (error) {
       console.error("Error deleting menu item:", error);
-      return { success: false };
+      return { success: false, error: "Error deleting menu item" };
     }
   };
 

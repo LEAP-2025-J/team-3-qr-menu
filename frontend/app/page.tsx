@@ -13,7 +13,7 @@ import {
   Clock,
   Calendar,
 } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -51,9 +51,6 @@ const categoryIcons = {
 export default function QRMenu() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("appetizers");
-
-  // Backend API URL - config файлаас авна
-  const API_BASE_URL = API_CONFIG.BACKEND_URL;
   const [tableNumber, setTableNumber] = useState<string | null>(null);
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -71,11 +68,17 @@ export default function QRMenu() {
   >([]);
   const [fetchingData, setFetchingData] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
-  const [restaurantName, setRestaurantName] = useState("Хаку");
+  const [restaurantName, setRestaurantName] = useState("Sakura");
   const [restaurantData, setRestaurantData] = useState<any>(null);
   const [currentLanguage, setCurrentLanguage] = useState<"en" | "mn" | "ja">(
-    "mn"
+    "en"
   );
+  const cartLoaded = useRef(false);
+  const pathname = usePathname();
+
+  // Backend API URL - config файлаас авна
+  const API_BASE_URL = API_CONFIG.BACKEND_URL;
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tableAvailable, setTableAvailable] = useState<boolean | null>(null); // Ширээ ашиглах боломжтой эсэх
 
@@ -83,7 +86,6 @@ export default function QRMenu() {
   const resetSubmittingState = () => {
     setIsSubmitting(false);
   };
-  const cartLoaded = useRef(false);
 
   // Language helper function - default хэл нь монгол
   const getText = (en: string, mn: string, ja: string) => {
@@ -119,14 +121,22 @@ export default function QRMenu() {
   // Function to get restaurant description based on current language
   const getRestaurantDescription = () => {
     if (!restaurantData) return "Хотын төвд байрлах жинхэнэ Япон хоол";
-    
+
     switch (currentLanguage) {
       case "en":
-        return restaurantData.descriptionEn || "Experience the perfect blend of tradition and innovation";
+        return (
+          restaurantData.descriptionEn ||
+          "Experience the perfect blend of tradition and innovation"
+        );
       case "ja":
-        return restaurantData.description || "街の中心で本格的な日本料理をお楽しみください";
+        return (
+          restaurantData.description ||
+          "街の中心で本格的な日本料理をお楽しみください"
+        );
       default:
-        return restaurantData.descriptionMn || "Хотын төвд байрлах жинхэнэ Япон хоол";
+        return (
+          restaurantData.descriptionMn || "Хотын төвд байрлах жинхэнэ Япон хоол"
+        );
     }
   };
 
@@ -1012,18 +1022,20 @@ export default function QRMenu() {
           </>
         )}
         {/* Floating Cart Button */}
-        <Button
-          className="fixed z-50 px-4 py-2 text-sm rounded-full shadow-lg bottom-4 md:bottom-8 right-4 md:right-8 md:px-6 md:py-3 md:text-base"
-          style={{
-            display: cart.length ? "block" : "none",
-            backgroundColor: "#FFB0B0",
-            color: "#8B4513",
-          }}
-          onClick={() => setCartOpen(true)}
-        >
-          {getText("View Cart", "Сагс харах", "カートを見る")} (
-          {cart.reduce((sum, i) => sum + i.quantity, 0)})
-        </Button>
+        {pathname !== "/admin" && (
+          <Button
+            className="fixed bottom-4 md:bottom-8 right-4 md:right-8 z-50 shadow-lg px-4 md:px-6 py-2 md:py-3 rounded-full text-sm md:text-base"
+            style={{
+              display: cart.length ? "block" : "none",
+              backgroundColor: "#FFB0B0",
+              color: "#8B4513",
+            }}
+            onClick={() => setCartOpen(true)}
+          >
+            {getText("View Cart", "Сагс харах", "カートを見る")} (
+            {cart.reduce((sum, i) => sum + i.quantity, 0)})
+          </Button>
+        )}
         {/* Cart Modal */}
         <Dialog open={cartOpen} onOpenChange={setCartOpen}>
           <DialogContent className="max-w-lg w-[95vw] md:max-w-lg max-h-[80vh] overflow-hidden">

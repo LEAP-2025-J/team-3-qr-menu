@@ -38,14 +38,14 @@ interface MenuGridProps {
   categories: Category[];
   searchQuery?: string;
   selectedCategory?: string;
-  onAdd?: (
+  onAddMenuItem?: (
     menuData: any
   ) => Promise<{ success: boolean; message?: string; error?: string }>;
-  onUpdate?: (
+  onUpdateMenuItem?: (
     id: string,
     menuData: any
   ) => Promise<{ success: boolean; message?: string; error?: string }>;
-  onDelete?: (
+  onDeleteMenuItem?: (
     id: string
   ) => Promise<{ success: boolean; message?: string; error?: string }>;
 }
@@ -61,9 +61,9 @@ export const MenuGrid = forwardRef<MenuGridRef, MenuGridProps>(
       categories,
       searchQuery = "",
       selectedCategory = "all",
-      onAdd,
-      onUpdate,
-      onDelete,
+      onAddMenuItem,
+      onUpdateMenuItem,
+      onDeleteMenuItem,
     },
     ref
   ) => {
@@ -153,8 +153,8 @@ export const MenuGrid = forwardRef<MenuGridRef, MenuGridProps>(
     const handleSubmit = async (formData: FormData) => {
       const result =
         isEditMode && currentItem
-          ? await onUpdate?.(currentItem._id, formData)
-          : await onAdd?.(formData);
+          ? await onUpdateMenuItem?.(currentItem._id, formData)
+          : await onAddMenuItem?.(formData);
       return result || { success: false, error: "Алдаа гарлаа" };
     };
 
@@ -163,7 +163,7 @@ export const MenuGrid = forwardRef<MenuGridRef, MenuGridProps>(
       if (!confirm("Энэ барааг устгахдаа итгэлтэй байна уу?")) return;
 
       try {
-        const result = await onDelete?.(id);
+        const result = await onDeleteMenuItem?.(id);
         if (result?.success) {
           alert(result.message || "Амжилттай устгагдлаа");
         } else {

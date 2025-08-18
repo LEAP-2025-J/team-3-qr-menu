@@ -34,7 +34,7 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
             onClick={() => onTabChange("orders")}
           >
             <ShoppingCart className="w-4 h-4 mr-3 flex-shrink-0" />
-            <span className="truncate">Захиалга</span>
+            <span className="truncate">Захиалгууд</span>
           </Button>
 
           <Button
@@ -44,15 +44,6 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
           >
             <MenuIcon className="w-4 h-4 mr-3 flex-shrink-0" />
             <span className="truncate">Хоолны цэс</span>
-          </Button>
-
-          <Button
-            variant={activeTab === "reservations" ? "default" : "ghost"}
-            className="w-full justify-start text-left overflow-hidden"
-            onClick={() => onTabChange("reservations")}
-          >
-            <Calendar className="w-4 h-4 mr-3 flex-shrink-0" />
-            <span className="truncate">Онлайн захиалга</span>
           </Button>
 
           <Button

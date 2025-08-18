@@ -89,7 +89,10 @@ export function RecentOrders({ orders, onRefresh, onUpdateStatus }: RecentOrders
                 </div>
                 <div>
                   <p className="text-sm">
-                    {order.items.map(item => `${item.quantity}x ${item.menuItem.nameEn}`).join(", ")}
+                    {order.items
+                      .filter(item => item.menuItem) // Only show items with valid menuItem
+                      .map(item => `${item.quantity}x ${item.menuItem.nameEn}`)
+                      .join(", ") || "No items"}
                   </p>
                   <p className="text-xs text-gray-500">{formatTime(order.createdAt)}</p>
                 </div>

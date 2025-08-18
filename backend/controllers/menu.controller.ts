@@ -3,6 +3,7 @@ import MenuItem from "../models/model.menuItem.js";
 import Category from "../models/model.category.js";
 import {
   uploadToCloudinary,
+  uploadBufferToCloudinary,
   deleteFromCloudinary,
 } from "../utils/cloudinary.js";
 
@@ -108,11 +109,32 @@ export const createMenuItem = async (req: Request, res: Response) => {
     }
 
     // Зураг upload хийх (хэрэв файл байвал)
-    let imageUrl = body.image || "";
+    let imageUrl = "";
     let imagePublicId = "";
 
     if (req.file) {
-      const uploadResult = await uploadToCloudinary(req.file.path);
+      console.log("=== FILE UPLOAD DEBUG ===");
+      console.log("File buffer size:", req.file.buffer ? req.file.buffer.length : "No buffer");
+      console.log("File size:", req.file.size);
+      console.log("File mimetype:", req.file.mimetype);
+      console.log("=========================");
+      
+      let uploadResult;
+      if (req.file.buffer) {
+        // Upload from memory buffer
+        uploadResult = await uploadBufferToCloudinary(req.file.buffer, req.file.originalname || 'image');
+      } else if (req.file.path) {
+        // Upload from file path (fallback)
+        uploadResult = await uploadToCloudinary(req.file.path);
+      } else {
+        return res.status(400).json({
+          success: false,
+          error: "No file data available for upload",
+        });
+      }
+      
+      console.log("Cloudinary upload result:", uploadResult);
+      
       if (uploadResult.success) {
         imageUrl = uploadResult.url;
         imagePublicId = uploadResult.public_id || "";
@@ -177,6 +199,8 @@ export const createMenuItem = async (req: Request, res: Response) => {
 export const updateMenuItem = async (req: Request, res: Response) => {
   try {
     const body = req.body;
+    
+
 
     // Validation
     if (!body.nameEn || !body.nameMn || !body.price || !body.categoryNameEn) {
@@ -196,11 +220,44 @@ export const updateMenuItem = async (req: Request, res: Response) => {
     }
 
     // Зураг upload хийх (хэрэв файл байвал)
-    let imageUrl = body.image || "";
+    let imageUrl = "";
     let imagePublicId = "";
 
+    // if (req.file) {
+    //   const uploadResult = await uploadToCloudinary(req.file.path);
+    //   if (uploadResult.success) {
+    //     imageUrl = uploadResult.url;
+    //     imagePublicId = uploadResult.public_id || "";
+    //   } else {
+    //     return res.status(400).json({
+    //       success: false,
+    //       error: uploadResult.error,
+    //     });
+    //   }
+    // }
     if (req.file) {
-      const uploadResult = await uploadToCloudinary(req.file.path);
+      console.log("=== FILE UPLOAD DEBUG ===");
+      console.log("File buffer size:", req.file.buffer ? req.file.buffer.length : "No buffer");
+      console.log("File size:", req.file.size);
+      console.log("File mimetype:", req.file.mimetype);
+      console.log("=========================");
+      
+      let uploadResult;
+      if (req.file.buffer) {
+        // Upload from memory buffer
+        uploadResult = await uploadBufferToCloudinary(req.file.buffer, req.file.originalname || 'image');
+      } else if (req.file.path) {
+        // Upload from file path (fallback)
+        uploadResult = await uploadToCloudinary(req.file.path);
+      } else {
+        return res.status(400).json({
+          success: false,
+          error: "No file data available for upload",
+        });
+      }
+      
+      console.log("Cloudinary upload result:", uploadResult);
+      
       if (uploadResult.success) {
         imageUrl = uploadResult.url;
         imagePublicId = uploadResult.public_id || "";
@@ -213,7 +270,7 @@ export const updateMenuItem = async (req: Request, res: Response) => {
     }
 
     // MenuItem-ийн data бэлтгэх
-    const updateData = {
+    const updateData: any = {
       name: body.nameEn, // name талбарт nameEn-ийг хадгалах
       nameEn: body.nameEn,
       nameMn: body.nameMn,
@@ -222,15 +279,19 @@ export const updateMenuItem = async (req: Request, res: Response) => {
       descriptionEn: body.descriptionEn || body.description || body.nameEn, // descriptionEn талбарт descriptionEn эсвэл description эсвэл nameEn
       descriptionMn: body.descriptionMn || body.description || body.nameMn, // descriptionMn талбарт descriptionMn эсвэл description эсвэл nameMn
       descriptionJp: body.descriptionJp || body.description || body.nameJp, // descriptionJp талбарт descriptionJp эсвэл description эсвэл nameJp
-      price: body.price,
+      price: parseFloat(body.price) || 0,
       category: category._id, // ObjectId хадгалах
-      image: imageUrl,
-      imagePublicId: imagePublicId, // Cloudinary public_id хадгалах
       ingredients: body.ingredients || [],
-      isAvailable: body.isAvailable !== undefined ? body.isAvailable : true,
-      preparationTime: body.preparationTime || 15,
+      isAvailable: body.isAvailable === "true" || body.isAvailable === true || body.isAvailable === undefined,
+      preparationTime: parseInt(body.preparationTime) || 15,
       order: body.order || 0,
     };
+
+    // Only update image fields if there's a new image
+    if (req.file) {
+      updateData.image = imageUrl;
+      updateData.imagePublicId = imagePublicId;
+    }
 
     const menuItem = await MenuItem.findByIdAndUpdate(
       req.params["id"],

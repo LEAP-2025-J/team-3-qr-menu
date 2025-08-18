@@ -169,7 +169,13 @@ async function seedDatabase() {
         price: 18.5,
         category: categories[2]._id,
         image: "/tonkotsu-ramen.png",
-        ingredients: ["pork bone broth", "noodles", "chashu", "egg", "green onions"],
+        ingredients: [
+          "pork bone broth",
+          "noodles",
+          "chashu",
+          "egg",
+          "green onions",
+        ],
         preparationTime: 15,
         order: 1,
       },
@@ -185,7 +191,13 @@ async function seedDatabase() {
         price: 16.0,
         category: categories[2]._id,
         image: "/miso-ramen.png",
-        ingredients: ["miso broth", "noodles", "vegetables", "corn", "bamboo shoots"],
+        ingredients: [
+          "miso broth",
+          "noodles",
+          "vegetables",
+          "corn",
+          "bamboo shoots",
+        ],
         preparationTime: 12,
         order: 2,
       },
@@ -213,12 +225,19 @@ async function seedDatabase() {
         nameJp: "牛すき焼き",
         description: "Thinly sliced beef with vegetables in sweet soy broth",
         descriptionEn: "Thinly sliced beef with vegetables in sweet soy broth",
-        descriptionMn: "Хүнсний ногоотой амттай шар буурцагны шөлтэй нимгэн хэсэгтэй үхрийн мах",
+        descriptionMn:
+          "Хүнсний ногоотой амттай шар буурцагны шөлтэй нимгэн хэсэгтэй үхрийн мах",
         descriptionJp: "野菜と甘い醤油スープの薄切り牛肉",
         price: 28.0,
         category: categories[3]._id,
         image: "/beef-sukiyaki.png",
-        ingredients: ["beef", "vegetables", "tofu", "noodles", "sweet soy sauce"],
+        ingredients: [
+          "beef",
+          "vegetables",
+          "tofu",
+          "noodles",
+          "sweet soy sauce",
+        ],
         preparationTime: 25,
         order: 2,
       },
@@ -269,7 +288,9 @@ async function seedDatabase() {
         capacity: i <= 4 ? 2 : i <= 8 ? 4 : 6,
         status: "empty",
         location: "main-hall",
-        qrCode: `http://localhost:3000/menu?table=${i}`,
+        qrCode: `${
+          process.env.FRONTEND_URL || "http://localhost:3000"
+        }/menu?table=${i}`,
       });
     }
     for (let i = 17; i <= 21; i++) {
@@ -278,7 +299,9 @@ async function seedDatabase() {
         capacity: 4,
         status: "empty",
         location: "terrace",
-        qrCode: `http://localhost:3000/menu?table=${i}`,
+        qrCode: `${
+          process.env.FRONTEND_URL || "http://localhost:3000"
+        }/menu?table=${i}`,
       });
     }
 

@@ -19,7 +19,6 @@ interface Reservation {
   partySize: number
   status: string
   table?: { number: number }
-  createdAt: string
 }
 
 interface ReservationsListProps {
