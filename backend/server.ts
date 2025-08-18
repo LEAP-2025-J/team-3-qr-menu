@@ -37,6 +37,7 @@ app.use(
       process.env["FRONTEND_URL"] || "http://192.168.0.102:3000",
       "http://localhost:3000",
       "http://127.0.0.1:3000",
+      "http://192.168.20.180:3000", // Шинэ IP хаяг нэмсэн
     ],
     credentials: true,
   })
