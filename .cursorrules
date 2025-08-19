@@ -1,0 +1,43 @@
+# Cursor Rules
+
+## General Rules
+
+1. Write comments in Mongolian and make them easy to understand
+2. Use pixel as CSS size unit
+3. Ask for permission before deleting old files and only delete them after the user says OK
+4. Organize admin components only into three main folders: orders, menu, settings
+5. Place type definition files in frontend/types folder with .type.ts extension
+6. Keep files under 200 lines in length
+7. Write all business logic in controllers, not in models
+8. Consolidate admin component types in frontend/components/admin/types folder
+9. Reduce file line counts starting with the largest files first in descending order
+10. Write concise code and avoid re-writing existing code
+11. Place all utility functions in components/admin/utils folder
+12. Before performing tasks based on images, explain understanding and wait for 'OK'
+13. Minimize use of if/else statements
+14. In routes files, only include routes. Put logic functions in controllers
+15. In model files, only include schemas and models. Follow MRC (Model-Route-Controller) architecture
+16. Use modular components and avoid files exceeding 200 lines
+
+## Code Style
+
+- Use TypeScript for type safety
+- Follow React best practices
+- Use Tailwind CSS for styling
+- Implement responsive design
+- Use proper error handling
+- Follow naming conventions consistently
+
+## File Organization
+
+- Keep related files together
+- Use descriptive file names
+- Maintain clear folder structure
+- Separate concerns properly
+
+## Performance
+
+- Optimize bundle size
+- Use proper loading states
+- Implement efficient data fetching
+- Minimize re-renders

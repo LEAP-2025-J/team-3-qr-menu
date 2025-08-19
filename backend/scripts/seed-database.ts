@@ -1,25 +1,25 @@
 import mongoose from "mongoose";
-import dotenv from "dotenv";
+import { config } from "dotenv";
 import Category from "../models/model.category.js";
 import MenuItem from "../models/model.menuItem.js";
 import Table from "../models/model.table.js";
 
-dotenv.config();
+config();
 // Fallback to default MongoDB URI if .env doesn't exist
-if (!process.env.MONGODB_URI) {
-  process.env.MONGODB_URI =
+if (!process.env["MONGODB_URI"]) {
+  process.env["MONGODB_URI"] =
     "mongodb+srv://togtoh:Random011021@cluster0.rds2ass.mongodb.net/menu";
 }
 
 async function seedDatabase() {
   try {
-    await mongoose.connect(process.env.MONGODB_URI!);
+    await mongoose.connect(process.env["MONGODB_URI"]!);
     console.log("Connected to MongoDB");
 
     // Clear existing data
     await Category.deleteMany({});
     await MenuItem.deleteMany({});
-    await Table.deleteMany({});
+    await (Table as any).deleteMany({});
     console.log("Cleared existing data");
 
     // Seed Categories

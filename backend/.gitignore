@@ -126,4 +126,7 @@ data/
 nodemon.json
 
 # React specific
-*.tsbuildinfo 
+*.tsbuildinfo
+
+# Seed files (development only)
+scripts/seed-*.ts 

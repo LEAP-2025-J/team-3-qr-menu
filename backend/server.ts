@@ -5,6 +5,9 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
 
+// Import database configuration
+import connectDB from "./config/database.js";
+
 // Import models (to register schemas with Mongoose)
 import "./models/model.category";
 import "./models/model.menuItem";
@@ -27,18 +30,13 @@ import { cleanupOldReservations } from "./controllers/reservation.controller.js"
 dotenv.config();
 
 const app = express();
-const PORT = process.env["PORT"] || 5000;
+const PORT = parseInt(process.env["PORT"] || "5000");
 
 // Security middleware
 app.use(helmet());
 app.use(
   cors({
-    origin: [
-      process.env["FRONTEND_URL"] || "http://192.168.0.102:3000",
-      "http://localhost:3000",
-      "http://127.0.0.1:3000",
-      "http://192.168.20.180:3000", // Шинэ IP хаяг нэмсэн
-    ],
+    origin: "*", // Development-д бүх IP-г зөвшөөрөх
     credentials: true,
   })
 );
@@ -55,10 +53,7 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 // Database connection
-mongoose
-  .connect(process.env["MONGODB_URI"]!)
-  .then(() => console.log("✅ Connected to MongoDB"))
-  .catch((err: any) => console.error("❌ MongoDB connection error:", err));
+connectDB();
 
 // Routes
 app.use("/api/menu", menuRoutes);
@@ -120,7 +115,11 @@ app.listen(PORT, "0.0.0.0", () => {
       const result = await cleanupOldReservations();
       if (result.success) {
         console.log(
-          `✅ Cleanup completed: ${result.deleted.completed} completed, ${result.deleted.cancelled} cancelled, ${result.deleted.noShow} no-show reservations removed`
+          `✅ Cleanup completed: ${result.deleted?.completed || 0} completed, ${
+            result.deleted?.cancelled || 0
+          } cancelled, ${
+            result.deleted?.noShow || 0
+          } no-show reservations removed`
         );
       } else {
         console.log("❌ Cleanup failed:", result.error);
@@ -132,7 +131,11 @@ app.listen(PORT, "0.0.0.0", () => {
         const result = await cleanupOldReservations();
         if (result.success) {
           console.log(
-            `✅ Cleanup completed: ${result.deleted.completed} completed, ${result.deleted.cancelled} cancelled, ${result.deleted.noShow} no-show reservations removed`
+            `✅ Cleanup completed: ${
+              result.deleted?.completed || 0
+            } completed, ${result.deleted?.cancelled || 0} cancelled, ${
+              result.deleted?.noShow || 0
+            } no-show reservations removed`
           );
         } else {
           console.log("❌ Cleanup failed:", result.error);

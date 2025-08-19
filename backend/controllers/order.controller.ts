@@ -76,11 +76,8 @@ export const getOrderById = async (req: Request, res: Response) => {
 // POST /api/orders - Create new order
 export const createOrder = async (req: Request, res: Response) => {
   try {
-    console.log("Order creation request body:", req.body);
-    console.log("Request body type:", typeof req.body);
-    console.log("Request body keys:", Object.keys(req.body));
-
     const {
+      tableNumber,
       tableId,
       items,
       customerName = "",
@@ -88,16 +85,17 @@ export const createOrder = async (req: Request, res: Response) => {
       specialRequests = "",
     } = req.body;
 
-    console.log("Extracted data:", {
-      tableId,
-      items,
-      customerName,
-      customerPhone,
-      specialRequests,
-    });
-
-    // Validate table exists and is available
-    const table = await (Table as any).findById(tableId);
+    // Find table by id or number
+    let table: any | null = null;
+    if (tableId) {
+      table = await (Table as any).findById(tableId);
+    }
+    if (!table && tableNumber) {
+      const n = Number(tableNumber);
+      if (!Number.isNaN(n)) {
+        table = await (Table as any).findOne({ number: n });
+      }
+    }
     if (!table) {
       return res.status(404).json({
         success: false,
@@ -105,25 +103,18 @@ export const createOrder = async (req: Request, res: Response) => {
       });
     }
 
-    // Ширээний статусыг шалгахгүй байх (QR menu-гээс ирэх захиалгын хувьд)
-    // if (table.status !== "empty") {
-    //   return res.status(400).json({
-    //     success: false,
-    //     error: "Ширээ захиалгатай байна",
-    //   });
-    // }
-
     // Calculate totals
     let subtotal = 0;
     const orderItems: any[] = [];
     let maxPrepTime = 15; // Default preparation time
 
     for (const item of items) {
-      const menuItem = await MenuItem.findById(item.menuItemId);
+      const menuItemId = item.menuItem || item.menuItemId || item.id;
+      const menuItem = await MenuItem.findById(menuItemId);
       if (!menuItem) {
         return res.status(404).json({
           success: false,
-          error: `Хоол ${item.menuItemId} олдсонгүй`,
+          error: `Хоол ${menuItemId} олдсонгүй`,
         });
       }
 
@@ -133,7 +124,7 @@ export const createOrder = async (req: Request, res: Response) => {
           .json({ success: false, error: `${menuItem.name} боломжгүй байна` });
       }
 
-      const itemTotal = menuItem.price * item.quantity;
+      const itemTotal = item.price * item.quantity; // Frontend-ээс ирсэн үнийг ашиглах
       subtotal += itemTotal;
 
       // Update max preparation time
@@ -144,8 +135,8 @@ export const createOrder = async (req: Request, res: Response) => {
       orderItems.push({
         menuItem: menuItem._id,
         quantity: item.quantity,
-        price: menuItem.price,
-        specialInstructions: item.specialInstructions,
+        price: item.price, // Frontend-ээс ирсэн үнэг ашиглах
+        specialInstructions: item.specialInstructions || "",
       });
     }
 
@@ -158,13 +149,8 @@ export const createOrder = async (req: Request, res: Response) => {
     // Calculate estimated time
     const estimatedTime = maxPrepTime + orderItems.length * 2; // Base time + 2 min per item
 
-    // Generate order number
-    const orderCount = await Order.countDocuments();
-    const orderNumber = `ORD-${String(orderCount + 1).padStart(4, "0")}`;
-
     const order = new Order({
-      orderNumber,
-      table: tableId,
+      table: table._id,
       items: orderItems,
       subtotal,
       tax,
@@ -179,7 +165,7 @@ export const createOrder = async (req: Request, res: Response) => {
     await order.save();
 
     // Update table status to reserved
-    await (Table as any).findByIdAndUpdate(tableId, {
+    await (Table as any).findByIdAndUpdate(table._id, {
       status: "reserved",
       currentOrder: order._id,
     });
@@ -198,30 +184,9 @@ export const createOrder = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Error creating order:", error);
-    console.error("Error details:", {
-      message: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-      name: error instanceof Error ? error.name : undefined,
-    });
-
-    // Илүү дэлгэрэнгүй error message өгөх
-    let errorMessage = "Захиалга үүсгэхэд алдаа гарлаа";
-    let errorDetails = {};
-
-    if (error instanceof Error) {
-      errorMessage = error.message;
-      errorDetails = {
-        name: error.name,
-        stack:
-          process.env["NODE_ENV"] === "development" ? error.stack : undefined,
-      };
-    }
-
     res.status(500).json({
       success: false,
-      error: errorMessage,
-      details: errorDetails,
-      timestamp: new Date().toISOString(),
+      error: "Захиалга үүсгэхэд алдаа гарлаа",
     });
   }
 };
@@ -246,12 +211,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 
     // Update table status based on order status
     if (status === "completed" || status === "cancelled") {
-      console.log(
-        `Захиалгын статус ${status} болсон - ширээний currentOrder цэвэрлэж байна`
-      );
-      console.log(`Ширээний ID: ${order.table._id}`);
-
-      const updatedTable = await (Table as any).findByIdAndUpdate(
+      await (Table as any).findByIdAndUpdate(
         order.table._id,
         {
           status: "empty",
@@ -259,13 +219,6 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
         },
         { new: true }
       );
-
-      console.log(`Ширээ шинэчлэгдсэн:`, {
-        tableId: updatedTable._id,
-        tableNumber: updatedTable.number,
-        status: updatedTable.status,
-        currentOrder: updatedTable.currentOrder,
-      });
     }
 
     res.json({

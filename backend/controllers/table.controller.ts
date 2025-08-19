@@ -11,7 +11,8 @@ export const getAllTables = async (req: Request, res: Response) => {
       query = { ...query, number: parseInt(number as string) };
     }
 
-    const tables = await Table.find(query)
+    const tables = await (Table as any)
+      .find(query)
       .populate({
         path: "currentOrder",
         populate: {
@@ -21,25 +22,6 @@ export const getAllTables = async (req: Request, res: Response) => {
       })
       .sort({ location: 1, number: 1 })
       .lean();
-
-    // Debug log for table 8
-    if (number === "8" || !number) {
-      const table8 = tables.find((t: any) => t.number === 8);
-      if (table8) {
-        console.log("8-р ширээний мэдээлэл:", {
-          _id: table8._id,
-          number: table8.number,
-          status: table8.status,
-          currentOrder: table8.currentOrder
-            ? {
-                _id: table8.currentOrder._id,
-                orderNumber: table8.currentOrder.orderNumber,
-                table: table8.currentOrder.table,
-              }
-            : null,
-        });
-      }
-    }
 
     res.json({
       success: true,
@@ -68,7 +50,7 @@ export const createTable = async (req: Request, res: Response) => {
     }
 
     // Check if table number already exists
-    const existingTable = await Table.findOne({ number });
+    const existingTable = await (Table as any).findOne({ number });
     if (existingTable) {
       return res.status(400).json({
         success: false,
@@ -78,7 +60,7 @@ export const createTable = async (req: Request, res: Response) => {
 
     // Generate QR code URL
     const qrCode = `${
-      process.env.FRONTEND_URL || "http://localhost:3000"
+      process.env["FRONTEND_URL"] || "http://localhost:3000"
     }/menu?table=${number}`;
 
     const table = new Table({
@@ -110,17 +92,15 @@ export const updateTableStatus = async (req: Request, res: Response) => {
     const { status } = req.body;
     const tableId = req.params["id"];
 
-    const table = await Table.findByIdAndUpdate(
-      tableId,
-      { status },
-      { new: true }
-    ).populate({
-      path: "currentOrder",
-      populate: {
-        path: "items.menuItem",
-        select: "name nameEn nameMn nameJp price",
-      },
-    });
+    const table = await (Table as any)
+      .findByIdAndUpdate(tableId, { status }, { new: true })
+      .populate({
+        path: "currentOrder",
+        populate: {
+          path: "items.menuItem",
+          select: "name nameEn nameMn nameJp price",
+        },
+      });
 
     if (!table) {
       return res.status(404).json({
@@ -149,7 +129,7 @@ export const updateTable = async (req: Request, res: Response) => {
     const { id } = req.params;
     const updateData = req.body;
 
-    const table = await Table.findByIdAndUpdate(id, updateData, {
+    const table = await (Table as any).findByIdAndUpdate(id, updateData, {
       new: true,
       runValidators: true,
     });
@@ -176,23 +156,25 @@ export const clearTableOrder = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const table = await Table.findByIdAndUpdate(
-      id,
-      {
-        status: "empty",
-        currentOrder: null,
-      },
-      {
-        new: true,
-        runValidators: true,
-      }
-    ).populate({
-      path: "currentOrder",
-      populate: {
-        path: "items.menuItem",
-        select: "name nameEn nameMn nameJp price",
-      },
-    });
+    const table = await (Table as any)
+      .findByIdAndUpdate(
+        id,
+        {
+          status: "empty",
+          currentOrder: null,
+        },
+        {
+          new: true,
+          runValidators: true,
+        }
+      )
+      .populate({
+        path: "currentOrder",
+        populate: {
+          path: "items.menuItem",
+          select: "name nameEn nameMn nameJp price",
+        },
+      });
 
     if (!table) {
       return res.status(404).json({

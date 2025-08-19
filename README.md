@@ -90,7 +90,7 @@ Frontend will run on http://localhost:3000
 - 🛒 Place orders directly from table
 - ⏰ View operating hours
 - 📅 Make table reservations
-- 🌐 Multi-language support (English/Mongolian)
+- 🌐 Multi-language support (English/Mongolian/Japanese)
 
 ### Admin Features
 
@@ -189,4 +189,4 @@ MIT License - see LICENSE file for details
 
 ## 📞 Support
 
-For support, email support@sakura-restaurant.com or create an issue on GitHub.
+For support, email support@haku-restaurant.com or create an issue on GitHub.
