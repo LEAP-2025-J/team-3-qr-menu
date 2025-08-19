@@ -5,9 +5,14 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: "v0 App",
-  description: "Created with v0",
-  generator: "v0.dev",
+  title: "Haku QR Menu Orders System",
+  description:
+    "Modern QR menu system for Japanese restaurants with real-time order management",
+  generator: "Haku Restaurant",
+  keywords: ["restaurant", "qr-menu", "japanese", "orders", "haku"],
+  authors: [{ name: "Haku Restaurant Team" }],
+  viewport: "width=device-width, initial-scale=1",
+  robots: "index, follow",
 };
 
 export default function RootLayout({

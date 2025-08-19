@@ -1,8 +1,18 @@
 // API Configuration
-// IP хаягийг энд өөрчлөх хэрэгтэй
+// Production болон development environment-д зориулсан тохиргоо
 export const API_CONFIG = {
-  BACKEND_URL: "http://192.168.20.198:5000",
-  FRONTEND_URL: "http://192.168.20.198:3000",
+  BACKEND_URL:
+    process.env.NEXT_PUBLIC_BACKEND_URL ||
+    (process.env.NODE_ENV === "production"
+      ? "https://haku-restaurant-backend.vercel.app"
+      : process.env.NEXT_PUBLIC_LOCAL_BACKEND_URL ||
+        "http://192.168.0.102:5000"),
+  FRONTEND_URL:
+    process.env.NEXT_PUBLIC_FRONTEND_URL ||
+    (process.env.NODE_ENV === "production"
+      ? "https://haku-restaurant.vercel.app"
+      : process.env.NEXT_PUBLIC_LOCAL_FRONTEND_URL ||
+        "http://192.168.0.102:3000"),
 };
 
 // Backend API endpoints
@@ -13,4 +23,57 @@ export const API_ENDPOINTS = {
   CATEGORIES: `${API_CONFIG.BACKEND_URL}/api/categories`,
   RESERVATIONS: `${API_CONFIG.BACKEND_URL}/api/reservations`,
   RESTAURANT: `${API_CONFIG.BACKEND_URL}/api/restaurant`,
+};
+
+// API helper functions
+export const apiHelpers = {
+  // GET request helper
+  async get(endpoint: string) {
+    const response = await fetch(endpoint);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  },
+
+  // POST request helper
+  async post(endpoint: string, data: any) {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  },
+
+  // PUT request helper
+  async put(endpoint: string, data: any) {
+    const response = await fetch(endpoint, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  },
+
+  // DELETE request helper
+  async delete(endpoint: string) {
+    const response = await fetch(endpoint, {
+      method: "DELETE",
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  },
 };

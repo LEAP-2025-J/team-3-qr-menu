@@ -17,23 +17,23 @@ import {
 } from "lucide-react";
 import { AdminHeader } from "./admin-header";
 import { AdminSidebar } from "./admin-sidebar";
-import { DashboardStats } from "./dashboard-stats";
-import { MenuManagement } from "./menu-management";
-import { OrdersList } from "./orders-list";
-import { ReservationsList } from "./reservations-list";
-import { TableLayout } from "./table-layout";
-import { SettingsForm } from "./settings-form";
-import { ReservationModal } from "./reservation-modal";
-import { EditReservationModal } from "./edit-reservation-modal";
-import { CreateOrderModal } from "./create-order-modal";
+import { DashboardStats } from "./orders/dashboard-stats";
+import { MenuManagement } from "./menu/menu-management";
+import { OrdersList } from "./orders/orders-list";
+import { ReservationsList } from "./orders/reservations-list";
+import { TableLayout } from "./orders/table-layout";
+import { SettingsForm } from "./settings/settings-form";
+import { ReservationModal } from "./orders/reservation-modal";
+import { EditReservationModal } from "./orders/edit-reservation-modal";
+import { CreateOrderModal } from "./orders/create-order-modal";
 import { useAdminData } from "@/hooks/use-admin-data";
 import { useToast } from "@/hooks/use-toast";
 import { Toaster } from "@/components/ui/toaster";
-import { CategoryModal } from "./category-modal";
+import { CategoryModal } from "./menu/category-modal";
 import { API_CONFIG } from "@/config/api";
 import { AdminDashboardSkeleton } from "./admin-dashboard-skeleton";
-import { MenuSkeleton } from "./menu-skeleton";
-import { SettingsSkeleton } from "./settings-skeleton";
+import { MenuSkeleton } from "./menu/menu-skeleton";
+import { SettingsSkeleton } from "./settings/settings-skeleton";
 
 export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("orders");

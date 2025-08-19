@@ -25,8 +25,8 @@ const seedOrders = async () => {
     console.log("Хуучин захиалгууд устгагдлаа");
 
     // Ширээ болон хоолны мэдээллийг авах
-    const tables = await Table.find().limit(5); // Эхний 5 ширээ
-    const menuItems = await MenuItem.find().limit(10); // Эхний 10 хоол
+    const tables = await (Table as any).find().limit(5); // Эхний 5 ширээ
+    const menuItems = await (MenuItem as any).find().limit(10); // Эхний 10 хоол
 
     if (tables.length === 0) {
       console.log("Ширээ олдсонгүй. Эхлээд ширээ үүсгэх хэрэгтэй.");
@@ -114,7 +114,7 @@ const seedOrders = async () => {
 
     // Ширээний статусыг шинэчлэх
     for (let i = 0; i < createdOrders.length; i++) {
-      await Table.findByIdAndUpdate(tables[i]._id, {
+      await (Table as any).findByIdAndUpdate(tables[i]._id, {
         status: "reserved",
         currentOrder: createdOrders[i]._id,
       });

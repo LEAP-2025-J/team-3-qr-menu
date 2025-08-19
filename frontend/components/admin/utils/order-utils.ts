@@ -8,7 +8,7 @@ export function getOrderStatusColor(status: Order["status"]): string {
       return "bg-yellow-100 text-yellow-800 border-yellow-200";
     case "preparing":
       return "bg-blue-100 text-blue-800 border-blue-200";
-    case "ready":
+    case "serving":
       return "bg-green-100 text-green-800 border-green-200";
     case "completed":
       return "bg-gray-100 text-gray-800 border-gray-200";
@@ -26,8 +26,8 @@ export function getOrderStatusText(status: Order["status"]): string {
       return "Хүлээгдэж буй";
     case "preparing":
       return "Бэлтгэж байна";
-    case "ready":
-      return "Бэлэн";
+    case "serving":
+      return "Үйлчилж байна";
     case "completed":
       return "Дууссан";
     case "cancelled":
@@ -43,8 +43,8 @@ export function getNextStatus(currentStatus: Order["status"]): Order["status"] {
     case "pending":
       return "preparing";
     case "preparing":
-      return "ready";
-    case "ready":
+      return "serving";
+    case "serving":
       return "completed";
     default:
       return currentStatus;
@@ -57,8 +57,8 @@ export function getPrimaryActionLabel(status: Order["status"]): string {
     case "pending":
       return "Хэвлэх";
     case "preparing":
-      return "Бэлэн болгох";
-    case "ready":
+      return "Үйлчилж эхлэх";
+    case "serving":
       return "Дуусгах";
     default:
       return "Дараагийн алхам";
@@ -70,13 +70,25 @@ export async function requestUpdateStatus(
   orderId: string,
   status: Order["status"]
 ): Promise<boolean> {
-  const res = await fetch(`${API_CONFIG.BACKEND_URL}/api/orders/${orderId}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ status }),
-  });
-  if (!res.ok) {
-    console.error("Захиалгын статус шинэчлэхэд алдаа гарлаа");
+  try {
+    const res = await fetch(`${API_CONFIG.BACKEND_URL}/api/orders/${orderId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      console.error(
+        "Захиалгын статус шинэчлэхэд алдаа гарлаа:",
+        errorData.error || res.statusText
+      );
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Захиалгын статус шинэчлэхэд алдаа гарлаа:", error);
+    return false;
   }
-  return res.ok;
 }

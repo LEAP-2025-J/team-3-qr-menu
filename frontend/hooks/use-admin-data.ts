@@ -155,8 +155,6 @@ export function useAdminData() {
 
   const fetchTables = async () => {
     try {
-      console.log("fetchTables called");
-
       const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/tables`);
       const data = await response.json();
       if (data.success) {
@@ -169,12 +167,6 @@ export function useAdminData() {
         let currentReservations: any[] = [];
         if (reservationsData.success) {
           currentReservations = reservationsData.data;
-          console.log("Fetched reservations:", currentReservations.length);
-          currentReservations.forEach((res: any) => {
-            console.log(
-              `Reservation ${res.reservationNumber}: date=${res.date}, table=${res.table}`
-            );
-          });
         }
 
         // Populate currentReservations field for each table (array of all reservations)
@@ -196,11 +188,6 @@ export function useAdminData() {
             }
 
             const matches = reservationTableId === tableId;
-            if (matches) {
-              console.log(
-                `Table ${table.number} matched with reservation ${res.reservationNumber}`
-              );
-            }
             return matches;
           });
 
@@ -210,15 +197,6 @@ export function useAdminData() {
             currentReservation: tableReservations[0] || undefined, // Keep for backward compatibility
           };
         });
-
-        console.log(
-          "Tables with reservations:",
-          tablesWithReservations.map((t) => ({
-            number: t.number,
-            hasReservation: !!t.currentReservation,
-            reservationNumber: t.currentReservation?.reservationNumber,
-          }))
-        );
 
         setTables(tablesWithReservations);
       }

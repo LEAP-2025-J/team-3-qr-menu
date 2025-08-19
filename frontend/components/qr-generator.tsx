@@ -20,7 +20,7 @@ export default function QRGenerator() {
   const downloadQR = () => {
     const link = document.createElement("a")
     link.href = qrUrl
-    link.download = "sakura-menu-qr.png"
+    link.download = "haku-menu-qr.png"
     link.click()
   }
 

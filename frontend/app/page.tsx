@@ -29,20 +29,27 @@ function QRMenuContent() {
 
   // Use custom hooks
   const { tableAvailable, setTableAvailable } = useTable(tableNumber, getText);
-  const { restaurantName, restaurantData, getRestaurantDescription, isBefore7PM, getDiscountedPrice } = useRestaurant(currentLanguage);
-  const { menuItems, categories, loadingMenu, fetchingData, groupedMenu } = useMenu();
-  const { 
-    cart, 
-    setCart, 
-    cartOpen, 
-    setCartOpen, 
-    isSubmitting, 
+  const {
+    restaurantName,
+    restaurantData,
+    getRestaurantDescription,
+    isBefore7PM,
+    getDiscountedPrice,
+  } = useRestaurant(currentLanguage);
+  const { menuItems, categories, loadingMenu, fetchingData, groupedMenu } =
+    useMenu();
+  const {
+    cart,
+    setCart,
+    cartOpen,
+    setCartOpen,
+    isSubmitting,
     setIsSubmitting,
-    addToCart, 
-    removeFromCart, 
-    changeQuantity, 
-    clearCart, 
-    total 
+    addToCart,
+    removeFromCart,
+    changeQuantity,
+    clearCart,
+    total,
   } = useCart(tableNumber, tableAvailable, getText);
 
   // Handle add to cart with proper parameters
@@ -76,7 +83,7 @@ function QRMenuContent() {
       {/* Floating Cart Button */}
       {pathname !== "/admin" && cart.length > 0 && (
         <button
-          className="fixed bottom-4 md:bottom-8 right-4 md:right-8 z-50 shadow-lg px-4 md:px-6 py-2 md:py-3 rounded-full text-sm md:text-base"
+          className="fixed z-50 px-4 py-2 text-sm rounded-full shadow-lg bottom-4 md:bottom-8 right-4 md:right-8 md:px-6 md:py-3 md:text-base"
           style={{ backgroundColor: "#FFB0B0", color: "#8B4513" }}
           onClick={() => setCartOpen(true)}
         >
@@ -96,8 +103,73 @@ function QRMenuContent() {
         onChangeQuantity={changeQuantity}
         onClearCart={clearCart}
         onSubmitOrder={async () => {
-          // Order submission logic will be implemented in CartModal
-          console.log("Order submission");
+          try {
+            setIsSubmitting(true);
+
+            // Create order data
+            const orderData = {
+              tableNumber: tableNumber,
+              items: cart.map((item) => ({
+                menuItem: item.id,
+                quantity: item.quantity,
+                price: item.price,
+                name: item.nameEn,
+                nameMn: item.nameMn,
+                nameJp: item.nameJp,
+              })),
+              total: total,
+              status: "pending",
+            };
+
+            // Send order to backend
+            const response = await fetch(
+              `${
+                process.env.NEXT_PUBLIC_BACKEND_URL ||
+                "http://192.168.0.102:5000"
+              }/api/orders`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify(orderData),
+              }
+            );
+
+            if (!response.ok) {
+              throw new Error("Failed to submit order");
+            }
+
+            const result = await response.json();
+
+            if (result.success) {
+              // Clear cart after successful order
+              clearCart();
+              setCartOpen(false);
+
+              // Show success message
+              alert(
+                getText(
+                  "Order submitted successfully!",
+                  "Захиалга амжилттай илгээгдлээ!",
+                  "注文が正常に送信されました！"
+                )
+              );
+            } else {
+              throw new Error(result.error || "Failed to submit order");
+            }
+          } catch (error) {
+            console.error("Error submitting order:", error);
+            alert(
+              getText(
+                "Failed to submit order. Please try again.",
+                "Захиалга илгээхэд алдаа гарлаа. Дахин оролдоно уу.",
+                "注文の送信に失敗しました。もう一度お試しください。"
+              )
+            );
+          } finally {
+            setIsSubmitting(false);
+          }
         }}
       />
 

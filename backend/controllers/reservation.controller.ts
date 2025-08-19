@@ -16,7 +16,8 @@ export const getAllReservations = async (req: Request, res: Response) => {
       query.status = status;
     }
 
-    const reservations = await Reservation.find(query)
+    const reservations = await (Reservation as any)
+      .find(query)
       .populate("table", "number")
       .sort({ date: 1, time: 1 })
       .lean();
@@ -109,7 +110,7 @@ export const createReservation = async (req: Request, res: Response) => {
       const requestedTimeMinutes = hours * 60 + minutes;
 
       // Check for reservations on the same table on the same date
-      const existingReservations = await Reservation.find({
+      const existingReservations = await (Reservation as any).find({
         table: reservationData.table,
         date: reservationData.date, // Direct string comparison
         status: { $nin: ["cancelled", "no-show", "completed"] }, // Don't count cancelled/completed reservations
@@ -223,11 +224,13 @@ export const cancelReservation = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const reservation = await Reservation.findByIdAndUpdate(
-      id,
-      { status: "cancelled" },
-      { new: true, runValidators: true }
-    ).populate("table", "number");
+    const reservation = await (Reservation as any)
+      .findByIdAndUpdate(
+        id,
+        { status: "cancelled" },
+        { new: true, runValidators: true }
+      )
+      .populate("table", "number");
 
     if (!reservation) {
       return res.status(404).json({
@@ -276,7 +279,7 @@ export const updateReservation = async (req: Request, res: Response) => {
     }
 
     // Check if reservation exists
-    const existingReservation = await Reservation.findById(id);
+    const existingReservation = await (Reservation as any).findById(id);
     if (!existingReservation) {
       return res.status(404).json({
         success: false,
@@ -285,11 +288,9 @@ export const updateReservation = async (req: Request, res: Response) => {
     }
 
     // Update the reservation
-    const updatedReservation = await Reservation.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true, runValidators: true }
-    ).populate("table", "number");
+    const updatedReservation = await (Reservation as any)
+      .findByIdAndUpdate(id, updateData, { new: true, runValidators: true })
+      .populate("table", "number");
 
     res.json({
       success: true,
@@ -310,7 +311,7 @@ export const deleteReservation = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const reservation = await Reservation.findById(id);
+    const reservation = await (Reservation as any).findById(id);
 
     if (!reservation) {
       return res.status(404).json({
@@ -332,7 +333,7 @@ export const deleteReservation = async (req: Request, res: Response) => {
       try {
         // Import Table model dynamically to avoid circular dependencies
         const Table = (await import("../models/model.table.js")).default;
-        await Table.findByIdAndUpdate(
+        await (Table as any).findByIdAndUpdate(
           reservation.table,
           { status: "empty" },
           { new: true }
@@ -342,7 +343,7 @@ export const deleteReservation = async (req: Request, res: Response) => {
       }
     }
 
-    await Reservation.findByIdAndDelete(id);
+    await (Reservation as any).findByIdAndDelete(id);
 
     res.json({
       success: true,
@@ -375,19 +376,19 @@ export const cleanupOldReservations = async () => {
     noShowCutoff.setDate(noShowCutoff.getDate() - 7);
 
     // Delete old completed reservations
-    const deletedCompleted = await Reservation.deleteMany({
+    const deletedCompleted = await (Reservation as any).deleteMany({
       status: "completed",
       date: { $lt: oneMonthAgo },
     });
 
     // Delete old cancelled reservations
-    const deletedCancelled = await Reservation.deleteMany({
+    const deletedCancelled = await (Reservation as any).deleteMany({
       status: "cancelled",
       date: { $lt: oneWeekAgo },
     });
 
     // Delete old no-show reservations
-    const deletedNoShow = await Reservation.deleteMany({
+    const deletedNoShow = await (Reservation as any).deleteMany({
       status: "no-show",
       date: { $lt: noShowCutoff },
     });

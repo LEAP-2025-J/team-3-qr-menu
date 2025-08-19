@@ -1,15 +1,13 @@
 {
-  "name": "sakura-restaurant-backend",
+  "name": "haku-restaurant-backend",
   "version": "1.0.0",
-  "description": "Backend API for Sakura Japanese Restaurant QR Menu System",
+  "description": "Backend API for Haku Japanese Restaurant QR Menu System",
   "main": "dist/server.js",
   "type": "module",
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
     "dev": "tsx watch server.ts",
-    "seed": "tsx scripts/seed-database.ts",
-    "seed-orders": "tsx scripts/seed-orders.ts",
     "test": "jest"
   },
   "dependencies": {
@@ -41,7 +39,14 @@
     "jest": "^29.7.0",
     "supertest": "^6.3.3"
   },
-  "keywords": ["restaurant", "qr-menu", "api", "mongodb", "express", "typescript"],
+  "keywords": [
+    "restaurant",
+    "qr-menu",
+    "api",
+    "mongodb",
+    "express",
+    "typescript"
+  ],
   "author": "Your Name",
   "license": "MIT"
 }

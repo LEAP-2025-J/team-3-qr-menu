@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { API_CONFIG } from "@/config/api";
 
 export function useRestaurant(currentLanguage: "en" | "mn" | "ja") {
-  const [restaurantName, setRestaurantName] = useState("Sakura");
+  const [restaurantName, setRestaurantName] = useState("Haku");
   const [restaurantData, setRestaurantData] = useState<any>(null);
 
   // Fetch restaurant data

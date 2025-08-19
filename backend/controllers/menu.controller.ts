@@ -5,7 +5,7 @@ import {
   uploadToCloudinary,
   uploadBufferToCloudinary,
   deleteFromCloudinary,
-} from "../utils/cloudinary.js";
+} from "../utils/cloudinary";
 
 // GET /api/menu - Get all menu items
 export const getAllMenuItems = async (req: Request, res: Response) => {
@@ -114,15 +114,21 @@ export const createMenuItem = async (req: Request, res: Response) => {
 
     if (req.file) {
       console.log("=== FILE UPLOAD DEBUG ===");
-      console.log("File buffer size:", req.file.buffer ? req.file.buffer.length : "No buffer");
+      console.log(
+        "File buffer size:",
+        req.file.buffer ? req.file.buffer.length : "No buffer"
+      );
       console.log("File size:", req.file.size);
       console.log("File mimetype:", req.file.mimetype);
       console.log("=========================");
-      
+
       let uploadResult;
       if (req.file.buffer) {
         // Upload from memory buffer
-        uploadResult = await uploadBufferToCloudinary(req.file.buffer, req.file.originalname || 'image');
+        uploadResult = await uploadBufferToCloudinary(
+          req.file.buffer,
+          req.file.originalname || "image"
+        );
       } else if (req.file.path) {
         // Upload from file path (fallback)
         uploadResult = await uploadToCloudinary(req.file.path);
@@ -132,9 +138,9 @@ export const createMenuItem = async (req: Request, res: Response) => {
           error: "No file data available for upload",
         });
       }
-      
+
       console.log("Cloudinary upload result:", uploadResult);
-      
+
       if (uploadResult.success) {
         imageUrl = uploadResult.url;
         imagePublicId = uploadResult.public_id || "";
@@ -199,8 +205,6 @@ export const createMenuItem = async (req: Request, res: Response) => {
 export const updateMenuItem = async (req: Request, res: Response) => {
   try {
     const body = req.body;
-    
-
 
     // Validation
     if (!body.nameEn || !body.nameMn || !body.price || !body.categoryNameEn) {
@@ -237,15 +241,21 @@ export const updateMenuItem = async (req: Request, res: Response) => {
     // }
     if (req.file) {
       console.log("=== FILE UPLOAD DEBUG ===");
-      console.log("File buffer size:", req.file.buffer ? req.file.buffer.length : "No buffer");
+      console.log(
+        "File buffer size:",
+        req.file.buffer ? req.file.buffer.length : "No buffer"
+      );
       console.log("File size:", req.file.size);
       console.log("File mimetype:", req.file.mimetype);
       console.log("=========================");
-      
+
       let uploadResult;
       if (req.file.buffer) {
         // Upload from memory buffer
-        uploadResult = await uploadBufferToCloudinary(req.file.buffer, req.file.originalname || 'image');
+        uploadResult = await uploadBufferToCloudinary(
+          req.file.buffer,
+          req.file.originalname || "image"
+        );
       } else if (req.file.path) {
         // Upload from file path (fallback)
         uploadResult = await uploadToCloudinary(req.file.path);
@@ -255,9 +265,9 @@ export const updateMenuItem = async (req: Request, res: Response) => {
           error: "No file data available for upload",
         });
       }
-      
+
       console.log("Cloudinary upload result:", uploadResult);
-      
+
       if (uploadResult.success) {
         imageUrl = uploadResult.url;
         imagePublicId = uploadResult.public_id || "";
@@ -282,7 +292,10 @@ export const updateMenuItem = async (req: Request, res: Response) => {
       price: parseFloat(body.price) || 0,
       category: category._id, // ObjectId хадгалах
       ingredients: body.ingredients || [],
-      isAvailable: body.isAvailable === "true" || body.isAvailable === true || body.isAvailable === undefined,
+      isAvailable:
+        body.isAvailable === "true" ||
+        body.isAvailable === true ||
+        body.isAvailable === undefined,
       preparationTime: parseInt(body.preparationTime) || 15,
       order: body.order || 0,
     };
