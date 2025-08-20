@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import Table from "../models/model.table";
+import Table from "../models/model.table.js";
 
 // GET /api/tables - Get all tables or specific table by number
 export const getAllTables = async (req: Request, res: Response) => {

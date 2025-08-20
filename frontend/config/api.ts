@@ -4,15 +4,15 @@ export const API_CONFIG = {
   BACKEND_URL:
     process.env.NEXT_PUBLIC_BACKEND_URL ||
     (process.env.NODE_ENV === "production"
-      ? "https://haku-restaurant-backend.vercel.app"
+      ? "https://backend-qne8i19tp-kherlenchimegs-projects.vercel.app"
       : process.env.NEXT_PUBLIC_LOCAL_BACKEND_URL ||
-        "http://192.168.0.102:5000"),
+        "http://192.168.0.102:5000"), //192.168.0.102
   FRONTEND_URL:
     process.env.NEXT_PUBLIC_FRONTEND_URL ||
     (process.env.NODE_ENV === "production"
       ? "https://haku-restaurant.vercel.app"
       : process.env.NEXT_PUBLIC_LOCAL_FRONTEND_URL ||
-        "http://192.168.0.102:3000"),
+        "http://192.168.0.102:3000"), //192.168.0.102
 };
 
 // Backend API endpoints

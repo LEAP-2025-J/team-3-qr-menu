@@ -9,20 +9,20 @@ import dotenv from "dotenv";
 import connectDB from "./config/database.js";
 
 // Import models (to register schemas with Mongoose)
-import "./models/model.category";
-import "./models/model.menuItem";
-import "./models/model.order";
-import "./models/model.table";
-import "./models/model.reservation";
-import "./models/model.restaurant";
+import "./models/model.category.js";
+import "./models/model.menuItem.js";
+import "./models/model.order.js";
+import "./models/model.table.js";
+import "./models/model.reservation.js";
+import "./models/model.restaurant.js";
 
 // Import routes
-import menuRoutes from "./routes/route.menu";
-import orderRoutes from "./routes/route.orders";
-import tableRoutes from "./routes/route.tables";
-import reservationRoutes from "./routes/route.reservations";
-import categoryRoutes from "./routes/route.categories";
-import restaurantRoutes from "./routes/route.restaurant";
+import menuRoutes from "./routes/route.menu.js";
+import orderRoutes from "./routes/route.orders.js";
+import tableRoutes from "./routes/route.tables.js";
+import reservationRoutes from "./routes/route.reservations.js";
+import categoryRoutes from "./routes/route.categories.js";
+import restaurantRoutes from "./routes/route.restaurant.js";
 
 // Import cleanup function
 import { cleanupOldReservations } from "./controllers/reservation.controller.js";
@@ -32,21 +32,57 @@ dotenv.config();
 const app = express();
 const PORT = parseInt(process.env["PORT"] || "5000");
 
-// Security middleware
-app.use(helmet());
+// CORS тохиргоо - Vercel дээр ажиллахад зориулсан (эхэнд нь тавих)
+app.use((req, res, next) => {
+  console.log(`🔍 Request: ${req.method} ${req.path}`);
+  console.log(`🌐 Origin: ${req.headers.origin}`);
+
+  // CORS headers - бүх request-д нэмэх
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, OPTIONS"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+  );
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+
+  if (req.method === "OPTIONS") {
+    console.log("✅ OPTIONS request handled");
+    res.status(200).end();
+    return;
+  }
+
+  next();
+});
+
+// Security middleware - түр хаасан
+// app.use(helmet());
+
+// CORS middleware - зөв тохиргоотой
 app.use(
   cors({
-    origin: "*", // Development-д бүх IP-г зөвшөөрөх
+    origin: "*",
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: [
+      "Origin",
+      "X-Requested-With",
+      "Content-Type",
+      "Accept",
+      "Authorization",
+    ],
   })
 );
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 500, // limit each IP to 500 requests per windowMs (нэмэгдүүлсэн)
-});
-app.use("/api/", limiter);
+// Rate limiting - түр хаасан (401 алдааны шалтгаан байж болно)
+// const limiter = rateLimit({
+//   windowMs: 15 * 60 * 1000, // 15 minutes
+//   max: 500, // limit each IP to 500 requests per windowMs (нэмэгдүүлсэн)
+// });
+// app.use("/api/", limiter);
 
 // Body parsing middleware
 app.use(express.json({ limit: "10mb" }));

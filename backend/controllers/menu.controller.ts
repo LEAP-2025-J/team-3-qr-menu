@@ -5,7 +5,7 @@ import {
   uploadToCloudinary,
   uploadBufferToCloudinary,
   deleteFromCloudinary,
-} from "../utils/cloudinary";
+} from "../utils/cloudinary.js";
 
 // GET /api/menu - Get all menu items
 export const getAllMenuItems = async (req: Request, res: Response) => {
