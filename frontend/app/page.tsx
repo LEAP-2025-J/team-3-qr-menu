@@ -123,10 +123,7 @@ function QRMenuContent() {
 
             // Send order to backend
             const response = await fetch(
-              `${
-                process.env.NEXT_PUBLIC_BACKEND_URL ||
-                "http://192.168.0.102:5000"
-              }/api/orders`,
+              `https://backend-htk90mjru-kherlenchimegs-projects.vercel.app/api/orders`,
               {
                 method: "POST",
                 headers: {
