@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { API_CONFIG } from "@/config/api";
 
 interface CartItem {
   id: string;
@@ -11,7 +12,11 @@ interface CartItem {
   image?: string;
 }
 
-export function useCart(tableNumber: string | null, tableAvailable: boolean | null, getText: (en: string, mn: string, ja: string) => string) {
+export function useCart(
+  tableNumber: string | null,
+  tableAvailable: boolean | null,
+  getText: (en: string, mn: string, ja: string) => string
+) {
   const { toast } = useToast();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
@@ -75,19 +80,31 @@ export function useCart(tableNumber: string | null, tableAvailable: boolean | nu
     }
   }, [cart, tableNumber]);
 
-  const addToCart = (item: {
-    _id: string;
-    nameEn: string;
-    nameMn: string;
-    nameJp: string;
-    price: string | number;
-    image?: string;
-  }, isBefore7PM: boolean, getDiscountedPrice: (price: number) => number) => {
+  const addToCart = (
+    item: {
+      _id: string;
+      nameEn: string;
+      nameMn: string;
+      nameJp: string;
+      price: string | number;
+      image?: string;
+    },
+    isBefore7PM: boolean,
+    getDiscountedPrice: (price: number) => number
+  ) => {
     // Check if table is selected
     if (!tableNumber) {
       toast({
-        title: getText("❌ No Table Selected", "❌ Ширээ сонгоогүй", "❌ テーブルが選択されていません"),
-        description: getText("Please scan a QR code to select a table first.", "Эхлээд QR код уншуулж ширээ сонгоно уу.", "まずQRコードをスキャンしてテーブルを選択してください。"),
+        title: getText(
+          "❌ No Table Selected",
+          "❌ Ширээ сонгоогүй",
+          "❌ テーブルが選択されていません"
+        ),
+        description: getText(
+          "Please scan a QR code to select a table first.",
+          "Эхлээд QR код уншуулж ширээ сонгоно уу.",
+          "まずQRコードをスキャンしてテーブルを選択してください。"
+        ),
         variant: "destructive",
         duration: 3000,
       });
@@ -97,8 +114,16 @@ export function useCart(tableNumber: string | null, tableAvailable: boolean | nu
     // Check if table is available
     if (tableAvailable === false) {
       toast({
-        title: getText("❌ Cannot Add Items", "❌ Бараа нэмэх боломжгүй", "❌ 商品を追加できません"),
-        description: getText("This table has an active order. Please wait for the table to become available.", "Энэ ширээ идэвхтэй захиалгатай байна. Та ширээ сулрахыг хүлээнэ үү.", "このテーブルは使用中です。テーブルが空くまでお待ちください。"),
+        title: getText(
+          "❌ Cannot Add Items",
+          "❌ Бараа нэмэх боломжгүй",
+          "❌ 商品を追加できません"
+        ),
+        description: getText(
+          "This table has an active order. Please wait for the table to become available.",
+          "Энэ ширээ идэвхтэй захиалгатай байна. Та ширээ сулрахыг хүлээнэ үү.",
+          "このテーブルは使用中です。テーブルが空くまでお待ちください。"
+        ),
         variant: "destructive",
         duration: 5000,
       });
@@ -108,14 +133,17 @@ export function useCart(tableNumber: string | null, tableAvailable: boolean | nu
     // Add item to cart
     setCart((prev) => {
       const idx = prev.findIndex((i) => i.id === item._id);
-      const originalPrice = typeof item.price === "string" 
-        ? parseFloat(item.price.replace(/[^0-9.]/g, "")) || 0
-        : typeof item.price === "number" && !isNaN(item.price) 
-        ? item.price 
-        : 0;
+      const originalPrice =
+        typeof item.price === "string"
+          ? parseFloat(item.price.replace(/[^0-9.]/g, "")) || 0
+          : typeof item.price === "number" && !isNaN(item.price)
+          ? item.price
+          : 0;
 
       // Apply discount if before 7pm
-      const finalPrice = isBefore7PM ? getDiscountedPrice(originalPrice) : originalPrice;
+      const finalPrice = isBefore7PM
+        ? getDiscountedPrice(originalPrice)
+        : originalPrice;
 
       if (idx !== -1) {
         const updated = [...prev];
@@ -156,6 +184,111 @@ export function useCart(tableNumber: string | null, tableAvailable: boolean | nu
 
   const total = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
+  const onSubmitOrder = async () => {
+    if (!tableNumber) {
+      toast({
+        title: getText(
+          "❌ No Table Selected",
+          "❌ Ширээ сонгоогүй",
+          "❌ テーブルが選択されていません"
+        ),
+        description: getText(
+          "Please scan a QR code to select a table first.",
+          "Эхлээд QR код уншуулж ширээ сонгоно уу.",
+          "まずQRコードをスキャンしてテーブルを選択してください。"
+        ),
+        variant: "destructive",
+        duration: 3000,
+      });
+      return;
+    }
+
+    if (cart.length === 0) {
+      toast({
+        title: getText("❌ Empty Cart", "❌ Сагс хоосон", "❌ カートが空です"),
+        description: getText(
+          "Please add items to your cart before placing an order.",
+          "Захиалга өгөхийн өмнө сагсанд бараа нэмнэ үү.",
+          "注文する前にカートに商品を追加してください。"
+        ),
+        variant: "destructive",
+        duration: 3000,
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const orderData = {
+        tableNumber: parseInt(tableNumber),
+        items: cart.map((item) => ({
+          menuItem: item.id,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+        total: total,
+      };
+
+      const response = await fetch(
+        `https://backend-htk90mjru-kherlenchimegs-projects.vercel.app/api/orders`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(orderData),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast({
+          title: getText(
+            "✅ Order Submitted!",
+            "✅ Захиалга илгээгдлээ!",
+            "✅ 注文が送信されました！"
+          ),
+          description: getText(
+            "Your order has been successfully submitted. We'll prepare it right away!",
+            "Таны захиалга амжилттай илгээгдлээ. Бид түүнийг шууд бэлтгэх болно!",
+            "注文が正常に送信されました。すぐに準備いたします！"
+          ),
+          duration: 5000,
+        });
+
+        // Clear cart after successful order
+        clearCart();
+        setCartOpen(false);
+      } else {
+        throw new Error(result.error || "Failed to submit order");
+      }
+    } catch (error) {
+      console.error("Error submitting order:", error);
+      toast({
+        title: getText(
+          "❌ Order Failed",
+          "❌ Захиалга амжилтгүй",
+          "❌ 注文に失敗しました"
+        ),
+        description: getText(
+          "Failed to submit order. Please try again.",
+          "Захиалга илгээх амжилтгүй боллоо. Дахин оролдоно уу.",
+          "注文の送信に失敗しました。もう一度お試しください。"
+        ),
+        variant: "destructive",
+        duration: 5000,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return {
     cart,
     setCart,
@@ -168,5 +301,6 @@ export function useCart(tableNumber: string | null, tableAvailable: boolean | nu
     changeQuantity,
     clearCart,
     total,
+    onSubmitOrder,
   };
-} 
+}

@@ -55,6 +55,8 @@ app.use((req, res, next) => {
     return;
   }
 
+  // Authentication middleware - бүх request-г зөвшөөрөх
+  console.log("✅ Request authorized");
   next();
 });
 
