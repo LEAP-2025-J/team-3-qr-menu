@@ -13,9 +13,12 @@ const nextConfig = {
   experimental: {
     forceSwcTransforms: true,
   },
-  // Cache цэвэрлэх - timestamp ашиглах
+  // Cache цэвэрлэх - preview mode-д зориулсан
   generateBuildId: async () => {
-    return `build-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substr(2, 9);
+    const previewMode = process.env.NEXT_PUBLIC_PREVIEW_MODE === 'true' ? 'preview' : 'prod';
+    return `build-${previewMode}-${timestamp}-${random}`;
   },
   // Build cache хаах
   onDemandEntries: {
