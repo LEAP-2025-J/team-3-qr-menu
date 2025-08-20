@@ -13,14 +13,19 @@ const nextConfig = {
   experimental: {
     forceSwcTransforms: true,
   },
-  // Cache цэвэрлэх
+  // Cache цэвэрлэх - timestamp ашиглах
   generateBuildId: async () => {
-    return `build-${Date.now()}`;
+    return `build-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   },
   // Build cache хаах
   onDemandEntries: {
     maxInactiveAge: 25 * 1000,
     pagesBufferLength: 2,
+  },
+  // Vercel дээр ажиллахад зориулсан
+  swcMinify: true,
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
   },
 }
 
