@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { API_CONFIG } from "@/config/api";
 
 interface CartItem {
   id: string;

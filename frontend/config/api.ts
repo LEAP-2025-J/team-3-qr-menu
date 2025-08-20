@@ -10,7 +10,7 @@ export const API_CONFIG = {
   FRONTEND_URL:
     process.env.NEXT_PUBLIC_FRONTEND_URL ||
     (process.env.NODE_ENV === "production"
-      ? "https://frontend-obkdibiil-kherlenchimegs-projects.vercel.app"
+      ? "https://frontend-po2elhd14-kherlenchimegs-projects.vercel.app"
       : process.env.NEXT_PUBLIC_LOCAL_FRONTEND_URL ||
         "http://192.168.0.102:3000"), //192.168.0.102
 };
