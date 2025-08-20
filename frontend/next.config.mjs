@@ -18,7 +18,8 @@ const nextConfig = {
     const timestamp = Date.now();
     const random = Math.random().toString(36).substr(2, 9);
     const previewMode = process.env.NEXT_PUBLIC_PREVIEW_MODE === 'true' ? 'preview' : 'prod';
-    return `build-${previewMode}-${timestamp}-${random}`;
+    const cacheBuster = Math.floor(Math.random() * 1000000);
+    return `build-${previewMode}-${timestamp}-${random}-${cacheBuster}`;
   },
   // Build cache хаах
   onDemandEntries: {
