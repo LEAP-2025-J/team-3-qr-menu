@@ -130,8 +130,9 @@ const seedOrders = async () => {
 
     console.log("\nҮүсгэгдсэн захиалгууд:");
     populatedOrders.forEach((order) => {
+      const tableNumber = (order.table as any)?.number || 'Unknown';
       console.log(
-        `Захиалга ${order.orderNumber} - Ширээ ${order.table.number} - Статус: ${order.status} - Нийт: ${order.total}₮`
+        `Захиалга ${order.orderNumber} - Ширээ ${tableNumber} - Статус: ${order.status} - Нийт: ${order.total}₮`
       );
     });
   } catch (error) {
