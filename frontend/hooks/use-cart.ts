@@ -1,7 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { submitOrder } from "@/components/admin/utils/order-submission";
+import {
+  showToast,
+  clearLocalStorage,
+  saveToLocalStorage,
+} from "@/components/admin/utils/cart-utils";
 
-interface CartItem {
+export interface CartItem {
   id: string;
   nameEn: string;
   nameMn: string;
@@ -38,9 +44,7 @@ export function useCart(
       // Clear cart if table changed or expired
       if (storedTableNumber !== tableNumber || isExpired) {
         setCart([]);
-        localStorage.removeItem("qr-menu-cart");
-        localStorage.removeItem("qr-menu-table-number");
-        localStorage.removeItem("qr-menu-timestamp");
+        clearLocalStorage();
         cartLoaded.current = true;
         return;
       }
@@ -50,18 +54,15 @@ export function useCart(
         try {
           const parsedCart = JSON.parse(stored);
           if (parsedCart.length > 0 && !parsedCart[0].id) {
-            // Clear old format cart
             setCart([]);
-            localStorage.removeItem("qr-menu-cart");
-            localStorage.removeItem("qr-menu-timestamp");
+            clearLocalStorage();
           } else {
             setCart(parsedCart);
           }
         } catch (error) {
           console.error("Error parsing cart from localStorage:", error);
           setCart([]);
-          localStorage.removeItem("qr-menu-cart");
-          localStorage.removeItem("qr-menu-timestamp");
+          clearLocalStorage();
         }
       }
       cartLoaded.current = true;
@@ -71,11 +72,7 @@ export function useCart(
   // Persist cart to localStorage
   useEffect(() => {
     if (cartLoaded.current) {
-      localStorage.setItem("qr-menu-cart", JSON.stringify(cart));
-      if (tableNumber) {
-        localStorage.setItem("qr-menu-table-number", tableNumber);
-        localStorage.setItem("qr-menu-timestamp", Date.now().toString());
-      }
+      saveToLocalStorage(cart, tableNumber);
     }
   }, [cart, tableNumber]);
 
@@ -91,41 +88,14 @@ export function useCart(
     isBefore7PM: boolean,
     getDiscountedPrice: (price: number) => number
   ) => {
-    // Check if table is selected
+    // Validation checks
     if (!tableNumber) {
-      toast({
-        title: getText(
-          "❌ No Table Selected",
-          "❌ Ширээ сонгоогүй",
-          "❌ テーブルが選択されていません"
-        ),
-        description: getText(
-          "Please scan a QR code to select a table first.",
-          "Эхлээд QR код уншуулж ширээ сонгоно уу.",
-          "まずQRコードをスキャンしてテーブルを選択してください。"
-        ),
-        variant: "destructive",
-        duration: 3000,
-      });
+      showToast(toast, getText, "noTable");
       return;
     }
 
-    // Check if table is available
     if (tableAvailable === false) {
-      toast({
-        title: getText(
-          "❌ Cannot Add Items",
-          "❌ Бараа нэмэх боломжгүй",
-          "❌ 商品を追加できません"
-        ),
-        description: getText(
-          "This table has an active order. Please wait for the table to become available.",
-          "Энэ ширээ идэвхтэй захиалгатай байна. Та ширээ сулрахыг хүлээнэ үү.",
-          "このテーブルは使用中です。テーブルが空くまでお待ちください。"
-        ),
-        variant: "destructive",
-        duration: 5000,
-      });
+      showToast(toast, getText, "tableUnavailable");
       return;
     }
 
@@ -138,8 +108,6 @@ export function useCart(
           : typeof item.price === "number" && !isNaN(item.price)
           ? item.price
           : 0;
-
-      // Apply discount if before 7pm
       const finalPrice = isBefore7PM
         ? getDiscountedPrice(originalPrice)
         : originalPrice;
@@ -176,43 +144,19 @@ export function useCart(
 
   const clearCart = () => {
     setCart([]);
-    localStorage.removeItem("qr-menu-cart");
-    localStorage.removeItem("qr-menu-table-number");
-    localStorage.removeItem("qr-menu-timestamp");
+    clearLocalStorage();
   };
 
   const total = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
   const onSubmitOrder = async () => {
     if (!tableNumber) {
-      toast({
-        title: getText(
-          "❌ No Table Selected",
-          "❌ Ширээ сонгоогүй",
-          "❌ テーブルが選択されていません"
-        ),
-        description: getText(
-          "Please scan a QR code to select a table first.",
-          "Эхлээд QR код уншуулж ширээ сонгоно уу.",
-          "まずQRコードをスキャンしてテーブルを選択してください。"
-        ),
-        variant: "destructive",
-        duration: 3000,
-      });
+      showToast(toast, getText, "noTable");
       return;
     }
 
     if (cart.length === 0) {
-      toast({
-        title: getText("❌ Empty Cart", "❌ Сагс хоосон", "❌ カートが空です"),
-        description: getText(
-          "Please add items to your cart before placing an order.",
-          "Захиалга өгөхийн өмнө сагсанд бараа нэмнэ үү.",
-          "注文する前にカートに商品を追加してください。"
-        ),
-        variant: "destructive",
-        duration: 3000,
-      });
+      showToast(toast, getText, "emptyCart");
       return;
     }
 
@@ -229,39 +173,10 @@ export function useCart(
         total: total,
       };
 
-      const response = await fetch(
-        `https://backend-htk90mjru-kherlenchimegs-projects.vercel.app/api/orders`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(orderData),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
+      const result = await submitOrder(orderData);
 
       if (result.success) {
-        toast({
-          title: getText(
-            "✅ Order Submitted!",
-            "✅ Захиалга илгээгдлээ!",
-            "✅ 注文が送信されました！"
-          ),
-          description: getText(
-            "Your order has been successfully submitted. We'll prepare it right away!",
-            "Таны захиалга амжилттай илгээгдлээ. Бид түүнийг шууд бэлтгэх болно!",
-            "注文が正常に送信されました。すぐに準備いたします！"
-          ),
-          duration: 5000,
-        });
-
-        // Clear cart after successful order
+        showToast(toast, getText, "orderSuccess");
         clearCart();
         setCartOpen(false);
       } else {
@@ -269,20 +184,7 @@ export function useCart(
       }
     } catch (error) {
       console.error("Error submitting order:", error);
-      toast({
-        title: getText(
-          "❌ Order Failed",
-          "❌ Захиалга амжилтгүй",
-          "❌ 注文に失敗しました"
-        ),
-        description: getText(
-          "Failed to submit order. Please try again.",
-          "Захиалга илгээх амжилтгүй боллоо. Дахин оролдоно уу.",
-          "注文の送信に失敗しました。もう一度お試しください。"
-        ),
-        variant: "destructive",
-        duration: 5000,
-      });
+      showToast(toast, getText, "orderFailed");
     } finally {
       setIsSubmitting(false);
     }

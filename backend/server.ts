@@ -32,11 +32,8 @@ dotenv.config();
 const app = express();
 const PORT = parseInt(process.env["PORT"] || "5000");
 
-// CORS тохиргоо - Vercel дээр ажиллахад зориулсан (эхэнд нь тавих)
+// CORS тохиргоо - Vercel дээр ажиллахад зориулсан
 app.use((req, res, next) => {
-  console.log(`🔍 Request: ${req.method} ${req.path}`);
-  console.log(`🌐 Origin: ${req.headers.origin}`);
-
   // CORS headers - бүх request-д нэмэх
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader(
@@ -50,13 +47,10 @@ app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Credentials", "true");
 
   if (req.method === "OPTIONS") {
-    console.log("✅ OPTIONS request handled");
     res.status(200).end();
     return;
   }
 
-  // Authentication middleware - бүх request-г зөвшөөрөх
-  console.log("✅ Request authorized");
   next();
 });
 
