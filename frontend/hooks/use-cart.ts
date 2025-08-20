@@ -1,7 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { submitOrder } from "@/components/admin/utils/order-submission";
+import {
+  showToast,
+  clearLocalStorage,
+  saveToLocalStorage,
+} from "@/components/admin/utils/cart-utils";
 
-interface CartItem {
+export interface CartItem {
   id: string;
   nameEn: string;
   nameMn: string;
@@ -11,7 +17,11 @@ interface CartItem {
   image?: string;
 }
 
-export function useCart(tableNumber: string | null, tableAvailable: boolean | null, getText: (en: string, mn: string, ja: string) => string) {
+export function useCart(
+  tableNumber: string | null,
+  tableAvailable: boolean | null,
+  getText: (en: string, mn: string, ja: string) => string
+) {
   const { toast } = useToast();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
@@ -34,9 +44,7 @@ export function useCart(tableNumber: string | null, tableAvailable: boolean | nu
       // Clear cart if table changed or expired
       if (storedTableNumber !== tableNumber || isExpired) {
         setCart([]);
-        localStorage.removeItem("qr-menu-cart");
-        localStorage.removeItem("qr-menu-table-number");
-        localStorage.removeItem("qr-menu-timestamp");
+        clearLocalStorage();
         cartLoaded.current = true;
         return;
       }
@@ -46,18 +54,15 @@ export function useCart(tableNumber: string | null, tableAvailable: boolean | nu
         try {
           const parsedCart = JSON.parse(stored);
           if (parsedCart.length > 0 && !parsedCart[0].id) {
-            // Clear old format cart
             setCart([]);
-            localStorage.removeItem("qr-menu-cart");
-            localStorage.removeItem("qr-menu-timestamp");
+            clearLocalStorage();
           } else {
             setCart(parsedCart);
           }
         } catch (error) {
           console.error("Error parsing cart from localStorage:", error);
           setCart([]);
-          localStorage.removeItem("qr-menu-cart");
-          localStorage.removeItem("qr-menu-timestamp");
+          clearLocalStorage();
         }
       }
       cartLoaded.current = true;
@@ -67,55 +72,45 @@ export function useCart(tableNumber: string | null, tableAvailable: boolean | nu
   // Persist cart to localStorage
   useEffect(() => {
     if (cartLoaded.current) {
-      localStorage.setItem("qr-menu-cart", JSON.stringify(cart));
-      if (tableNumber) {
-        localStorage.setItem("qr-menu-table-number", tableNumber);
-        localStorage.setItem("qr-menu-timestamp", Date.now().toString());
-      }
+      saveToLocalStorage(cart, tableNumber);
     }
   }, [cart, tableNumber]);
 
-  const addToCart = (item: {
-    _id: string;
-    nameEn: string;
-    nameMn: string;
-    nameJp: string;
-    price: string | number;
-    image?: string;
-  }, isBefore7PM: boolean, getDiscountedPrice: (price: number) => number) => {
-    // Check if table is selected
+  const addToCart = (
+    item: {
+      _id: string;
+      nameEn: string;
+      nameMn: string;
+      nameJp: string;
+      price: string | number;
+      image?: string;
+    },
+    isBefore7PM: boolean,
+    getDiscountedPrice: (price: number) => number
+  ) => {
+    // Validation checks
     if (!tableNumber) {
-      toast({
-        title: getText("❌ No Table Selected", "❌ Ширээ сонгоогүй", "❌ テーブルが選択されていません"),
-        description: getText("Please scan a QR code to select a table first.", "Эхлээд QR код уншуулж ширээ сонгоно уу.", "まずQRコードをスキャンしてテーブルを選択してください。"),
-        variant: "destructive",
-        duration: 3000,
-      });
+      showToast(toast, getText, "noTable");
       return;
     }
 
-    // Check if table is available
     if (tableAvailable === false) {
-      toast({
-        title: getText("❌ Cannot Add Items", "❌ Бараа нэмэх боломжгүй", "❌ 商品を追加できません"),
-        description: getText("This table has an active order. Please wait for the table to become available.", "Энэ ширээ идэвхтэй захиалгатай байна. Та ширээ сулрахыг хүлээнэ үү.", "このテーブルは使用中です。テーブルが空くまでお待ちください。"),
-        variant: "destructive",
-        duration: 5000,
-      });
+      showToast(toast, getText, "tableUnavailable");
       return;
     }
 
     // Add item to cart
     setCart((prev) => {
       const idx = prev.findIndex((i) => i.id === item._id);
-      const originalPrice = typeof item.price === "string" 
-        ? parseFloat(item.price.replace(/[^0-9.]/g, "")) || 0
-        : typeof item.price === "number" && !isNaN(item.price) 
-        ? item.price 
-        : 0;
-
-      // Apply discount if before 7pm
-      const finalPrice = isBefore7PM ? getDiscountedPrice(originalPrice) : originalPrice;
+      const originalPrice =
+        typeof item.price === "string"
+          ? parseFloat(item.price.replace(/[^0-9.]/g, "")) || 0
+          : typeof item.price === "number" && !isNaN(item.price)
+          ? item.price
+          : 0;
+      const finalPrice = isBefore7PM
+        ? getDiscountedPrice(originalPrice)
+        : originalPrice;
 
       if (idx !== -1) {
         const updated = [...prev];
@@ -149,12 +144,51 @@ export function useCart(tableNumber: string | null, tableAvailable: boolean | nu
 
   const clearCart = () => {
     setCart([]);
-    localStorage.removeItem("qr-menu-cart");
-    localStorage.removeItem("qr-menu-table-number");
-    localStorage.removeItem("qr-menu-timestamp");
+    clearLocalStorage();
   };
 
   const total = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
+
+  const onSubmitOrder = async () => {
+    if (!tableNumber) {
+      showToast(toast, getText, "noTable");
+      return;
+    }
+
+    if (cart.length === 0) {
+      showToast(toast, getText, "emptyCart");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const orderData = {
+        tableNumber: parseInt(tableNumber),
+        items: cart.map((item) => ({
+          menuItem: item.id,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+        total: total,
+      };
+
+      const result = await submitOrder(orderData);
+
+      if (result.success) {
+        showToast(toast, getText, "orderSuccess");
+        clearCart();
+        setCartOpen(false);
+      } else {
+        throw new Error(result.error || "Failed to submit order");
+      }
+    } catch (error) {
+      console.error("Error submitting order:", error);
+      showToast(toast, getText, "orderFailed");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return {
     cart,
@@ -168,5 +202,6 @@ export function useCart(tableNumber: string | null, tableAvailable: boolean | nu
     changeQuantity,
     clearCart,
     total,
+    onSubmitOrder,
   };
-} 
+}

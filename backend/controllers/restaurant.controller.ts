@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import Restaurant from "../models/model.restaurant";
+import Restaurant from "../models/model.restaurant.js";
 
 // GET /api/restaurant - Get restaurant settings
 export const getRestaurantSettings = async (req: Request, res: Response) => {

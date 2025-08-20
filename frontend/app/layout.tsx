@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import "./globals.css";
@@ -11,8 +11,15 @@ export const metadata: Metadata = {
   generator: "Haku Restaurant",
   keywords: ["restaurant", "qr-menu", "japanese", "orders", "haku"],
   authors: [{ name: "Haku Restaurant Team" }],
-  viewport: "width=device-width, initial-scale=1",
   robots: "index, follow",
+  icons: {
+    icon: "/favicon.ico",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
