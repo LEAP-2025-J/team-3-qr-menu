@@ -122,12 +122,17 @@ app.use("*", (req: Request, res: Response) => {
   });
 });
 
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🌐 Server accessible at: http://0.0.0.0:${PORT}`);
-  console.log(
-    `📱 Frontend URL: ${process.env["FRONTEND_URL"] || "http://localhost:3000"}`
-  );
+// Vercel дээр ажиллахад зориулсан export
+export default app;
+
+// Local development-д зориулсан server start
+if (process.env.NODE_ENV !== 'production' || process.env.VERCEL !== '1') {
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`🌐 Server accessible at: http://0.0.0.0:${PORT}`);
+    console.log(
+      `📱 Frontend URL: ${process.env["FRONTEND_URL"] || "http://localhost:3000"}`
+    );
 
   // Schedule automatic cleanup every day at 2 AM
   const scheduleCleanup = () => {
@@ -179,4 +184,5 @@ app.listen(PORT, "0.0.0.0", () => {
   };
 
   scheduleCleanup();
-});
+  });
+}
