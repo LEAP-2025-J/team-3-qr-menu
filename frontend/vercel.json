@@ -22,6 +22,13 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "github": {
-    "silent": true
+    "silent": true,
+    "autoAlias": false
+  },
+  "git": {
+    "deploymentEnabled": {
+      "main": true,
+      "115-deploy-link-check2": true
+    }
   }
 }
