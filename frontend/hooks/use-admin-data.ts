@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { API_CONFIG } from "@/config/api";
+import { API_CONFIG, API_ENDPOINTS } from "@/config/api";
 
 // Types
 export interface Order {
@@ -121,9 +121,7 @@ export function useAdminData() {
   // Fetch data functions
   const fetchOrders = async () => {
     try {
-      const response = await fetch(
-        `${API_CONFIG.BACKEND_URL}/api/orders?limit=20`
-      );
+      const response = await fetch(`${API_ENDPOINTS.ORDERS}?limit=20`);
       const data = await response.json();
       if (data.success) {
         setOrders(data.data);
@@ -155,12 +153,12 @@ export function useAdminData() {
 
   const fetchTables = async () => {
     try {
-      const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/tables`);
+      const response = await fetch(`${API_ENDPOINTS.TABLES}`);
       const data = await response.json();
       if (data.success) {
         // Get current reservations to populate currentReservation field
         const reservationsResponse = await fetch(
-          `${API_CONFIG.BACKEND_URL}/api/reservations?date=all&status=all`
+          `${API_ENDPOINTS.RESERVATIONS}?date=all&status=all`
         );
         const reservationsData = await reservationsResponse.json();
 
@@ -208,7 +206,7 @@ export function useAdminData() {
   const fetchReservations = async () => {
     try {
       const response = await fetch(
-        `${API_CONFIG.BACKEND_URL}/api/reservations?date=all&status=all`
+        `${API_ENDPOINTS.RESERVATIONS}?date=all&status=all`
       );
       const data = await response.json();
       if (data.success) {
@@ -231,7 +229,7 @@ export function useAdminData() {
 
   const fetchMenuItems = async () => {
     try {
-      const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/menu`);
+      const response = await fetch(`${API_ENDPOINTS.MENU}`);
       const data = await response.json();
       if (data.success) {
         setMenuItems(data.data);
@@ -243,7 +241,7 @@ export function useAdminData() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/categories`);
+      const response = await fetch(`${API_ENDPOINTS.CATEGORIES}`);
       const data = await response.json();
       if (data.success) {
         setCategories(data.data);
@@ -255,14 +253,11 @@ export function useAdminData() {
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
-      const response = await fetch(
-        `${API_CONFIG.BACKEND_URL}/api/orders/${orderId}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: newStatus }),
-        }
-      );
+      const response = await fetch(`${API_ENDPOINTS.ORDERS}/${orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
 
       if (response.ok) {
         fetchOrders(); // Refresh orders
@@ -276,7 +271,7 @@ export function useAdminData() {
   // Menu item functions
   const addMenuItem = async (menuData: any) => {
     try {
-      const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/menu`, {
+      const response = await fetch(`${API_ENDPOINTS.MENU}`, {
         method: "POST",
         body: menuData, // FormData ашиглах
       });
@@ -300,7 +295,7 @@ export function useAdminData() {
 
   const updateMenuItem = async (id: string, menuData: any) => {
     try {
-      const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/menu/${id}`, {
+      const response = await fetch(`${API_ENDPOINTS.MENU}/${id}`, {
         method: "PUT",
         body: menuData,
       });
@@ -324,7 +319,7 @@ export function useAdminData() {
 
   const deleteMenuItem = async (id: string) => {
     try {
-      const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/menu/${id}`, {
+      const response = await fetch(`${API_ENDPOINTS.MENU}/${id}`, {
         method: "DELETE",
       });
 
@@ -348,7 +343,7 @@ export function useAdminData() {
   // Category functions
   const addCategory = async (categoryData: any) => {
     try {
-      const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/categories`, {
+      const response = await fetch(`${API_ENDPOINTS.CATEGORIES}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(categoryData),

@@ -2,7 +2,9 @@
 // Production болон development environment-д зориулсан тохиргоо
 export const API_CONFIG = {
   BACKEND_URL:
-    process.env.NEXT_PUBLIC_BACKEND_URL ||
+    (process.env.NEXT_PUBLIC_PREVIEW_MODE === "true"
+      ? "https://backend-i9qx3k9dq-kherlenchimegs-projects.vercel.app"
+      : process.env.NEXT_PUBLIC_BACKEND_URL) ||
     (process.env.NODE_ENV === "production"
       ? "https://backend-htk90mjru-kherlenchimegs-projects.vercel.app"
       : process.env.NEXT_PUBLIC_LOCAL_BACKEND_URL || "http://localhost:5000"),
@@ -13,14 +15,42 @@ export const API_CONFIG = {
       : process.env.NEXT_PUBLIC_LOCAL_FRONTEND_URL || "http://localhost:3000"),
 };
 
+// Preview deployment-д зориулсан backend URL
+export const PREVIEW_BACKEND_URL =
+  "https://backend-i9qx3k9dq-kherlenchimegs-projects.vercel.app";
+
 // Backend API endpoints
 export const API_ENDPOINTS = {
-  ORDERS: `${API_CONFIG.BACKEND_URL}/api/orders`,
-  TABLES: `${API_CONFIG.BACKEND_URL}/api/tables`,
-  MENU: `${API_CONFIG.BACKEND_URL}/api/menu`,
-  CATEGORIES: `${API_CONFIG.BACKEND_URL}/api/categories`,
-  RESERVATIONS: `${API_CONFIG.BACKEND_URL}/api/reservations`,
-  RESTAURANT: `${API_CONFIG.BACKEND_URL}/api/restaurant`,
+  ORDERS: `${
+    process.env.NEXT_PUBLIC_PREVIEW_MODE === "true"
+      ? PREVIEW_BACKEND_URL
+      : API_CONFIG.BACKEND_URL
+  }/api/orders`,
+  TABLES: `${
+    process.env.NEXT_PUBLIC_PREVIEW_MODE === "true"
+      ? PREVIEW_BACKEND_URL
+      : API_CONFIG.BACKEND_URL
+  }/api/tables`,
+  MENU: `${
+    process.env.NEXT_PUBLIC_PREVIEW_MODE === "true"
+      ? PREVIEW_BACKEND_URL
+      : API_CONFIG.BACKEND_URL
+  }/api/menu`,
+  CATEGORIES: `${
+    process.env.NEXT_PUBLIC_PREVIEW_MODE === "true"
+      ? PREVIEW_BACKEND_URL
+      : API_CONFIG.BACKEND_URL
+  }/api/categories`,
+  RESERVATIONS: `${
+    process.env.NEXT_PUBLIC_PREVIEW_MODE === "true"
+      ? PREVIEW_BACKEND_URL
+      : API_CONFIG.BACKEND_URL
+  }/api/reservations`,
+  RESTAURANT: `${
+    process.env.NEXT_PUBLIC_PREVIEW_MODE === "true"
+      ? PREVIEW_BACKEND_URL
+      : API_CONFIG.BACKEND_URL
+  }/api/restaurant`,
 };
 
 // API helper functions
