@@ -12,6 +12,7 @@ import { DiscountBanner } from "@/components/qr-menu/discount-banner";
 import { CartModal } from "@/components/qr-menu/cart-modal";
 import { MenuGrid } from "@/components/qr-menu/menu-grid";
 import { Footer } from "@/components/qr-menu/footer";
+import { ShoppingCart } from "lucide-react";
 
 function QRMenuContent() {
   const pathname = usePathname();
@@ -84,11 +85,15 @@ function QRMenuContent() {
       {pathname !== "/admin" && cart.length > 0 && (
         <button
           className="fixed z-50 px-4 py-2 text-sm rounded-full shadow-lg bottom-4 md:bottom-8 right-4 md:right-8 md:px-6 md:py-3 md:text-base"
-          style={{ backgroundColor: "#FFB0B0", color: "#8B4513" }}
+          style={{ backgroundColor: "#FFFFFF", color: "#FF0000" }}
           onClick={() => setCartOpen(true)}
         >
-          {getText("View Cart", "Сагс харах", "カートを見る")} (
-          {cart.reduce((sum, i) => sum + i.quantity, 0)})
+          <div className="relative">
+            <ShoppingCart className="h-6 w-6" style={{ color: "#FF0000" }} />
+            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+              {cart.reduce((sum, i) => sum + i.quantity, 0)}
+            </span>
+          </div>
         </button>
       )}
 
