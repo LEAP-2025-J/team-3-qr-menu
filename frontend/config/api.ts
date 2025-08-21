@@ -2,7 +2,9 @@
 // Production болон development environment-д зориулсан тохиргоо
 export const API_CONFIG = {
   BACKEND_URL:
-    process.env.NEXT_PUBLIC_BACKEND_URL ||
+    (process.env.NEXT_PUBLIC_PREVIEW_MODE === "true"
+      ? "https://backend-i9qx3k9dq-kherlenchimegs-projects.vercel.app"
+      : process.env.NEXT_PUBLIC_BACKEND_URL) ||
     (process.env.NODE_ENV === "production"
       ? "https://backend-htk90mjru-kherlenchimegs-projects.vercel.app"
       : process.env.NEXT_PUBLIC_LOCAL_BACKEND_URL || "http://localhost:5000"),
@@ -15,7 +17,7 @@ export const API_CONFIG = {
 
 // Preview deployment-д зориулсан backend URL
 export const PREVIEW_BACKEND_URL =
-  "https://backend-plf28jmz7-kherlenchimegs-projects.vercel.app";
+  "https://backend-i9qx3k9dq-kherlenchimegs-projects.vercel.app";
 
 // Backend API endpoints
 export const API_ENDPOINTS = {
