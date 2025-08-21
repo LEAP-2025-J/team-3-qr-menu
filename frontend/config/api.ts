@@ -6,7 +6,7 @@ export const API_CONFIG = {
       ? "https://backend-i9qx3k9dq-kherlenchimegs-projects.vercel.app"
       : process.env.NEXT_PUBLIC_BACKEND_URL) ||
     (process.env.NODE_ENV === "production"
-      ? "https://backend-htk90mjru-kherlenchimegs-projects.vercel.app"
+      ? "https://backend-3vsi1erbq-kherlenchimegs-projects.vercel.app"
       : process.env.NEXT_PUBLIC_LOCAL_BACKEND_URL || "http://localhost:5000"),
   FRONTEND_URL:
     process.env.NEXT_PUBLIC_FRONTEND_URL ||
