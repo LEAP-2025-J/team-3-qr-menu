@@ -12,10 +12,10 @@ export function DiscountBanner({ isBefore7PM }: DiscountBannerProps) {
   if (!isBefore7PM) return null;
 
   return (
-    <div className="container px-4 py-2 mx-auto">
-      <div className="px-4 py-3 text-center text-white rounded-lg shadow-lg bg-gradient-to-r from-yellow-400 to-orange-400">
-        <div className="flex items-center justify-center gap-2">
-          <span className="text-lg">🎉</span>
+    <div className="container px-4 py-1 mx-auto">
+      <div className="px-3 py-2 text-center text-white rounded-lg shadow-lg bg-gradient-to-r from-yellow-400 to-orange-400">
+        <div className="flex items-center justify-center gap-1">
+          <span className="text-base">🎉</span>
           <span className="text-lg font-bold">
             {getText("Happy Hour!", "Хөгжөөний цаг!", "ハッピーアワー！")}
           </span>
@@ -26,7 +26,7 @@ export function DiscountBanner({ isBefore7PM }: DiscountBannerProps) {
               "19:00までの全商品10%オフ"
             )}
           </span>
-          <span className="text-lg">🎉</span>
+          <span className="text-base">🎉</span>
         </div>
       </div>
     </div>

@@ -147,7 +147,7 @@ export function MenuGrid({
                                   backgroundColor: "#FFB0B0",
                                   color: "#8B4513",
                                 }}
-                                className="px-2 py-1 text-xs font-bold md:text-sm md:px-3"
+                                className="px-1 py-0.5 text-xs font-bold md:px-1.5 md:py-0.5"
                               >
                                 $
                                 {typeof item.price === "number"
@@ -161,7 +161,7 @@ export function MenuGrid({
                                 backgroundColor: "#FFB0B0",
                                 color: "#8B4513",
                               }}
-                              className="px-2 py-1 text-xs font-bold md:text-sm md:px-3"
+                              className="px-1 py-0.5 text-xs font-bold md:px-1.5 md:py-0.5"
                             >
                               $
                               {typeof item.price === "number"
