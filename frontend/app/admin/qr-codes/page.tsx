@@ -14,8 +14,7 @@ const COMPUTER_IP = API_CONFIG.FRONTEND_URL.replace("http://", "").replace(
   ""
 );
 
-const BASE_URL =
-  "https://frontend-6n3k7rf30-kherlenchimegs-projects.vercel.app";
+const BASE_URL = "frontend-cyan-tau-99.vercel.app";
 const TABLE_COUNT = 21;
 
 function getQrUrl(table: number) {

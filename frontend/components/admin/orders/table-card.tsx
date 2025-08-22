@@ -36,7 +36,9 @@ import {
   getPrimaryActionLabel,
   handlePrint as handlePrintUtil,
   requestUpdateStatus,
+  isReservationActive,
 } from "../utils";
+import { isOrderActive } from "./table-utils";
 
 export function TableCard({
   table,
@@ -49,6 +51,7 @@ export function TableCard({
   onPrintOrder,
   onCreateOrder,
   onRefresh,
+  onEditReservation,
 }: TableCardProps) {
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [showCreateOrderModal, setShowCreateOrderModal] = useState(false);
@@ -56,37 +59,57 @@ export function TableCard({
   const [copyCount, setCopyCount] = useState(1);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  // pending үед хэвлэх modal нээх, бусад үед зөвхөн статус солих
-  const handleAdvanceStatus = async () => {
-    if (!table.currentOrder) return;
+  // Статус өөрчлөх (orderId-тай)
+  const handleAdvanceStatus = async (orderId: string) => {
     if (isUpdating) return;
 
-    const current = table.currentOrder.status;
+    setIsUpdating(true);
+    try {
+      // table.orders-оос тухайн order-г олох
+      const order = (table as any).orders?.find((o: any) => o._id === orderId);
+      if (!order) return;
 
-    if (current === "pending") {
-      setShowPrintModal(true);
-    } else {
-      setIsUpdating(true);
-      try {
-        const next = getNextStatus(current);
-        await requestUpdateStatus(table.currentOrder._id, next);
-        onRefresh?.();
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setIsUpdating(false);
-      }
+      const next = getNextStatus(order.status);
+      await requestUpdateStatus(orderId, next);
+      onRefresh?.();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsUpdating(false);
     }
   };
 
-  // Принт функцийг дуудах
-  const handlePrint = async () => {
-    if (!table.currentOrder) return;
+  // Хамгийн сүүлийн идэвхтэй захиалгын статусыг олох
+  const getLatestActiveOrderStatus = () => {
+    if (!(table as any).orders || (table as any).orders.length === 0) {
+      return null;
+    }
+
+    // Өнөөдрийн огноотой идэвхтэй захиалгуудыг олох (pending, preparing, serving)
+    const activeOrders = (table as any).orders.filter(
+      (order: any) =>
+        ["pending", "preparing", "serving"].includes(order.status) &&
+        isOrderActive(order)
+    );
+
+    if (activeOrders.length === 0) {
+      return null;
+    }
+
+    // Хамгийн сүүлийн идэвхтэй захиалгын статусыг буцаах
+    return activeOrders[activeOrders.length - 1];
+  };
+
+  // Принт функцийг дуудах (orderId-тай)
+  const handlePrint = async (orderId: string) => {
+    // table.orders-оос тухайн order-г олох
+    const order = (table as any).orders?.find((o: any) => o._id === orderId);
+    if (!order) return;
 
     const updateStatus = async () => {
       setIsUpdating(true);
       try {
-        await requestUpdateStatus(table.currentOrder!._id, "preparing");
+        await requestUpdateStatus(orderId, "preparing");
         onRefresh?.();
       } catch (e) {
         console.error(e);
@@ -95,39 +118,50 @@ export function TableCard({
       }
     };
 
-    handlePrintUtil(table.currentOrder, table, printDevice, updateStatus);
+    handlePrintUtil(order, table, printDevice, updateStatus);
     setShowPrintModal(false);
   };
 
   return (
     <>
       <Card
-        className={`w-72 h-auto transition-all duration-200 hover:shadow-md pt-2 pb-0 gap-0 flex flex-col px-0 border-gray-200 bg-white ${
-          table.currentOrder && table.currentReservation
-            ? "border-purple-200" // Both exist
-            : table.currentOrder
-            ? "border-green-200" // Only order
-            : table.currentReservation
-            ? "border-blue-200" // Only reservation
-            : table.status === "reserved"
-            ? "border-red-200" // Reserved but no current data
-            : "border-red-200" // Empty - changed to red
-        }`}
+        className={`w-72 h-auto transition-all duration-200 hover:shadow-md pt-2 pb-0 gap-0 flex flex-col px-0 ${(() => {
+          // 1. Background өнгө: өнөөдрийн идэвхтэй order байхгүй бол ногоон
+          const hasActiveOrder =
+            table.currentOrder && isOrderActive(table.currentOrder);
+          const bgColor = hasActiveOrder ? "bg-white" : "bg-green-200";
+
+          // 2. Border өнгө: active reservation-тай бол pink, үгүй бол gray
+          const hasActiveReservation =
+            table.currentReservation &&
+            isReservationActive(table.currentReservation);
+          const borderColor = hasActiveReservation
+            ? "border-pink-400"
+            : "border-gray-100";
+
+          return `${bgColor} ${borderColor}`;
+        })()}`}
       >
         {/* Table header - at the very top */}
         <div className="px-6 pt-3 pb-2">
           <div className="flex items-center justify-between">
             <p className="text-lg font-semibold">Ширээ {table.number}</p>
             <div className="flex gap-2">
-              {table.currentOrder && (
-                <Badge
-                  className={`text-xs ${getOrderStatusColor(
-                    table.currentOrder.status
-                  )}`}
-                >
-                  {getOrderStatusText(table.currentOrder.status)}
-                </Badge>
-              )}
+              {(() => {
+                const latestActiveOrder = getLatestActiveOrderStatus();
+                if (latestActiveOrder) {
+                  return (
+                    <Badge
+                      className={`text-xs ${getOrderStatusColor(
+                        latestActiveOrder.status
+                      )}`}
+                    >
+                      {getOrderStatusText(latestActiveOrder.status)}
+                    </Badge>
+                  );
+                }
+                return null;
+              })()}
             </div>
           </div>
         </div>
@@ -155,7 +189,7 @@ export function TableCard({
             {/* Orders Tab */}
             <TabsContent
               value="orders"
-              className="h-full p-0 m-0 space-y-2 bg-blue-50"
+              className="h-full p-0 m-0 space-y-2 rounded-b-lg bg-blue-50"
             >
               <OrderTab
                 table={table}
@@ -163,6 +197,7 @@ export function TableCard({
                 onAdvanceStatus={handleAdvanceStatus}
                 onCancelOrder={(orderId) => onCancelOrder?.(orderId)}
                 onCreateOrder={() => setShowCreateOrderModal(true)}
+                onPrintOrder={handlePrint}
               />
             </TabsContent>
 
@@ -171,7 +206,10 @@ export function TableCard({
               value="reservations"
               className="h-full p-0 m-0 space-y-2 rounded-b-lg bg-red-50"
             >
-              <ReservationTab table={table} />
+              <ReservationTab
+                table={table}
+                onEditReservation={onEditReservation}
+              />
             </TabsContent>
           </Tabs>
         </div>
@@ -183,7 +221,11 @@ export function TableCard({
         onClose={() => setShowPrintModal(false)}
         order={table.currentOrder || null}
         table={table}
-        onPrint={handlePrint}
+        onPrint={() => {
+          if (table.currentOrder) {
+            handlePrint(table.currentOrder._id);
+          }
+        }}
       />
 
       {/* Захиалга үүсгэх Modal */}

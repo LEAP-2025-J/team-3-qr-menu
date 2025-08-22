@@ -36,6 +36,7 @@ export interface Table {
   location: "main-hall" | "terrace";
   qrCode?: string;
   currentOrder?: Order;
+  orders?: Order[]; // Бүх захиалгын жагсаалт
   currentReservation?: any;
   currentReservations?: any[]; // Array of all reservations for this table
 }
@@ -68,6 +69,7 @@ export interface TableLayoutProps {
     items: any[];
     total: number;
   }) => Promise<{ success: boolean }>;
+  onEditReservation?: (reservation: any, tableId: string) => void;
 }
 
 export interface TableStats {

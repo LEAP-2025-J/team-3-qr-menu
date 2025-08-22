@@ -287,6 +287,28 @@ export const updateReservation = async (req: Request, res: Response) => {
       });
     }
 
+    // Хуучин ширээний currentReservation талбарыг цэвэрлэх
+    if (
+      existingReservation.table &&
+      updateData.table &&
+      existingReservation.table.toString() !== updateData.table.toString()
+    ) {
+      try {
+        // Import Table model dynamically to avoid circular dependencies
+        const Table = (await import("../models/model.table.js")).default;
+        await (Table as any).findByIdAndUpdate(
+          existingReservation.table,
+          { currentReservation: null },
+          { new: true }
+        );
+        console.log(
+          `Cleared currentReservation from table ${existingReservation.table}`
+        );
+      } catch (importError) {
+        console.log("Table model not available, skipping table cleanup");
+      }
+    }
+
     // Update the reservation
     const updatedReservation = await (Reservation as any)
       .findByIdAndUpdate(id, updateData, { new: true, runValidators: true })

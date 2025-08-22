@@ -30,4 +30,5 @@ export interface TableCardProps {
     total: number;
   }) => Promise<{ success: boolean }>;
   onRefresh?: () => void;
+  onEditReservation?: (reservation: any, tableId: string) => void;
 }

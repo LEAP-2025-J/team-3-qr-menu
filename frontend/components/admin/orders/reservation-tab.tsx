@@ -7,9 +7,13 @@ import { formatDate } from "../utils";
 
 interface ReservationTabProps {
   table: Table;
+  onEditReservation?: (reservation: any, tableId: string) => void;
 }
 
-export function ReservationTab({ table }: ReservationTabProps) {
+export function ReservationTab({
+  table,
+  onEditReservation,
+}: ReservationTabProps) {
   // Өнөөдрийн огноог UTC+8 timezone-тай болгож авах (Mongolia timezone)
   const now = new Date();
   const utc8Date = new Date(now.getTime() + 8 * 60 * 60 * 1000); // UTC+8
@@ -108,7 +112,9 @@ export function ReservationTab({ table }: ReservationTabProps) {
           size="sm"
           variant="outline"
           onClick={() => {
-            // Handle edit reservation
+            if (onEditReservation && table.currentReservation) {
+              onEditReservation(table.currentReservation, table._id);
+            }
           }}
         >
           Засах

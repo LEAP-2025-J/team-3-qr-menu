@@ -20,12 +20,34 @@ export const getAllTables = async (req: Request, res: Response) => {
           select: "name nameEn nameMn nameJp price",
         },
       })
+      .populate({
+        path: "orders",
+        populate: {
+          path: "items.menuItem",
+          select: "name nameEn nameMn nameJp price",
+        },
+        options: { sort: { createdAt: -1 } }, // Хамгийн сүүлийн захиалга эхэндээ
+      })
       .sort({ location: 1, number: 1 })
       .lean();
 
+    // Хоосон ширээнүүдийн currentOrder-г null болгох
+    const processedTables = tables.map((table: any) => {
+      // Хэрэв currentOrder байхгүй эсвэл orders array хоосон бол хоосон ширээ
+      if (!table.currentOrder || !table.orders || table.orders.length === 0) {
+        return {
+          ...table,
+          currentOrder: null,
+          orders: [],
+          status: "empty", // Хоосон ширээний статус
+        };
+      }
+      return table;
+    });
+
     res.json({
       success: true,
-      data: tables,
+      data: processedTables,
     });
   } catch (error) {
     console.error("Error fetching tables:", error);

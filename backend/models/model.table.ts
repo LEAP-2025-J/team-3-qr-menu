@@ -5,6 +5,7 @@ export interface ITable extends Document {
   capacity: number;
   status: "empty" | "reserved" | "cleaning" | "maintenance";
   currentOrder?: mongoose.Types.ObjectId;
+  orders: mongoose.Types.ObjectId[]; // Бүх захиалгын жагсаалт
   qrCode: string;
   location?: string;
   isActive: boolean;
@@ -34,6 +35,12 @@ const TableSchema = new Schema<ITable>(
       type: Schema.Types.ObjectId,
       ref: "Order",
     },
+    orders: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Order",
+      },
+    ], // Бүх захиалгын жагсаалт
     qrCode: {
       type: String,
       required: [true, "QR code is required"],

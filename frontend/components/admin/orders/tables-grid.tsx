@@ -24,6 +24,7 @@ export function TablesGrid({
   onPrintOrder,
   onCreateOrder,
   onRefresh,
+  onEditReservation,
 }: TablesGridProps) {
   const [showCreateReservationModal, setShowCreateReservationModal] =
     useState(false);
@@ -73,6 +74,7 @@ export function TablesGrid({
           onPrintOrder={onPrintOrder}
           onCreateOrder={onCreateOrder}
           onRefresh={onRefresh}
+          onEditReservation={onEditReservation}
         />
 
         {/* Баруун тал - 2 багана, контентын өндөр */}
@@ -87,6 +89,7 @@ export function TablesGrid({
           onPrintOrder={onPrintOrder}
           onCreateOrder={onCreateOrder}
           onRefresh={onRefresh}
+          onEditReservation={onEditReservation}
         />
       </div>
 

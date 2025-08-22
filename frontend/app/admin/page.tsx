@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AdminDashboard } from "@/components/admin/admin-dashboard";
+import { NotificationProvider } from "@/contexts/notification-context";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -13,14 +14,14 @@ export default function AdminPage() {
     // Check if user is authenticated
     const adminStatus = localStorage.getItem("admin");
     const username = localStorage.getItem("username");
-    
+
     if (adminStatus === "true" && username) {
       setIsAuthenticated(true);
     } else {
       // Not authenticated, redirect to sign-in
       router.push("/sign-in");
     }
-    
+
     setIsLoading(false);
   }, [router]);
 
@@ -41,5 +42,9 @@ export default function AdminPage() {
     return null; // Will redirect to sign-in
   }
 
-  return <AdminDashboard />;
+  return (
+    <NotificationProvider>
+      <AdminDashboard />
+    </NotificationProvider>
+  );
 }
