@@ -7,6 +7,7 @@ import { useCart } from "@/hooks/use-cart";
 import { useMenu } from "@/hooks/use-menu";
 import { useRestaurant } from "@/hooks/use-restaurant";
 import { useTable } from "@/hooks/use-table";
+import { API_CONFIG } from "@/config/api";
 import { Header } from "@/components/qr-menu/header";
 import { DiscountBanner } from "@/components/qr-menu/discount-banner";
 import { CartModal } from "@/components/qr-menu/cart-modal";
@@ -113,7 +114,7 @@ function QRMenuContent() {
 
             // Create order data
             const orderData = {
-              tableNumber: tableNumber,
+              tableNumber: parseInt(tableNumber || "0"),
               items: cart.map((item) => ({
                 menuItem: item.id,
                 quantity: item.quantity,
@@ -128,7 +129,7 @@ function QRMenuContent() {
 
             // Send order to backend
             const response = await fetch(
-              `https://backend-htk90mjru-kherlenchimegs-projects.vercel.app/api/orders`,
+              `${API_CONFIG.BACKEND_URL}/api/orders`,
               {
                 method: "POST",
                 headers: {
@@ -148,6 +149,38 @@ function QRMenuContent() {
               // Clear cart after successful order
               clearCart();
               setCartOpen(false);
+
+              // Trigger notification for admin
+              if (typeof window !== "undefined") {
+                const tableNum = parseInt(tableNumber || "0");
+                console.log("QR order submitted for table:", tableNum);
+
+                // localStorage-д notification хадгалах
+                const currentCount = parseInt(
+                  localStorage.getItem("qr-notification-count") || "0"
+                );
+                const newCount = currentCount + 1;
+                localStorage.setItem(
+                  "qr-notification-count",
+                  newCount.toString()
+                );
+                console.log("Updated notification count:", newCount);
+
+                // Хамгийн сүүлийн захиалгын table number хадгалах
+                localStorage.setItem(
+                  "last-qr-order",
+                  JSON.stringify({ tableNumber: tableNum })
+                );
+                console.log("Saved last order to localStorage:", {
+                  tableNumber: tableNum,
+                });
+
+                // Custom event trigger хийх
+                const event = new CustomEvent("qr-order-notification", {
+                  detail: { tableNumber: tableNum },
+                });
+                window.dispatchEvent(event);
+              }
 
               // Show success message
               alert(

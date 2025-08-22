@@ -55,9 +55,9 @@ export function getNextStatus(currentStatus: Order["status"]): Order["status"] {
 export function getPrimaryActionLabel(status: Order["status"]): string {
   switch (status) {
     case "pending":
-      return "Хэвлэх";
+      return "Бэлтгэх";
     case "preparing":
-      return "Үйлчилж эхлэх";
+      return "Үйлчлэх";
     case "serving":
       return "Дуусгах";
     default:

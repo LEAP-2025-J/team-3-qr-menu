@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import { AdminHeader } from "./admin-header";
 import { AdminSidebar } from "./admin-sidebar";
-import { DashboardStats } from "./orders/dashboard-stats";
 import { MenuManagement } from "./menu/menu-management";
 import { OrdersList } from "./orders/orders-list";
 import { ReservationsList } from "./orders/reservations-list";
@@ -34,6 +33,10 @@ import { API_CONFIG } from "@/config/api";
 import { AdminDashboardSkeleton } from "./admin-dashboard-skeleton";
 import { MenuSkeleton } from "./menu/menu-skeleton";
 import { SettingsSkeleton } from "./settings/settings-skeleton";
+import {
+  NotificationProvider,
+  useNotification,
+} from "@/contexts/notification-context";
 
 export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("orders");
@@ -45,7 +48,8 @@ export function AdminDashboard() {
     useState(false);
   const [selectedReservation, setSelectedReservation] = useState<any>(null);
 
-  const { toast } = useToast();
+  const { toast, dismiss } = useToast();
+  const { notificationCount, addNotification, markAsRead } = useNotification();
 
   const {
     orders,
@@ -70,6 +74,132 @@ export function AdminDashboard() {
   // MenuGrid ref
   const menuGridRef = React.useRef<any>(null);
 
+  // QR notification listener болон polling
+  useEffect(() => {
+    const handleQRNotification = (event: CustomEvent) => {
+      const { tableNumber } = event.detail;
+      addNotification(tableNumber);
+
+      // Toast notification харуулах
+      toast({
+        title: `${tableNumber}-р ширээнд QR захиалга ирлээ`,
+        description: "OK дарж шинэчлэх",
+        action: (
+          <Button
+            size="sm"
+            onClick={() => {
+              markAsRead();
+              handleAutoRefresh();
+              dismiss();
+            }}
+          >
+            OK
+          </Button>
+        ),
+        duration: Infinity,
+      });
+    };
+
+    // localStorage өөрчлөгдөхийг сонсох
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "qr-notification-count") {
+        const newCount = e.newValue ? parseInt(e.newValue) : 0;
+        const oldCount = e.oldValue ? parseInt(e.oldValue) : 0;
+
+        // Хэрэв тоо нэмэгдсэн бол toast харуулах
+        if (newCount > oldCount) {
+          // Хамгийн сүүлийн захиалгын table number-г олох
+          const lastOrder = localStorage.getItem("last-qr-order");
+          if (lastOrder) {
+            const { tableNumber } = JSON.parse(lastOrder);
+            toast({
+              title: `${tableNumber}-р ширээнд QR захиалга ирлээ`,
+              description: "OK дарж шинэчлэх",
+              action: (
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    markAsRead();
+                    handleAutoRefresh();
+                    dismiss();
+                  }}
+                >
+                  OK
+                </Button>
+              ),
+              duration: Infinity,
+            });
+          }
+        }
+      }
+    };
+
+    window.addEventListener(
+      "qr-order-notification",
+      handleQRNotification as EventListener
+    );
+
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      window.removeEventListener(
+        "qr-order-notification",
+        handleQRNotification as EventListener
+      );
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, [addNotification, markAsRead, fetchTables, fetchOrders, toast, dismiss]);
+
+  // Notification badge дархад toast харуулах функц
+  const handleNotificationClick = () => {
+    console.log("Notification badge clicked!");
+    console.log("Current notification count:", notificationCount);
+
+    const lastOrder = localStorage.getItem("last-qr-order");
+    console.log("Last order from localStorage:", lastOrder);
+
+    // Хэрэв notification count 0 эсвэл last order байхгүй бол хоосон мэдэгдэл
+    if (notificationCount === 0 || !lastOrder) {
+      console.log("No notifications available");
+      toast({
+        title: "Захиалгын мэдээлэл",
+        description: "Одоогоор шинэ захиалга ирээгүй байна",
+        duration: 3000,
+      });
+      return;
+    }
+
+    // Хэрэв notification байвал toast харуулах
+    try {
+      const { tableNumber } = JSON.parse(lastOrder);
+      console.log("Showing toast for table:", tableNumber);
+      toast({
+        title: `${tableNumber}-р ширээнд QR захиалга ирлээ`,
+        description: "OK дарж шинэчлэх",
+        action: (
+          <Button
+            size="sm"
+            onClick={() => {
+              markAsRead();
+              handleAutoRefresh();
+              dismiss();
+            }}
+          >
+            OK
+          </Button>
+        ),
+        duration: Infinity,
+      });
+    } catch (error) {
+      console.error("Error parsing last order:", error);
+      toast({
+        title: "Захиалгын мэдээлэл",
+        description: "Одоогоор шинэ захиалга ирээгүй байна",
+        duration: 3000,
+      });
+    }
+  };
+
   // Table functions
   const handleTableStatusChange = async (
     tableId: string,
@@ -86,7 +216,7 @@ export function AdminDashboard() {
       );
 
       if (response.ok) {
-        fetchTables();
+        handleAutoRefresh();
       }
     } catch (error) {
       console.error("Error updating table status:", error);
@@ -112,6 +242,12 @@ export function AdminDashboard() {
   };
 
   const handleRefresh = async () => {
+    await Promise.all([fetchOrders(), fetchTables(), fetchReservations()]);
+    // Toast notification болиулсан
+  };
+
+  // Зөвхөн автомат refresh-д зориулсан функц (toast байхгүй)
+  const handleAutoRefresh = async () => {
     await Promise.all([fetchOrders(), fetchTables(), fetchReservations()]);
   };
 
@@ -146,9 +282,7 @@ export function AdminDashboard() {
         const responseData = await response.json();
 
         // Ширээний мэдээллийг шинэчлэх
-        await fetchTables();
-        // Захиалгын жагсаалтыг бас шинэчлэх
-        await fetchOrders();
+        await handleAutoRefresh();
         return { success: true };
       } else {
         const errorData = await response.json();
@@ -217,8 +351,7 @@ export function AdminDashboard() {
       );
 
       if (result.success) {
-        fetchReservations();
-        fetchTables();
+        handleAutoRefresh();
         toast({
           title: "Reservation status updated successfully!",
           description: result.message || "Reservation status updated.",
@@ -257,8 +390,7 @@ export function AdminDashboard() {
       );
 
       if (result.success) {
-        fetchReservations();
-        fetchTables();
+        handleAutoRefresh();
         toast({
           title: "Reservation cancelled successfully!",
           description: result.message || "Reservation cancelled.",
@@ -286,6 +418,11 @@ export function AdminDashboard() {
     setIsEditReservationModalOpen(true);
   };
 
+  const handleEditReservation = (reservation: any, tableId: string) => {
+    setSelectedReservation(reservation);
+    setIsEditReservationModalOpen(true);
+  };
+
   const handleReservationDelete = async (id: string) => {
     try {
       const response = await fetch(
@@ -302,8 +439,7 @@ export function AdminDashboard() {
       );
 
       if (result.success) {
-        fetchReservations();
-        fetchTables();
+        handleAutoRefresh();
         toast({
           title: "Reservation deleted successfully!",
           description: result.message || "Reservation deleted.",
@@ -359,8 +495,7 @@ export function AdminDashboard() {
         });
 
         // Refresh data
-        fetchReservations();
-        fetchTables();
+        handleAutoRefresh();
         setIsReservationModalOpen(false);
         toast({
           title: "Reservation created successfully!",
@@ -414,8 +549,7 @@ export function AdminDashboard() {
 
       if (responseData.success) {
         // Refresh data
-        fetchReservations();
-        fetchTables();
+        handleAutoRefresh();
         setIsEditReservationModalOpen(false);
         toast({
           title: "Reservation updated successfully!",
@@ -461,7 +595,10 @@ export function AdminDashboard() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col ml-[210px] min-w-0">
-        <AdminHeader />
+        <AdminHeader
+          notificationCount={notificationCount}
+          onNotificationClick={handleNotificationClick}
+        />
 
         <main className="flex-1 w-full p-8 max-w-none">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -474,11 +611,12 @@ export function AdminDashboard() {
                 loading={loading}
                 onStatusChange={handleTableStatusChange}
                 onViewQR={handleViewQR}
-                onRefresh={fetchTables}
+                onRefresh={handleRefresh}
                 onCompleteOrder={handleCompleteOrder}
                 onCancelOrder={handleCancelOrder}
                 onPrintOrder={handlePrintOrder}
                 onCreateOrder={handleCreateOrder}
+                onEditReservation={handleEditReservation}
               />
             </TabsContent>
 
@@ -546,6 +684,9 @@ export function AdminDashboard() {
         reservation={selectedReservation}
         tables={tables}
       />
+
+      {/* Toaster for notifications */}
+      <Toaster />
     </div>
   );
 }

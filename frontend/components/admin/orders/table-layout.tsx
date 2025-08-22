@@ -25,6 +25,7 @@ export function TableLayout({
   onCreateOrder,
 }: TableLayoutProps) {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [showReservationModal, setShowReservationModal] = useState(false);
   const [editingReservation, setEditingReservation] = useState<any>(null);
   const [selectedTableId, setSelectedTableId] = useState<string>("");
@@ -54,6 +55,15 @@ export function TableLayout({
     setShowQRModal(true);
   };
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await onRefresh();
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   const handleReservationSubmitWrapper = async (data: any) => {
     const result = await handleReservationSubmit(
       data,
@@ -75,7 +85,8 @@ export function TableLayout({
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         onAddReservation={handleAddReservation}
-        onRefresh={onRefresh || (() => {})}
+        onRefresh={handleRefresh}
+        isRefreshing={isRefreshing}
       />
 
       {/* Stats Cards */}
@@ -101,6 +112,7 @@ export function TableLayout({
             onPrintOrder={onPrintOrder}
             onCreateOrder={onCreateOrder}
             onRefresh={onRefresh}
+            onEditReservation={handleEditReservation}
           />
         )
       ) : (

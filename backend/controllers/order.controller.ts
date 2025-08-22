@@ -164,10 +164,11 @@ export const createOrder = async (req: Request, res: Response) => {
 
     await order.save();
 
-    // Update table status to reserved
+    // Update table status to reserved and add order to orders array
     await (Table as any).findByIdAndUpdate(table._id, {
       status: "reserved",
       currentOrder: order._id,
+      $push: { orders: order._id }, // Захиалгыг orders array-д нэмэх
     });
 
     const populatedOrder = await Order.findById(order._id)
@@ -211,14 +212,32 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 
     // Update table status based on order status
     if (status === "completed" || status === "cancelled") {
-      await (Table as any).findByIdAndUpdate(
-        order.table._id,
-        {
-          status: "empty",
-          currentOrder: null,
-        },
-        { new: true }
-      );
+      // Хэрэв тухайн ширээнд өөр идэвхтэй захиалга байвал currentOrder-г шинэчлэхгүй
+      const activeOrders = await Order.find({
+        table: order.table._id,
+        status: { $nin: ["completed", "cancelled"] },
+      }).sort({ createdAt: -1 });
+
+      if (activeOrders.length === 0) {
+        // Идэвхтэй захиалга байхгүй бол ширээг хоосон болгох
+        await (Table as any).findByIdAndUpdate(
+          order.table._id,
+          {
+            status: "empty",
+            currentOrder: null,
+          },
+          { new: true }
+        );
+      } else {
+        // Хамгийн сүүлийн идэвхтэй захиалгыг currentOrder болгох
+        await (Table as any).findByIdAndUpdate(
+          order.table._id,
+          {
+            currentOrder: activeOrders[0]._id,
+          },
+          { new: true }
+        );
+      }
     }
 
     res.json({

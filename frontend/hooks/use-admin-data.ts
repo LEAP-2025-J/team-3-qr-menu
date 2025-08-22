@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { API_CONFIG, API_ENDPOINTS } from "@/config/api";
+import { isReservationActive } from "@/components/admin/utils/date-utils";
 
 // Types
 export interface Order {
@@ -126,11 +127,16 @@ export function useAdminData() {
       if (data.success) {
         setOrders(data.data);
 
-        // Calculate stats
-        const today = new Date().toDateString();
-        const todayOrders = data.data.filter(
-          (order: Order) => new Date(order.createdAt).toDateString() === today
-        );
+        // Calculate stats - UTC+8 timezone ашиглах (Mongolia timezone)
+        const now = new Date();
+        const utc8Date = new Date(now.getTime() + 8 * 60 * 60 * 1000); // UTC+8
+        const todayString = utc8Date.toISOString().split("T")[0]; // YYYY-MM-DD формат
+
+        const todayOrders = data.data.filter((order: Order) => {
+          const orderDate = new Date(order.createdAt);
+          const orderDateString = orderDate.toISOString().split("T")[0]; // YYYY-MM-DD формат
+          return orderDateString === todayString;
+        });
 
         const totalRevenue = todayOrders.reduce(
           (sum: number, order: Order) => sum + order.total,
@@ -213,9 +219,8 @@ export function useAdminData() {
         setReservations(data.data);
         setStats((prev) => ({
           ...prev,
-          activeReservations: data.data.filter(
-            (res: Reservation) =>
-              res.status === "confirmed" || res.status === "pending"
+          activeReservations: data.data.filter((res: Reservation) =>
+            isReservationActive(res)
           ).length,
         }));
 

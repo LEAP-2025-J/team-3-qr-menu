@@ -6,12 +6,12 @@ export const API_CONFIG = {
       ? "https://backend-i9qx3k9dq-kherlenchimegs-projects.vercel.app"
       : process.env.NEXT_PUBLIC_BACKEND_URL) ||
     (process.env.NODE_ENV === "production"
-      ? "https://backend-3vsi1erbq-kherlenchimegs-projects.vercel.app"
+      ? "backend-wine-pi.vercel.app"
       : process.env.NEXT_PUBLIC_LOCAL_BACKEND_URL || "http://localhost:5000"),
   FRONTEND_URL:
     process.env.NEXT_PUBLIC_FRONTEND_URL ||
     (process.env.NODE_ENV === "production"
-      ? "https://frontend-po2elhd14-kherlenchimegs-projects.vercel.app"
+      ? "frontend-cyan-tau-99.vercel.app"
       : process.env.NEXT_PUBLIC_LOCAL_FRONTEND_URL || "http://localhost:3000"),
 };
 

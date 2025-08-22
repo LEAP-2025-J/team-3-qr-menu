@@ -8,6 +8,7 @@ interface TableHeaderProps {
   onViewModeChange: (mode: "grid" | "list") => void;
   onAddReservation: () => void;
   onRefresh: () => void;
+  isRefreshing?: boolean;
 }
 
 export function TableHeader({
@@ -15,6 +16,7 @@ export function TableHeader({
   onViewModeChange,
   onAddReservation,
   onRefresh,
+  isRefreshing = false,
 }: TableHeaderProps) {
   return (
     <div className="flex items-center justify-between">
@@ -51,9 +53,16 @@ export function TableHeader({
             Add Reservation
           </Button>
         )}
-        <Button onClick={onRefresh} variant="outline" size="sm">
-          <RefreshCw className="w-4 h-4 mr-2" />
-          Шинэчлэх
+        <Button
+          onClick={onRefresh}
+          variant="outline"
+          size="sm"
+          disabled={isRefreshing}
+        >
+          <RefreshCw
+            className={`w-4 h-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`}
+          />
+          {isRefreshing ? "Шинэчилж байна..." : "Шинэчлэх"}
         </Button>
       </div>
     </div>

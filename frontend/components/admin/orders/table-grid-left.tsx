@@ -17,6 +17,7 @@ export function TableGridLeft({
   onPrintOrder,
   onCreateOrder,
   onRefresh,
+  onEditReservation,
 }: TableGridLeftProps) {
   return (
     <div
@@ -37,6 +38,7 @@ export function TableGridLeft({
           onPrintOrder={onPrintOrder}
           onCreateOrder={onCreateOrder}
           onRefresh={onRefresh}
+          onEditReservation={onEditReservation}
         />
       )}
       {getTableByNumber(tables, 2) && (
@@ -52,6 +54,7 @@ export function TableGridLeft({
           onPrintOrder={onPrintOrder}
           onCreateOrder={onCreateOrder}
           onRefresh={onRefresh}
+          onEditReservation={onEditReservation}
         />
       )}
       {getTableByNumber(tables, 3) && (
@@ -67,6 +70,7 @@ export function TableGridLeft({
           onPrintOrder={onPrintOrder}
           onCreateOrder={onCreateOrder}
           onRefresh={onRefresh}
+          onEditReservation={onEditReservation}
         />
       )}
 
@@ -84,6 +88,7 @@ export function TableGridLeft({
           onPrintOrder={onPrintOrder}
           onCreateOrder={onCreateOrder}
           onRefresh={onRefresh}
+          onEditReservation={onEditReservation}
         />
       )}
       {getTableByNumber(tables, 5) && (
@@ -99,6 +104,7 @@ export function TableGridLeft({
           onPrintOrder={onPrintOrder}
           onCreateOrder={onCreateOrder}
           onRefresh={onRefresh}
+          onEditReservation={onEditReservation}
         />
       )}
       {getTableByNumber(tables, 6) && (
@@ -114,6 +120,7 @@ export function TableGridLeft({
           onPrintOrder={onPrintOrder}
           onCreateOrder={onCreateOrder}
           onRefresh={onRefresh}
+          onEditReservation={onEditReservation}
         />
       )}
 
@@ -145,6 +152,7 @@ export function TableGridLeft({
           onPrintOrder={onPrintOrder}
           onCreateOrder={onCreateOrder}
           onRefresh={onRefresh}
+          onEditReservation={onEditReservation}
         />
       )}
       <div></div>
@@ -164,6 +172,7 @@ export function TableGridLeft({
           onPrintOrder={onPrintOrder}
           onCreateOrder={onCreateOrder}
           onRefresh={onRefresh}
+          onEditReservation={onEditReservation}
         />
       )}
       {getTableByNumber(tables, 18) && (
@@ -179,6 +188,7 @@ export function TableGridLeft({
           onPrintOrder={onPrintOrder}
           onCreateOrder={onCreateOrder}
           onRefresh={onRefresh}
+          onEditReservation={onEditReservation}
         />
       )}
       <div></div>
@@ -197,6 +207,7 @@ export function TableGridLeft({
           onPrintOrder={onPrintOrder}
           onCreateOrder={onCreateOrder}
           onRefresh={onRefresh}
+          onEditReservation={onEditReservation}
         />
       )}
       {getTableByNumber(tables, 21) && (
@@ -212,6 +223,7 @@ export function TableGridLeft({
           onPrintOrder={onPrintOrder}
           onCreateOrder={onCreateOrder}
           onRefresh={onRefresh}
+          onEditReservation={onEditReservation}
         />
       )}
       <div></div>

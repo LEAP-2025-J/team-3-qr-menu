@@ -21,7 +21,8 @@ export function TableStatsCards({ stats }: TableStatsCardsProps) {
             {stats.totalTables}
           </div>
           <p className="text-xs leading-tight text-gray-500">
-            {stats.emptyTables} хоосон, {stats.reservedTables} захиалгатай
+            {stats.emptyTables} хоосон,{" "}
+            {stats.orderTables + stats.reservedTables} захиалгатай
           </p>
         </div>
       </Card>

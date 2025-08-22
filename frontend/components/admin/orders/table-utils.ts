@@ -1,24 +1,71 @@
 import { Table, TableStats } from "../types/table-layout.type";
+import { isReservationActive } from "../utils/date-utils";
+
+// Өнөөдрийн огноотой захиалгыг шалгах функц
+export function isOrderActive(order: any): boolean {
+  if (!order || !order.createdAt) {
+    return false;
+  }
+
+  // Өнөөдрийн огноог UTC+8 timezone-тай болгож авах (Mongolia timezone)
+  const now = new Date();
+  const utc8Date = new Date(now.getTime() + 8 * 60 * 60 * 1000); // UTC+8
+  const todayString = utc8Date.toISOString().split("T")[0]; // YYYY-MM-DD формат
+
+  // Захиалгын огноог шалгах
+  const orderDate = new Date(order.createdAt);
+  const orderDateString = orderDate.toISOString().split("T")[0]; // YYYY-MM-DD формат
+
+  return orderDateString === todayString;
+}
 
 // Статистик тооцоолох функц
 export function calculateTableStats(tables: Table[]): TableStats {
+  // Өнөөдрийн идэвхтэй order-тай ширээнүүд
+  const orderTables = tables.filter(
+    (t) => t.currentOrder && isOrderActive(t.currentOrder)
+  ).length;
+
+  // Өнөөдрийн идэвхтэй reservation-тай ширээнүүд
+  const reservedTables = tables.filter(
+    (t) => t.currentReservation && isReservationActive(t.currentReservation)
+  ).length;
+
+  // Хоосон биш ширээний тоо = өнөөдрийн идэвхтэй order-той + өнөөдрийн идэвхтэй reservation-тай
+  const nonEmptyTables = orderTables + reservedTables;
+
+  // Хоосон ширээний тоо = нийт - хоосон биш
+  const emptyTables = tables.length - nonEmptyTables;
+
+  // Order болон reservation хоёулантай ширээнүүд (давхцал)
+  const bothOrderAndReservation = tables.filter(
+    (t) =>
+      t.currentOrder &&
+      isOrderActive(t.currentOrder) &&
+      t.currentReservation &&
+      isReservationActive(t.currentReservation)
+  ).length;
+
   return {
     totalTables: tables.length,
-    emptyTables: tables.filter(
-      (t) => t.status === "empty" && !t.currentOrder && !t.currentReservation
+    emptyTables: emptyTables,
+    reservedTables: reservedTables,
+    orderTables: orderTables, // Зөвхөн order-тай ширээнүүд
+    bothOrderAndReservation: bothOrderAndReservation,
+    pendingOrders: tables.filter(
+      (t) =>
+        t.currentOrder &&
+        isOrderActive(t.currentOrder) &&
+        t.currentOrder.status === "pending"
     ).length,
-    reservedTables: tables.filter((t) => t.currentReservation).length,
-    orderTables: tables.filter((t) => t.currentOrder).length,
-    bothOrderAndReservation: tables.filter(
-      (t) => t.currentOrder && t.currentReservation
-    ).length,
-    pendingOrders: tables.filter((t) => t.currentOrder?.status === "pending")
-      .length,
     preparingOrders: tables.filter(
-      (t) => t.currentOrder?.status === "preparing"
+      (t) =>
+        t.currentOrder &&
+        isOrderActive(t.currentOrder) &&
+        t.currentOrder.status === "preparing"
     ).length,
     totalRevenue: tables
-      .filter((t) => t.currentOrder)
+      .filter((t) => t.currentOrder && isOrderActive(t.currentOrder))
       .reduce((sum, t) => sum + (t.currentOrder?.total || 0), 0),
   };
 }
