@@ -23,6 +23,7 @@ import tableRoutes from "./routes/route.tables.js";
 import reservationRoutes from "./routes/route.reservations.js";
 import categoryRoutes from "./routes/route.categories.js";
 import restaurantRoutes from "./routes/route.restaurant.js";
+import authRoutes from "./routes/auth.js";
 
 // Import cleanup function
 import { cleanupOldReservations } from "./controllers/reservation.controller.js";
@@ -94,6 +95,7 @@ app.use("/api/tables", tableRoutes);
 app.use("/api/reservations", reservationRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/restaurant", restaurantRoutes);
+app.use("/api/auth", authRoutes);
 
 // Health check endpoint
 app.get("/api/health", (req: Request, res: Response) => {

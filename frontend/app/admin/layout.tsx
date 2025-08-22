@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
 
 export const metadata: Metadata = {
   title: "Admin - Haku QR Menu Orders System",
@@ -11,5 +12,14 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return (
+    <>
+      <SignedIn>
+        {children}
+      </SignedIn>
+      <SignedOut>
+        <RedirectToSignIn />
+      </SignedOut>
+    </>
+  );
 }

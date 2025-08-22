@@ -1,0 +1,24 @@
+import { SignIn } from "@clerk/nextjs";
+
+export default function SignInPage() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <SignIn 
+        appearance={{
+          elements: {
+            formButtonPrimary: "bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors",
+            card: "shadow-xl max-w-md mx-auto",
+            headerTitle: "text-2xl font-bold text-gray-900",
+            headerSubtitle: "text-gray-600",
+            socialButtonsBlockButton: "bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-4 rounded-lg transition-colors",
+            dividerLine: "bg-gray-200",
+            dividerText: "text-gray-500",
+            formFieldLabel: "text-gray-700 font-medium",
+            formFieldInput: "border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg",
+            footerActionLink: "text-blue-600 hover:text-blue-700",
+          },
+        }}
+      />
+    </div>
+  );
+}

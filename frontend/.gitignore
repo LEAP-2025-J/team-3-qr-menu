@@ -127,3 +127,5 @@ nodemon.json
 
 # React specific
 *.tsbuildinfo 
+# clerk configuration (can include secrets)
+/.clerk/

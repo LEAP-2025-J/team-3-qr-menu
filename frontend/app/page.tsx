@@ -12,11 +12,14 @@ import { DiscountBanner } from "@/components/qr-menu/discount-banner";
 import { CartModal } from "@/components/qr-menu/cart-modal";
 import { MenuGrid } from "@/components/qr-menu/menu-grid";
 import { Footer } from "@/components/qr-menu/footer";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 function QRMenuContent() {
   const pathname = usePathname();
   const { getText, currentLanguage } = useLanguage();
   const [tableNumber, setTableNumber] = useState<string | null>(null);
+  const router = useRouter();
 
   // Get table number from URL
   useEffect(() => {
