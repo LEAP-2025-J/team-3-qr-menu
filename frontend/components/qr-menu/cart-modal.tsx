@@ -106,8 +106,13 @@ export function CartModal({
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => onChangeQuantity(item.id, item.quantity - 1)}
-                        disabled={item.quantity === 1}
+                        onClick={() => {
+                          if (item.quantity === 1) {
+                            onRemoveFromCart(item.id);
+                          } else {
+                            onChangeQuantity(item.id, item.quantity - 1);
+                          }
+                        }}
                         className="w-8 h-8 p-0"
                       >
                         -
@@ -129,7 +134,7 @@ export function CartModal({
                     size="icon"
                     variant="ghost"
                     onClick={() => onRemoveFromCart(item.id)}
-                    className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50"
+                    className="p-4 text-red-500 hover:text-red-700 hover:bg-red-50 text-2xl font-bold w-12 h-12"
                   >
                     ×
                   </Button>
