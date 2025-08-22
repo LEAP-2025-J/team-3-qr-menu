@@ -1,23 +1,36 @@
 // API Configuration
 // Production болон development environment-д зориулсан тохиргоо
+// Локал орчинд эсэхийг шалгах функц
+const isLocalEnvironment = () => {
+  if (typeof window !== "undefined") {
+    const hostname = window.location.hostname;
+    return (
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname.startsWith("192.168.")
+    );
+  }
+  return process.env.NODE_ENV !== "production";
+};
+
 export const API_CONFIG = {
   BACKEND_URL:
     (process.env.NEXT_PUBLIC_PREVIEW_MODE === "true"
-      ? "https://backend-i9qx3k9dq-kherlenchimegs-projects.vercel.app"
+      ? "https://backend-wine-pi.vercel.app"
       : process.env.NEXT_PUBLIC_BACKEND_URL) ||
-    (process.env.NODE_ENV === "production"
-      ? "backend-wine-pi.vercel.app"
-      : process.env.NEXT_PUBLIC_LOCAL_BACKEND_URL || "http://localhost:5000"),
+    (isLocalEnvironment()
+      ? process.env.NEXT_PUBLIC_LOCAL_BACKEND_URL || "http://localhost:5000"
+      : process.env.NEXT_PUBLIC_PRODUCTION_BACKEND_URL ||
+        "https://backend-wine-pi.vercel.app"), // Тогтмол Vercel URL
   FRONTEND_URL:
     process.env.NEXT_PUBLIC_FRONTEND_URL ||
     (process.env.NODE_ENV === "production"
-      ? "frontend-cyan-tau-99.vercel.app"
+      ? "frontend-cyan-tau-99.vercel.app" // Тогтмол Vercel URL
       : process.env.NEXT_PUBLIC_LOCAL_FRONTEND_URL || "http://localhost:3000"),
 };
 
 // Preview deployment-д зориулсан backend URL
-export const PREVIEW_BACKEND_URL =
-  "https://backend-i9qx3k9dq-kherlenchimegs-projects.vercel.app";
+export const PREVIEW_BACKEND_URL = "https://backend-wine-pi.vercel.app";
 
 // Backend API endpoints
 export const API_ENDPOINTS = {
