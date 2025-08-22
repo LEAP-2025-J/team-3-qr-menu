@@ -1,10 +1,16 @@
 import { Table, TableStats } from "../types/table-layout.type";
 import { isReservationActive } from "../utils/date-utils";
 
-// Өнөөдрийн огноотой захиалгыг шалгах функц
+// Өнөөдрийн огноотой идэвхтэй захиалгыг шалгах функц
 export function isOrderActive(order: any): boolean {
   if (!order || !order.createdAt) {
     return false;
+  }
+
+  // Захиалгын статус шалгах - зөвхөн идэвхтэй статустай захиалгууд
+  const activeStatuses = ["pending", "preparing", "serving"];
+  if (!activeStatuses.includes(order.status)) {
+    return false; // completed, cancelled, reserved статустай захиалгууд идэвхгүй
   }
 
   // Өнөөдрийн огноог UTC+8 timezone-тай болгож авах (Mongolia timezone)

@@ -42,6 +42,49 @@ export const getAllTables = async (req: Request, res: Response) => {
           status: "empty", // Хоосон ширээний статус
         };
       }
+
+      // currentOrder байгаа ч тухайн захиалга дууссан/цуцлагдсан бол currentOrder-г null болгох
+      if (table.currentOrder) {
+        const currentOrderStatus = table.currentOrder.status;
+        if (
+          currentOrderStatus === "completed" ||
+          currentOrderStatus === "cancelled"
+        ) {
+          return {
+            ...table,
+            currentOrder: null,
+            status: "empty", // Хоосон ширээний статус
+          };
+        }
+      }
+
+      // Хамгийн сүүлийн идэвхтэй захиалгыг currentOrder болгох
+      if (table.orders && table.orders.length > 0) {
+        const activeOrders = table.orders.filter(
+          (order: any) =>
+            order.status === "pending" ||
+            order.status === "preparing" ||
+            order.status === "serving"
+        );
+
+        if (activeOrders.length > 0) {
+          // Хамгийн сүүлийн идэвхтэй захиалгыг currentOrder болгох
+          const latestActiveOrder = activeOrders[0]; // sort({ createdAt: -1 }) учраас эхнийх нь хамгийн сүүлийнх
+          return {
+            ...table,
+            currentOrder: latestActiveOrder,
+            status: "reserved",
+          };
+        } else {
+          // Идэвхтэй захиалга байхгүй бол хоосон ширээ
+          return {
+            ...table,
+            currentOrder: null,
+            status: "empty",
+          };
+        }
+      }
+
       return table;
     });
 
