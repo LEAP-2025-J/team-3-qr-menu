@@ -23,7 +23,7 @@ import { ReservationsList } from "./orders/reservations-list";
 import { TableLayout } from "./orders/table-layout";
 import { SettingsForm } from "./settings/settings-form";
 import { ReservationModal } from "./orders/reservation-modal";
-import { EditReservationModal } from "./orders/edit-reservation-modal";
+import { EditReservationModal } from "./orders/edit-reservation-modal-new";
 import { CreateOrderModal } from "./orders/create-order-modal";
 import { useAdminData } from "@/hooks/use-admin-data";
 import { useToast } from "@/hooks/use-toast";

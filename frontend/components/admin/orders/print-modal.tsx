@@ -17,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { formatNumberForInput } from "../utils";
 import { X, Printer } from "lucide-react";
 import { Order, Table } from "../types";
 import { formatDate, formatTime } from "../utils";
@@ -29,7 +30,13 @@ interface PrintModalProps {
   onPrint: () => void;
 }
 
-export function PrintModal({ isOpen, onClose, order, table, onPrint }: PrintModalProps) {
+export function PrintModal({
+  isOpen,
+  onClose,
+  order,
+  table,
+  onPrint,
+}: PrintModalProps) {
   const [printDevice, setPrintDevice] = useState("browser");
   const [copyCount, setCopyCount] = useState(1);
 
@@ -59,7 +66,9 @@ export function PrintModal({ isOpen, onClose, order, table, onPrint }: PrintModa
             </div>
             <div className="flex justify-between">
               <span className="text-sm font-medium">Цаг:</span>
-              <span className="text-lg font-bold">{formatTime(order.createdAt)}</span>
+              <span className="text-lg font-bold">
+                {formatTime(order.createdAt)}
+              </span>
             </div>
           </div>
 
@@ -73,7 +82,9 @@ export function PrintModal({ isOpen, onClose, order, table, onPrint }: PrintModa
                   <div key={index} className="flex justify-between text-sm">
                     <div className="flex-1">
                       <div className="text-lg font-bold">
-                        {item.menuItem?.nameMn || item.menuItem?.name || "Unknown Item"}
+                        {item.menuItem?.nameMn ||
+                          item.menuItem?.name ||
+                          "Unknown Item"}
                       </div>
                       <div className="text-xs text-gray-500">
                         {item.menuItem?.nameJp || "日本語名なし"}
@@ -131,7 +142,7 @@ export function PrintModal({ isOpen, onClose, order, table, onPrint }: PrintModa
                 type="number"
                 min="1"
                 max="10"
-                value={copyCount}
+                value={formatNumberForInput(copyCount, 1)}
                 onChange={(e) => setCopyCount(parseInt(e.target.value) || 1)}
                 className="mt-1"
               />
@@ -144,7 +155,10 @@ export function PrintModal({ isOpen, onClose, order, table, onPrint }: PrintModa
               <X className="w-4 h-4 mr-2" />
               Цуцлах
             </Button>
-            <Button className="flex-1 bg-black hover:bg-gray-800" onClick={onPrint}>
+            <Button
+              className="flex-1 bg-black hover:bg-gray-800"
+              onClick={onPrint}
+            >
               <Printer className="w-4 h-4 mr-2" />
               Хэвлэх ({copyCount} хувь)
             </Button>

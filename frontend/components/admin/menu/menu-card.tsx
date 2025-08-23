@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
+import { formatPrice } from "../utils";
 
 interface MenuItem {
   _id: string;
@@ -64,7 +65,7 @@ export const MenuCard = ({ item, onEdit, onDelete }: MenuCardProps) => {
                 {item.nameMn}
               </h3>
               <Badge className="text-sm font-semibold text-white bg-green-600">
-                ${item.price.toFixed(2)}
+                {formatPrice(item.price)}
               </Badge>
             </div>
           </div>

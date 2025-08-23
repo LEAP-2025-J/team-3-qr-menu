@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Minus, ShoppingCart, X } from "lucide-react";
+import { formatPrice } from "../utils";
 
 // Menu item интерфейс
 interface MenuItem {
@@ -241,7 +242,7 @@ export function CreateOrderModal({
                           </div>
                         )}
                         <div className="mt-1 text-lg font-bold text-green-600">
-                          ${menuItem.price.toLocaleString()}
+                          {formatPrice(menuItem.price)}
                         </div>
                       </div>
                     </div>
@@ -282,7 +283,7 @@ export function CreateOrderModal({
                             </div>
                           )}
                           <div className="text-sm font-semibold text-green-600">
-                            ${item.price.toLocaleString()}
+                            {formatPrice(item.price)}
                           </div>
                         </div>
                         <Button
@@ -319,7 +320,7 @@ export function CreateOrderModal({
                           <Plus className="w-3 h-3" />
                         </Button>
                         <span className="ml-auto font-semibold">
-                          ${(item.price * item.quantity).toLocaleString()}
+                          {formatPrice(item.price * item.quantity)}
                         </span>
                       </div>
                     </CardContent>
@@ -333,9 +334,7 @@ export function CreateOrderModal({
               <div className="pt-4 mt-4 border-t border-gray-200">
                 <div className="flex items-center justify-between text-lg font-bold">
                   <span>Нийт дүн:</span>
-                  <span className="text-green-600">
-                    ${total.toLocaleString()}
-                  </span>
+                  <span className="text-green-600">{formatPrice(total)}</span>
                 </div>
               </div>
             )}

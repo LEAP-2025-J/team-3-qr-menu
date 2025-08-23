@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Clock, CheckCircle, AlertCircle, Eye } from "lucide-react";
+import { formatPrice } from "../utils";
 
 interface Order {
   _id: string;
@@ -144,7 +145,7 @@ export function OrdersList({ orders, onUpdateStatus }: OrdersListProps) {
                       <span>
                         {item.quantity}x {item.menuItem.nameEn}
                       </span>
-                      <span>${(item.price * item.quantity).toFixed(2)}</span>
+                      <span>{formatPrice(item.price * item.quantity)}</span>
                     </div>
                   ))}
               </div>

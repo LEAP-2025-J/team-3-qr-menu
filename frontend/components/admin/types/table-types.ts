@@ -31,4 +31,8 @@ export interface TableCardProps {
   }) => Promise<{ success: boolean }>;
   onRefresh?: () => void;
   onEditReservation?: (reservation: any, tableId: string) => void;
+  onReservationStatusChange?: (
+    reservationId: string,
+    newStatus: string
+  ) => void;
 }

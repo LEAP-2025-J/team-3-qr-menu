@@ -70,9 +70,30 @@ export function calculateTableStats(tables: Table[]): TableStats {
         isOrderActive(t.currentOrder) &&
         t.currentOrder.status === "preparing"
     ).length,
-    totalRevenue: tables
-      .filter((t) => t.currentOrder && isOrderActive(t.currentOrder))
-      .reduce((sum, t) => sum + (t.currentOrder?.total || 0), 0),
+    totalRevenue: tables.reduce((sum, t) => {
+      // Тухайн ширээний өнөөдрийн дууссан захиалгуудын нийлбэр
+      const completedOrders =
+        (t as any).orders?.filter((order: any) => {
+          // Зөвхөн completed статустай өнөөдрийн захиалгууд
+          if (order.status !== "completed") return false;
+
+          // Өнөөдрийн огноотой эсэхийг шалгах
+          if (!order.createdAt) return false;
+          const now = new Date();
+          const utc8Date = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+          const todayString = utc8Date.toISOString().split("T")[0];
+          const orderDate = new Date(order.createdAt);
+          const orderDateString = orderDate.toISOString().split("T")[0];
+
+          return orderDateString === todayString;
+        }) || [];
+
+      const tableTotal = completedOrders.reduce(
+        (orderSum: number, order: any) => orderSum + (order.total || 0),
+        0
+      );
+      return sum + tableTotal;
+    }, 0),
   };
 }
 

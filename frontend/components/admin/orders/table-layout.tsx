@@ -64,6 +64,35 @@ export function TableLayout({
     }
   };
 
+  const handleReservationStatusChange = async (
+    reservationId: string,
+    newStatus: string
+  ) => {
+    try {
+      const API_CONFIG = (await import("@/config/api")).API_CONFIG;
+      const response = await fetch(
+        `${API_CONFIG.BACKEND_URL}/api/reservations/${reservationId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ status: newStatus }),
+        }
+      );
+
+      const result = await response.json();
+      if (result.success) {
+        console.log("Reservation status updated successfully");
+        await onRefresh(); // Refresh data
+      } else {
+        console.error("Failed to update reservation status:", result.error);
+      }
+    } catch (error) {
+      console.error("Error updating reservation status:", error);
+    }
+  };
+
   const handleReservationSubmitWrapper = async (data: any) => {
     const result = await handleReservationSubmit(
       data,
@@ -113,6 +142,7 @@ export function TableLayout({
             onCreateOrder={onCreateOrder}
             onRefresh={onRefresh}
             onEditReservation={handleEditReservation}
+            onReservationStatusChange={handleReservationStatusChange}
           />
         )
       ) : (
@@ -136,6 +166,7 @@ export function TableLayout({
         tables={tables}
         editingReservation={editingReservation}
         selectedTableId={selectedTableId}
+        onRefresh={onRefresh}
       />
 
       {/* QR Modal */}

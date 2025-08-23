@@ -17,6 +17,7 @@ export function TableGridRight({
   onCreateOrder,
   onRefresh,
   onEditReservation,
+  onReservationStatusChange,
 }: TableGridRightProps) {
   return (
     <div
@@ -38,6 +39,7 @@ export function TableGridRight({
           onCreateOrder={onCreateOrder}
           onRefresh={onRefresh}
           onEditReservation={onEditReservation}
+          onReservationStatusChange={onReservationStatusChange}
         />
       )}
       {getTableByNumber(tables, 8) && (
@@ -54,6 +56,7 @@ export function TableGridRight({
           onCreateOrder={onCreateOrder}
           onRefresh={onRefresh}
           onEditReservation={onEditReservation}
+          onReservationStatusChange={onReservationStatusChange}
         />
       )}
 
@@ -73,6 +76,7 @@ export function TableGridRight({
           onCreateOrder={onCreateOrder}
           onRefresh={onRefresh}
           onEditReservation={onEditReservation}
+          onReservationStatusChange={onReservationStatusChange}
         />
       )}
 
@@ -92,6 +96,7 @@ export function TableGridRight({
           onCreateOrder={onCreateOrder}
           onRefresh={onRefresh}
           onEditReservation={onEditReservation}
+          onReservationStatusChange={onReservationStatusChange}
         />
       )}
 
@@ -111,6 +116,7 @@ export function TableGridRight({
           onCreateOrder={onCreateOrder}
           onRefresh={onRefresh}
           onEditReservation={onEditReservation}
+          onReservationStatusChange={onReservationStatusChange}
         />
       )}
 
@@ -129,6 +135,7 @@ export function TableGridRight({
           onCreateOrder={onCreateOrder}
           onRefresh={onRefresh}
           onEditReservation={onEditReservation}
+          onReservationStatusChange={onReservationStatusChange}
         />
       )}
       {getTableByNumber(tables, 12) && (
@@ -145,6 +152,7 @@ export function TableGridRight({
           onCreateOrder={onCreateOrder}
           onRefresh={onRefresh}
           onEditReservation={onEditReservation}
+          onReservationStatusChange={onReservationStatusChange}
         />
       )}
 
@@ -164,6 +172,7 @@ export function TableGridRight({
           onCreateOrder={onCreateOrder}
           onRefresh={onRefresh}
           onEditReservation={onEditReservation}
+          onReservationStatusChange={onReservationStatusChange}
         />
       )}
 
@@ -182,6 +191,7 @@ export function TableGridRight({
           onCreateOrder={onCreateOrder}
           onRefresh={onRefresh}
           onEditReservation={onEditReservation}
+          onReservationStatusChange={onReservationStatusChange}
         />
       )}
       {getTableByNumber(tables, 14) && (
@@ -198,6 +208,7 @@ export function TableGridRight({
           onCreateOrder={onCreateOrder}
           onRefresh={onRefresh}
           onEditReservation={onEditReservation}
+          onReservationStatusChange={onReservationStatusChange}
         />
       )}
     </div>
