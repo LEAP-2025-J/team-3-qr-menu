@@ -17,6 +17,14 @@ module.exports = {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ["Inter", "Segoe UI", "system-ui", "sans-serif"],
+      },
+      fontWeight: {
+        semilight: "300",
+        normal: "400",
+        semibold: "600",
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

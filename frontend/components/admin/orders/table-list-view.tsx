@@ -5,6 +5,25 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { API_CONFIG } from "@/config/api";
 import { Table } from "../types/table-layout.type";
+import { formatPrice } from "../utils/price-utils";
+
+// isOrderActive функцийг import хийх
+function isOrderActive(order: any): boolean {
+  if (!order || !order.createdAt) {
+    return false;
+  }
+
+  // Өнөөдрийн огноог UTC+8 timezone-тай болгож авах (Mongolia timezone)
+  const now = new Date();
+  const utc8Date = new Date(now.getTime() + 8 * 60 * 60 * 1000); // UTC+8
+  const todayString = utc8Date.toISOString().split("T")[0]; // YYYY-MM-DD формат
+
+  // Захиалгын огноог шалгах
+  const orderDate = new Date(order.createdAt);
+  const orderDateString = orderDate.toISOString().split("T")[0]; // YYYY-MM-DD формат
+
+  return orderDateString === todayString;
+}
 
 interface TableListViewProps {
   tables: Table[];
@@ -19,6 +38,10 @@ export function TableListView({
   onEditReservation,
   onViewQR,
 }: TableListViewProps) {
+  // Өнөөдрийн огноог UTC+8 timezone-тай болгож авах (Mongolia timezone)
+  const now = new Date();
+  const utc8Date = new Date(now.getTime() + 8 * 60 * 60 * 1000); // UTC+8
+  const todayString = utc8Date.toISOString().split("T")[0]; // YYYY-MM-DD формат
   const handleCancelReservation = async (reservation: any) => {
     if (confirm("Энэ захиалгыг цуцлахдаа итгэлтэй байна уу?")) {
       try {
@@ -76,12 +99,20 @@ export function TableListView({
               <div className="text-lg font-semibold">Ширээ {table.number}</div>
               <Badge
                 className={
-                  table.status === "empty"
-                    ? "bg-green-100 text-green-800"
-                    : "bg-red-100 text-red-800"
+                  (table.currentOrder && isOrderActive(table.currentOrder)) ||
+                  (table.currentReservation &&
+                    table.currentReservation.status === "pending" &&
+                    table.currentReservation.date === todayString)
+                    ? "bg-red-100 text-red-800"
+                    : "bg-green-100 text-green-800"
                 }
               >
-                {table.status === "empty" ? "Хоосон" : "Захиалгатай"}
+                {(table.currentOrder && isOrderActive(table.currentOrder)) ||
+                (table.currentReservation &&
+                  table.currentReservation.status === "pending" &&
+                  table.currentReservation.date === todayString)
+                  ? "Захиалгатай"
+                  : "Хоосон"}
               </Badge>
               <span className="text-sm text-gray-600">
                 {table.location === "main-hall" ? "Үндсэн танхим" : "Террас"}
@@ -105,7 +136,7 @@ export function TableListView({
           </div>
 
           {/* Order Display */}
-          {table.currentOrder && (
+          {table.currentOrder && isOrderActive(table.currentOrder) && (
             <div className="pt-2 mt-2 border-t border-gray-200">
               <div className="flex items-center gap-4 text-sm">
                 <span className="text-green-700">
@@ -125,7 +156,7 @@ export function TableListView({
                     : "Захиалгатай"}
                 </Badge>
                 <span className="text-green-700">
-                  Нийт: ¥{table.currentOrder.total.toLocaleString()}
+                  Нийт: {formatPrice(table.currentOrder.total)}
                 </span>
                 {table.currentOrder.customerName && (
                   <span className="text-green-700">
@@ -138,10 +169,6 @@ export function TableListView({
 
           {/* Reservation Display */}
           {(() => {
-            const now = new Date();
-            const utc8Date = new Date(now.getTime() + 8 * 60 * 60 * 1000);
-            const todayString = utc8Date.toISOString().split("T")[0];
-
             const todayAndFutureReservations = (
               table.currentReservations || [table.currentReservation]
             ).filter((res: any) => res && res.date >= todayString);
