@@ -10,12 +10,14 @@ import {
 } from "@/components/ui/dialog";
 import { formatTime } from "../utils/date-utils";
 import { formatPrice } from "../utils/price-utils";
+import { completeAllOrders } from "../utils/order-utils";
 
 interface TotalOrdersModalProps {
   isOpen: boolean;
   onClose: () => void;
   table: any;
   onPrint?: () => void;
+  onRefresh?: () => void;
 }
 
 export function TotalOrdersModal({
@@ -23,6 +25,7 @@ export function TotalOrdersModal({
   onClose,
   table,
   onPrint,
+  onRefresh,
 }: TotalOrdersModalProps) {
   // Тухайн ширээний session-ийн бүх захиалгыг цуглуулах
   const sessionOrders =
@@ -78,6 +81,36 @@ export function TotalOrdersModal({
       onPrint();
     } else {
       window.print();
+    }
+  };
+
+  // Бүх захиалгыг дуусгах функц
+  const handleCompleteAllOrders = async () => {
+    const orderIds = sessionOrders.map((order: any) => order._id);
+
+    if (orderIds.length === 0) {
+      alert("Дуусгах захиалга байхгүй байна");
+      return;
+    }
+
+    const confirmComplete = window.confirm(
+      `Бүх ${orderIds.length} захиалгыг дуусгахдаа итгэлтэй байна уу?`
+    );
+
+    if (!confirmComplete) return;
+
+    try {
+      const success = await completeAllOrders(orderIds);
+
+      if (success) {
+        alert("Бүх захиалга амжилттай дууслаа!");
+        onRefresh?.();
+        onClose();
+      } else {
+        alert("Зарим захиалга дуусгахад алдаа гарлаа");
+      }
+    } catch (error) {
+      alert("Захиалга дуусгахад алдаа гарлаа");
     }
   };
 
@@ -164,18 +197,26 @@ export function TotalOrdersModal({
             ))}
           </div>
 
-          {/* Хэвлэх товч */}
-          <div className="flex justify-end gap-2 pt-4 border-t">
-            <Button variant="outline" onClick={onClose}>
-              Хаах
-            </Button>
+          {/* Товчнууд */}
+          <div className="flex justify-between gap-2 pt-4 border-t">
             <Button
-              onClick={handlePrint}
-              className="bg-blue-600 hover:bg-blue-700"
+              onClick={handleCompleteAllOrders}
+              className="bg-red-600 hover:bg-red-700 text-white"
             >
-              <Printer className="w-4 h-4 mr-2" />
-              Хэвлэх
+              Бүх захиалгыг дуусгах
             </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={onClose}>
+                Хаах
+              </Button>
+              <Button
+                onClick={handlePrint}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <Printer className="w-4 h-4 mr-2" />
+                Хэвлэх
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>

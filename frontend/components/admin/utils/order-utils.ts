@@ -92,3 +92,64 @@ export async function requestUpdateStatus(
     return false;
   }
 }
+
+// Захиалгын хугацаа тооцоолох функц
+export function calculateOrderTime(order: any): string | null {
+  if (!order || !order.createdAt) {
+    return null;
+  }
+
+  // Зөвхөн pending, preparing төлөвт байгаа захиалгуудад хугацаа харуулах
+  if (order.status !== "pending" && order.status !== "preparing") {
+    return null;
+  }
+
+  const startTime = new Date(order.createdAt);
+  const endTime = new Date(); // Одоогийн цаг
+
+  const timeDiff = endTime.getTime() - startTime.getTime();
+  const minutes = Math.floor(timeDiff / (1000 * 60));
+
+  // Зөвхөн тоогоор харагдах (мин гэдэг үггүй)
+  return `${minutes}`;
+}
+
+// Захиалгын хугацааг секундээр тооцоолох (auto refresh-д хэрэгтэй)
+export function getOrderTimeInSeconds(order: any): number | null {
+  if (!order || !order.createdAt) {
+    return null;
+  }
+
+  if (order.status !== "pending" && order.status !== "preparing") {
+    return null;
+  }
+
+  const startTime = new Date(order.createdAt);
+  const endTime = new Date(); // Одоогийн цаг
+
+  return Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
+}
+
+// Бүх захиалгыг дуусгах функц
+export async function completeAllOrders(orderIds: string[]): Promise<boolean> {
+  try {
+    // Бүх захиалгыг зэрэг дуусгах
+    const promises = orderIds.map((orderId) =>
+      requestUpdateStatus(orderId, "completed")
+    );
+
+    const results = await Promise.all(promises);
+    const allSuccessful = results.every((result) => result === true);
+
+    if (allSuccessful) {
+      console.log("Бүх захиалга амжилттай дууслаа");
+      return true;
+    } else {
+      console.error("Зарим захиалга дуусгахад алдаа гарлаа");
+      return false;
+    }
+  } catch (error) {
+    console.error("Бүх захиалга дуусгахад алдаа гарлаа:", error);
+    return false;
+  }
+}

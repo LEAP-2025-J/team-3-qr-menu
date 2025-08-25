@@ -240,6 +240,7 @@ export function TableCard({
                 onCancelOrder={(orderId) => onCancelOrder?.(orderId)}
                 onCreateOrder={() => setShowCreateOrderModal(true)}
                 onPrintOrder={handlePrint}
+                onRefresh={onRefresh}
               />
             </TabsContent>
 
