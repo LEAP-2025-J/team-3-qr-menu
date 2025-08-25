@@ -95,15 +95,23 @@ export function Footer({ restaurantName, restaurantData }: FooterProps) {
                 Follow Us
               </h4>
               <div className="flex space-x-3 text-xs md:space-x-4 md:text-sm">
-                <span className="text-gray-700 cursor-pointer hover:text-gray-900">
+                <a 
+                  href="https://www.instagram.com/haku2025_mongolia?igsh=MXh1OTNkdWhnanR2cQ=="
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-pink-600 cursor-pointer hover:text-pink-800 transition-colors duration-200"
+                >
                   Instagram
-                </span>
-                <span className="text-gray-700 cursor-pointer hover:text-gray-900">
+                </a>
+                <a 
+                  href="https://www.facebook.com/share/179NxBioQM/?mibextid=wwXIfr"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 cursor-pointer hover:text-blue-800 transition-colors duration-200"
+                >
                   Facebook
-                </span>
-                <span className="text-gray-700 cursor-pointer hover:text-gray-900">
-                  Twitter
-                </span>
+                </a>
+                
               </div>
             </div>
           </div>

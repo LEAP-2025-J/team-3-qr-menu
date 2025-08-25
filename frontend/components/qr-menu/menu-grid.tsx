@@ -98,7 +98,7 @@ export function MenuGrid({
               <TabsTrigger
                 key={category}
                 value={category}
-                className="flex items-center justify-center text-xs data-[state=active]:bg-yellow-100 data-[state=active]:text-gray-900 data-[state=inactive]:text-gray-600 rounded transition-all whitespace-nowrap hover:bg-gray-50 category-mobile-item p-0 border border-yellow-500"
+                className="flex items-center justify-center text-xs data-[state=active]:bg-white data-[state=active]:text-black data-[state=inactive]:bg-gradient-to-r data-[state=inactive]:from-yellow-300 data-[state=inactive]:to-yellow-400 data-[state=inactive]:text-gray-800 rounded-lg transition-all duration-200 whitespace-nowrap hover:from-yellow-200 hover:to-yellow-300 hover:shadow-md active:scale-95 active:shadow-inner category-mobile-item px-3 py-2 border border-yellow-200 hover:border-yellow-400 cursor-pointer select-none shadow-sm"
               >
                 <span className="capitalize text-xs">{category}</span>
               </TabsTrigger>
@@ -155,8 +155,8 @@ export function MenuGrid({
                               </span>
                               <Badge
                                 style={{
-                                  backgroundColor: "#FFB0B0",
-                                  color: "#8B4513",
+                                  backgroundColor: "#90EE90",
+                                  color: "#006400",
                                 }}
                                 className="px-1 py-0.5 text-xs font-bold md:px-1.5 md:py-0.5"
                               >
@@ -168,8 +168,8 @@ export function MenuGrid({
                           ) : (
                             <Badge
                               style={{
-                                backgroundColor: "#FFB0B0",
-                                color: "#8B4513",
+                                backgroundColor: "#90EE90",
+                                color: "#006400",
                               }}
                               className="px-1 py-0.5 text-xs font-bold md:px-1.5 md:py-0.5"
                             >
