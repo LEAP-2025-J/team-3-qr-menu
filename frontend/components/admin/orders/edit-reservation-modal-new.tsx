@@ -441,7 +441,7 @@ export function EditReservationModal({
               disabled={loading}
               className="flex-1 sm:w-auto"
             >
-              {loading ? "Updating..." : "Update Reservation"}
+              {loading ? "Шинэчилж байна..." : "Захиалга шинэчлэх"}
             </Button>
           </DialogFooter>
         </form>

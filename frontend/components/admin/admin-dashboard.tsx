@@ -37,6 +37,7 @@ import {
   NotificationProvider,
   useNotification,
 } from "@/contexts/notification-context";
+import { NotificationDialog } from "./notifications/notification-dialog";
 
 export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("orders");
@@ -69,6 +70,7 @@ export function AdminDashboard() {
     updateMenuItem,
     deleteMenuItem,
     addCategory,
+    deleteCategory,
   } = useAdminData();
 
   // MenuGrid ref
@@ -150,55 +152,7 @@ export function AdminDashboard() {
     };
   }, [addNotification, markAsRead, fetchTables, fetchOrders, toast, dismiss]);
 
-  // Notification badge дархад toast харуулах функц
-  const handleNotificationClick = () => {
-    console.log("Notification badge clicked!");
-    console.log("Current notification count:", notificationCount);
-
-    const lastOrder = localStorage.getItem("last-qr-order");
-    console.log("Last order from localStorage:", lastOrder);
-
-    // Хэрэв notification count 0 эсвэл last order байхгүй бол хоосон мэдэгдэл
-    if (notificationCount === 0 || !lastOrder) {
-      console.log("No notifications available");
-      toast({
-        title: "Захиалгын мэдээлэл",
-        description: "Одоогоор шинэ захиалга ирээгүй байна",
-        duration: 3000,
-      });
-      return;
-    }
-
-    // Хэрэв notification байвал toast харуулах
-    try {
-      const { tableNumber } = JSON.parse(lastOrder);
-      console.log("Showing toast for table:", tableNumber);
-      toast({
-        title: `${tableNumber}-р ширээнд QR захиалга ирлээ`,
-        description: "OK дарж шинэчлэх",
-        action: (
-          <Button
-            size="sm"
-            onClick={() => {
-              markAsRead();
-              handleAutoRefresh();
-              dismiss();
-            }}
-          >
-            OK
-          </Button>
-        ),
-        duration: Infinity,
-      });
-    } catch (error) {
-      console.error("Error parsing last order:", error);
-      toast({
-        title: "Захиалгын мэдээлэл",
-        description: "Одоогоор шинэ захиалга ирээгүй байна",
-        duration: 3000,
-      });
-    }
-  };
+  // Notification badge click handler (popover-д шаардлагагүй)
 
   // Table functions
   const handleTableStatusChange = async (
@@ -597,7 +551,11 @@ export function AdminDashboard() {
       <div className="flex-1 flex flex-col ml-[210px] min-w-0">
         <AdminHeader
           notificationCount={notificationCount}
-          onNotificationClick={handleNotificationClick}
+          notificationDialog={
+            <NotificationDialog onMarkAsRead={markAsRead}>
+              <div></div>
+            </NotificationDialog>
+          }
         />
 
         <main className="flex-1 w-full p-8 max-w-none">
@@ -636,6 +594,7 @@ export function AdminDashboard() {
                   onUpdateMenuItem={updateMenuItem}
                   onDeleteMenuItem={deleteMenuItem}
                   onAddCategory={addCategory}
+                  onDeleteCategory={deleteCategory}
                 />
               )}
             </TabsContent>

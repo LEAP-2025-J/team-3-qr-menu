@@ -187,12 +187,12 @@ export const MenuModal = ({
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>
-            {isEditMode ? "Бараа засах" : "Шинэ бараа нэмэх"}
+            {isEditMode ? "Хоол засах" : "Шинэ хоол нэмэх"}
           </DialogTitle>
           <DialogDescription>
             {isEditMode
-              ? "Барааны мэдээллийг засна уу"
-              : "Шинэ барааны мэдээллийг оруулна уу"}
+              ? "Хоолны мэдээллийг засна уу"
+              : "Шинэ хоолны мэдээллийг оруулна уу"}
           </DialogDescription>
         </DialogHeader>
 
@@ -309,7 +309,7 @@ export const MenuModal = ({
               <Input
                 id="price"
                 type="number"
-                step="1"
+                step="1000"
                 value={formatPriceForInput(formData.price)}
                 onChange={(e) =>
                   setFormData({
@@ -396,7 +396,7 @@ export const MenuModal = ({
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
               <X className="w-4 h-4 mr-2" />
-              Цуцлах
+              Хаах
             </Button>
             <Button type="submit" disabled={loading}>
               <Save className="w-4 h-4 mr-2" />

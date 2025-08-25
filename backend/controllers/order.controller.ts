@@ -253,3 +253,111 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
     });
   }
 };
+
+// GET /api/orders/notifications - Get unread QR orders count for notifications
+export const getNotifications = async (req: Request, res: Response) => {
+  try {
+    console.log("🚀 getNotifications endpoint called");
+    // Өнөөдрийн QR захиалгуудыг авах (unread статустай)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    console.log("📅 Date range:", { today, tomorrow });
+
+    // Badge дээр харуулах зөвхөн unread захиалгууд
+    const unreadQROrders = await Order.find({
+      status: "pending",
+      isReadByAdmin: false, // Зөвхөн хараагүй захиалгууд
+      createdAt: {
+        $gte: today,
+        $lt: tomorrow,
+      },
+    })
+      .populate("table", "number location")
+      .lean();
+
+    // Dialog дээр харуулах өнөөдрийн бүх QR захиалгууд (read болон unread)
+    const todayQROrders = await Order.find({
+      status: "pending",
+      createdAt: {
+        $gte: today,
+        $lt: tomorrow,
+      },
+    })
+      .populate("table", "number location")
+      .populate("items.menuItem", "name nameEn nameMn nameJp")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Unread захиалгатай ширээний тоо (unique table count)
+    const uniqueTables = new Set();
+    unreadQROrders.forEach((order) => {
+      if (order.table && (order.table as any).number) {
+        uniqueTables.add((order.table as any).number);
+      }
+    });
+
+    const unreadTableCount = uniqueTables.size;
+
+    console.log("🔍 Today QR Orders found:", todayQROrders.length);
+    console.log("📊 Unread QR Orders found:", unreadQROrders.length);
+    console.log("🏷️ Unique tables with unread orders:", uniqueTables.size);
+
+    res.json({
+      success: true,
+      data: {
+        unreadTableCount, // Үүгээр notification badge дээр харуулна
+        todayQROrders, // Dialog-д харуулах бүх захиалга
+        totalTodayOrders: todayQROrders.length,
+      },
+    });
+  } catch (error) {
+    console.error("💥 Error fetching notifications:", error);
+    res.status(500).json({
+      success: false,
+      error: "Notification-ын мэдээлэл авахад алдаа гарлаа",
+      details: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+// POST /api/orders/mark-as-read - Mark today's QR orders as read by admin
+export const markOrdersAsRead = async (req: Request, res: Response) => {
+  try {
+    // Өнөөдрийн өдрийн эхлэл болон төгсгөл
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // Өнөөдрийн бүх pending захиалгуудыг "харсан" болгох
+    const updateResult = await Order.updateMany(
+      {
+        status: "pending",
+        isReadByAdmin: false,
+        createdAt: {
+          $gte: today,
+          $lt: tomorrow,
+        },
+      },
+      {
+        $set: { isReadByAdmin: true },
+      }
+    );
+
+    res.json({
+      success: true,
+      message: "Захиалгууд харсан болж тэмдэглэгдлээ",
+      data: {
+        modifiedCount: updateResult.modifiedCount,
+      },
+    });
+  } catch (error) {
+    console.error("Error marking orders as read:", error);
+    res.status(500).json({
+      success: false,
+      error: "Захиалгуудыг харсан болгоход алдаа гарлаа",
+    });
+  }
+};

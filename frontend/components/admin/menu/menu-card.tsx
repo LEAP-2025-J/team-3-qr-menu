@@ -31,7 +31,7 @@ interface MenuCardProps {
 
 export const MenuCard = ({ item, onEdit, onDelete }: MenuCardProps) => {
   return (
-    <Card className="pt-0 pb-0 transition-all duration-300 hover:shadow-lg hover:scale-105 group">
+    <Card className="pt-0 pb-0 transition-all duration-300 hover:shadow-lg hover:scale-105 group relative">
       <div className="relative">
         {/* Хоолны зураг */}
         <div className="aspect-[3/2] overflow-hidden rounded-t-lg">
@@ -50,13 +50,13 @@ export const MenuCard = ({ item, onEdit, onDelete }: MenuCardProps) => {
         <div className="absolute flex flex-col gap-1 top-3 left-3">
           {!item.isAvailable && (
             <Badge variant="secondary" className="text-xs">
-              Unavailable
+              Боломжгүй
             </Badge>
           )}
         </div>
       </div>
 
-      <CardContent className="p-3 pt-2">
+      <CardContent className="p-3 pt-2 pb-16">
         <div className="space-y-1">
           {/* Хоолны нэр */}
           <div>
@@ -84,29 +84,29 @@ export const MenuCard = ({ item, onEdit, onDelete }: MenuCardProps) => {
               ⏱️ {item.preparationTime} min
             </span>
           </div>
-
-          {/* Action buttons */}
-          <div className="flex items-center justify-between pt-2 border-t">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => onEdit(item)}
-              className="px-2 h-7"
-            >
-              <Edit className="w-3 h-3 mr-1" />
-              Edit
-            </Button>
-            <Button
-              size="sm"
-              variant="destructive"
-              onClick={() => onDelete(item._id)}
-              className="px-2 h-7"
-            >
-              <Trash2 className="w-3 h-3" />
-            </Button>
-          </div>
         </div>
       </CardContent>
+
+      {/* Action buttons - Картны доод ирмэгт байрлуулах */}
+      <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between p-3 border-t bg-white rounded-b-lg">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => onEdit(item)}
+          className="px-2 h-7"
+        >
+          <Edit className="w-3 h-3 mr-1" />
+          Засах
+        </Button>
+        <Button
+          size="sm"
+          variant="destructive"
+          onClick={() => onDelete(item._id)}
+          className="px-2 h-7"
+        >
+          <Trash2 className="w-3 h-3" />
+        </Button>
+      </div>
     </Card>
   );
 };

@@ -160,7 +160,7 @@ export const MenuGrid = forwardRef<MenuGridRef, MenuGridProps>(
 
     // Delete function
     const handleDelete = async (id: string) => {
-      if (!confirm("Энэ барааг устгахдаа итгэлтэй байна уу?")) return;
+      if (!confirm("Энэ хоолыг устгахдаа итгэлтэй байна уу?")) return;
 
       try {
         const result = await onDeleteMenuItem?.(id);
@@ -222,7 +222,7 @@ export const MenuGrid = forwardRef<MenuGridRef, MenuGridProps>(
               {!searchQuery && (
                 <Button onClick={openAddModal}>
                   <Plus className="w-4 h-4 mr-2" />
-                  Add Menu Item
+                  Хоол нэмэх
                 </Button>
               )}
             </div>

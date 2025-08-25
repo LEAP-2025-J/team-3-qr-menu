@@ -47,12 +47,10 @@ export function TableHeader({
             List
           </Button>
         </div>
-        {viewMode === "list" && (
-          <Button onClick={onAddReservation} variant="outline" size="sm">
-            <Plus className="w-4 h-4 mr-2" />
-            Add Reservation
-          </Button>
-        )}
+        <Button onClick={onAddReservation} variant="outline" size="sm">
+          <Plus className="w-4 h-4 mr-2" />
+          Add Reservation
+        </Button>
         <Button
           onClick={onRefresh}
           variant="outline"

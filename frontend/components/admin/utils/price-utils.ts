@@ -15,8 +15,8 @@ export const formatPrice = (price: number): string => {
   // Таслалаар ангилах (10,000 гэж харуулах)
   const formattedPrice = wholePrice.toLocaleString("en-US");
 
-  // Монгол төгрөгийн тэмдэг нэмэх (хоосон зайтай)
-  return `${formattedPrice} ₮`;
+  // Монгол төгрөгийн тэмдэг нэмэх (зайгүйгээр)
+  return `${formattedPrice}₮`;
 };
 
 /**
@@ -58,7 +58,8 @@ export const formatNumberForInput = (
   defaultValue: number = 0
 ): string => {
   // Хэрэв утга default утгатай тэнцүү бол хоосон string буцаах
-  if (value === defaultValue) {
+  // ЗӨВХӨН defaultValue нь 0 байх үед л хоосон харуулах
+  if (value === defaultValue && defaultValue === 0) {
     return "";
   }
   return value.toString();
