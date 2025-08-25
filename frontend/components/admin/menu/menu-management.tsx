@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Minus } from "lucide-react";
 import { MenuGrid, MenuGridRef } from "./menu-grid";
 import { CategoryModal } from "./category-modal";
 import { MenuItem, Category } from "@/hooks/use-admin-data";
@@ -25,6 +25,7 @@ interface MenuManagementProps {
   ) => Promise<{ success: boolean }>;
   onDeleteMenuItem: (id: string) => Promise<{ success: boolean }>;
   onAddCategory: (categoryData: any) => Promise<{ success: boolean }>;
+  onDeleteCategory: (categoryId: string) => Promise<{ success: boolean }>;
 }
 
 export function MenuManagement({
@@ -38,9 +39,11 @@ export function MenuManagement({
   onUpdateMenuItem,
   onDeleteMenuItem,
   onAddCategory,
+  onDeleteCategory,
 }: MenuManagementProps) {
   const menuGridRef = useRef<MenuGridRef>(null);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [deleteCategoryMode, setDeleteCategoryMode] = useState(false);
 
   // Хамгийн сүүлийн дугаарыг тооцоолох
   const getNextOrder = () => {
@@ -49,10 +52,39 @@ export function MenuManagement({
     return maxOrder + 1;
   };
 
+  // Категори хасах функц
+  const handleDeleteCategory = async (categoryId: string) => {
+    if (window.confirm("Энэ категорийг устгахдаа итгэлтэй байна уу?")) {
+      try {
+        console.log("🗑️ Deleting category:", categoryId);
+        const result = await onDeleteCategory(categoryId);
+        console.log("🗑️ Delete result:", result);
+
+        if (result.success) {
+          console.log("✅ Category deleted successfully");
+          // Амжилттай устгасны дараа:
+          // 1. All dishes рүү шилжих
+          onCategoryChange("all");
+          // 2. Delete mode унтраах
+          setDeleteCategoryMode(false);
+        } else {
+          console.error("❌ Delete failed:", result);
+        }
+      } catch (error) {
+        console.error("💥 Category delete error:", error);
+      }
+    } else {
+      // Cancel дарсан үед delete mode унтраах
+      setDeleteCategoryMode(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold text-gray-900">Menu Management</h2>
+        <h2 className="text-3xl font-bold text-gray-900">
+          Хоолны цэс удирдлага
+        </h2>
         <div className="flex items-center space-x-4">
           <div className="relative">
             <Search className="absolute w-4 h-4 text-gray-400 transform -translate-y-1/2 left-3 top-1/2" />
@@ -70,7 +102,7 @@ export function MenuManagement({
             }}
           >
             <Plus className="w-4 h-4 mr-2" />
-            Add Menu Item
+            Хоол нэмэх
           </Button>
         </div>
       </div>
@@ -103,17 +135,37 @@ export function MenuManagement({
             return (
               <button
                 key={category._id}
-                onClick={() => onCategoryChange(category.nameEn)}
+                onClick={() =>
+                  deleteCategoryMode
+                    ? handleDeleteCategory(category._id)
+                    : onCategoryChange(category.nameEn)
+                }
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-colors ${
-                  selectedCategory === category.nameEn
+                  deleteCategoryMode
+                    ? "border-red-500 bg-red-50 text-red-700 hover:bg-red-100"
+                    : selectedCategory === category.nameEn
                     ? "border-red-500 bg-white text-gray-900"
                     : "border-gray-300 bg-white text-gray-900 hover:bg-gray-50"
                 }`}
+                title={
+                  deleteCategoryMode
+                    ? `Delete ${category.nameEn}`
+                    : `Filter by ${category.nameEn}`
+                }
               >
                 <span>{category.nameEn}</span>
-                <Badge className="px-2 py-1 text-xs text-white bg-gray-900 rounded-full">
+                <Badge
+                  className={`px-2 py-1 text-xs rounded-full ${
+                    deleteCategoryMode
+                      ? "text-red-700 bg-red-200"
+                      : "text-white bg-gray-900"
+                  }`}
+                >
                   {categoryItemCount}
                 </Badge>
+                {deleteCategoryMode && (
+                  <Minus className="w-4 h-4 text-red-600" />
+                )}
               </button>
             );
           })}
@@ -122,9 +174,22 @@ export function MenuManagement({
           <button
             onClick={() => setIsCategoryModalOpen(true)}
             className="w-10 h-10 bg-red-600 hover:bg-red-700 rounded-full flex items-center justify-center text-white transition-colors"
-            title="Add Category"
+            title="Категори нэмэх"
           >
             <Plus className="w-5 h-5" />
+          </button>
+
+          {/* Delete Category Button */}
+          <button
+            onClick={() => setDeleteCategoryMode(!deleteCategoryMode)}
+            className={`w-10 h-10 rounded-full flex items-center justify-center text-white transition-colors ${
+              deleteCategoryMode
+                ? "bg-gray-600 hover:bg-gray-700"
+                : "bg-red-800 hover:bg-red-900"
+            }`}
+            title={deleteCategoryMode ? "Цуцлах" : "Категори устгах"}
+          >
+            <Minus className="w-5 h-5" />
           </button>
         </div>
       </div>

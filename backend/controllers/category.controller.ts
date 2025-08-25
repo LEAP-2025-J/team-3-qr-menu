@@ -69,7 +69,7 @@ export const getAllCategories = async (req: Request, res: Response) => {
 // GET /api/categories/:id - Get single category
 export const getCategoryById = async (req: Request, res: Response) => {
   try {
-    const category = await Category.findById(req.params['id']);
+    const category = await Category.findById(req.params["id"]);
 
     if (!category) {
       return res.status(404).json({
@@ -87,6 +87,33 @@ export const getCategoryById = async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       error: "Категори авахад алдаа гарлаа",
+    });
+  }
+};
+
+// DELETE /api/categories/:id - Delete category
+export const deleteCategory = async (req: Request, res: Response) => {
+  try {
+    const category = await Category.findById(req.params["id"]);
+
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        error: "Категори олдсонгүй",
+      });
+    }
+
+    await Category.findByIdAndDelete(req.params["id"]);
+
+    res.json({
+      success: true,
+      message: "Категори амжилттай устгагдлаа",
+    });
+  } catch (error) {
+    console.error("Error deleting category:", error);
+    res.status(500).json({
+      success: false,
+      error: "Категори устгахад алдаа гарлаа: " + (error as Error).message,
     });
   }
 };

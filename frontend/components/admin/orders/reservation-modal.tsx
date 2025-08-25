@@ -72,39 +72,50 @@ export function ReservationModal({
   });
   const [loading, setLoading] = useState(false);
   const [validationError, setValidationError] = useState("");
-  const [availableTimes] = useState([
-    "11:00",
-    "11:30",
-    "12:00",
-    "12:30",
-    "13:00",
-    "13:30",
-    "14:00",
-    "14:30",
-    "17:00",
-    "17:30",
-    "18:00",
-    "18:30",
-    "19:00",
-    "19:30",
-    "20:00",
-    "20:30",
-    "21:00",
-  ]);
+  const [partySizeInput, setPartySizeInput] = useState("1"); // Separate state for input display
+
+  // Цагийн формат шалгах функц
+  const validateTimeFormat = (time: string, date: Date): string | null => {
+    if (!time) return "Цаг заавал оруулна уу";
+
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    if (!timeRegex.test(time)) {
+      return "Зөв цагийн формат оруулна уу (ЖН: 14:30)";
+    }
+
+    // Өнгөрсөн цаг оруулахыг хориглох
+    const selectedDate = new Date(date);
+    const today = new Date();
+
+    // Хэрэв өнөөдөр бол цагийг шалгах
+    if (selectedDate.toDateString() === today.toDateString()) {
+      const [hours, minutes] = time.split(":").map(Number);
+      const selectedTimeMinutes = hours * 60 + minutes;
+      const currentTimeMinutes = today.getHours() * 60 + today.getMinutes();
+
+      if (selectedTimeMinutes <= currentTimeMinutes) {
+        return "Өнгөрсөн цаг сонгож болохгүй";
+      }
+    }
+
+    return null;
+  };
 
   // Load editing reservation data when modal opens
   useEffect(() => {
     if (editingReservation) {
+      const partySize = editingReservation.partySize || 1;
       setFormData({
         customerName: editingReservation.customerName || "",
         customerPhone: editingReservation.customerPhone || "",
         date: new Date(editingReservation.date) || new Date(),
         time: editingReservation.time || "",
-        partySize: editingReservation.partySize || 1,
+        partySize: partySize,
         tableId:
           editingReservation.table?._id || editingReservation.table || "",
         specialRequests: editingReservation.specialRequests || "",
       });
+      setPartySizeInput(partySize.toString());
     } else {
       // Reset form for new reservation
       setFormData({
@@ -116,12 +127,17 @@ export function ReservationModal({
         tableId: selectedTableId || "",
         specialRequests: "",
       });
+      setPartySizeInput("1");
     }
   }, [editingReservation, selectedTableId, isOpen]);
 
-  // Function to check for table conflicts
+  // Function to check for table conflicts - өмнө болон хойно 2 цагийн дотор
   const checkTableConflict = (tableId: string, date: Date, time: string) => {
     if (!tableId || !date || !time) return null;
+
+    // Цагийн формат шалгах
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    if (!timeRegex.test(time)) return null;
 
     const selectedDate = new Date(date);
     const [hours, minutes] = time.split(":").map(Number);
@@ -134,13 +150,18 @@ export function ReservationModal({
         if (resDate.toDateString() === selectedDate.toDateString()) {
           const [resHours, resMinutes] = res.time.split(":").map(Number);
           const resTimeMinutes = resHours * 60 + resMinutes;
-          const timeDifference = Math.abs(
-            requestedTimeMinutes - resTimeMinutes
-          );
 
-          // Check if reservations are less than 2 hours apart
+          // Шинэ логик: өмнө болон хойно 2 цагийн дотор давхцал шалгах
+          const isWithinTwoHoursBefore =
+            requestedTimeMinutes >= resTimeMinutes - 120 &&
+            requestedTimeMinutes < resTimeMinutes;
+          const isWithinTwoHoursAfter =
+            requestedTimeMinutes > resTimeMinutes &&
+            requestedTimeMinutes <= resTimeMinutes + 120;
+          const isExactTime = requestedTimeMinutes === resTimeMinutes;
+
           return (
-            timeDifference < 120 &&
+            (isWithinTwoHoursBefore || isWithinTwoHoursAfter || isExactTime) &&
             res.status !== "cancelled" &&
             res.status !== "no-show" &&
             res.status !== "completed"
@@ -159,11 +180,24 @@ export function ReservationModal({
     formData.date,
     formData.time
   );
-  const isTimeSlotAvailable = !currentConflict;
+
+  // Real-time цагийн validation
+  const currentTimeError = formData.time
+    ? validateTimeFormat(formData.time, formData.date)
+    : null;
+
+  const isTimeSlotAvailable = !currentConflict && !currentTimeError;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setValidationError("");
+
+    // Цагийн формат шалгах
+    const timeError = validateTimeFormat(formData.time, formData.date);
+    if (timeError) {
+      setValidationError(timeError);
+      return;
+    }
 
     if (
       !formData.customerName ||
@@ -172,7 +206,7 @@ export function ReservationModal({
       !formData.time ||
       !formData.tableId
     ) {
-      setValidationError("Please fill in all required fields");
+      setValidationError("Бүх заавал талбаруудыг бөглөнө үү");
       return;
     }
 
@@ -184,9 +218,9 @@ export function ReservationModal({
     );
     if (conflict) {
       setValidationError(
-        `Table already has a reservation at ${conflict.time} on ${new Date(
+        `Энэ ширээнд ${conflict.time} цагт ${new Date(
           conflict.date
-        ).toLocaleDateString()}. Reservations must be at least 2 hours apart.`
+        ).toLocaleDateString()}-нд захиалга байна. Захиалгууд хамгийн багадаа 2 цагийн зайтай байх ёстой.`
       );
       return;
     }
@@ -210,8 +244,8 @@ export function ReservationModal({
         alert(
           result.message ||
             (editingReservation
-              ? "Reservation updated successfully!"
-              : "Reservation created successfully!")
+              ? "Захиалга амжилттай шинэчлэгдлээ!"
+              : "Захиалга амжилттай үүсгэгдлээ!")
         );
         onClose();
         setFormData({
@@ -223,19 +257,20 @@ export function ReservationModal({
           tableId: "",
           specialRequests: "",
         });
+        setPartySizeInput("1");
       } else {
         setValidationError(
           result.error ||
             (editingReservation
-              ? "Failed to update reservation"
-              : "Failed to create reservation")
+              ? "Захиалга шинэчлэх амжилтгүй"
+              : "Захиалга үүсгэх амжилтгүй")
         );
       }
     } catch (error) {
       setValidationError(
         editingReservation
-          ? "Error updating reservation"
-          : "Error creating reservation"
+          ? "Захиалга шинэчлэхэд алдаа гарлаа"
+          : "Захиалга үүсгэхэд алдаа гарлаа"
       );
     } finally {
       setLoading(false);
@@ -306,12 +341,12 @@ export function ReservationModal({
       <DialogContent className="sm:max-w-[600px] max-w-[95vw] max-h-[90vh] overflow-y-auto mx-4">
         <DialogHeader>
           <DialogTitle className="text-lg text-center sm:text-xl">
-            {editingReservation ? "Edit Reservation" : "New Reservation"}
+            {editingReservation ? "Захиалга засах" : "Шинэ захиалга"}
           </DialogTitle>
           <DialogDescription className="text-sm text-center sm:text-base">
             {editingReservation
-              ? "Edit existing reservation details"
-              : "Create a new reservation for your restaurant"}
+              ? "Байгаа захиалгын мэдээллийг засах"
+              : "Ресторанд шинэ захиалга үүсгэх"}
           </DialogDescription>
         </DialogHeader>
 
@@ -321,7 +356,7 @@ export function ReservationModal({
             <div className="space-y-2">
               <Label htmlFor="customerName">
                 <User className="inline w-4 h-4 mr-2" />
-                Customer Name *
+                Хэрэглэгчийн нэр *
               </Label>
               <Input
                 id="customerName"
@@ -329,7 +364,7 @@ export function ReservationModal({
                 onChange={(e) =>
                   setFormData({ ...formData, customerName: e.target.value })
                 }
-                placeholder="Enter customer name"
+                placeholder="Хэрэглэгчийн нэрийг оруулна уу"
                 required
                 className="text-base sm:text-sm"
               />
@@ -338,7 +373,7 @@ export function ReservationModal({
             <div className="space-y-2">
               <Label htmlFor="customerPhone">
                 <Phone className="inline w-4 h-4 mr-2" />
-                Phone Number *
+                Утасны дугаар *
               </Label>
               <Input
                 id="customerPhone"
@@ -346,7 +381,7 @@ export function ReservationModal({
                 onChange={(e) =>
                   setFormData({ ...formData, customerPhone: e.target.value })
                 }
-                placeholder="Enter phone number"
+                placeholder="Утасны дугаарыг оруулна уу"
                 required
                 className="text-base sm:text-sm"
                 type="tel"
@@ -357,7 +392,7 @@ export function ReservationModal({
           {/* Date and Time */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Date *</Label>
+              <Label>Огноо *</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -370,7 +405,7 @@ export function ReservationModal({
                     <CalendarIcon className="w-4 h-4 mr-2" />
                     {formData.date
                       ? format(formData.date, "PPP")
-                      : "Pick a date"}
+                      : "Огноо сонгоно уу"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
@@ -390,49 +425,31 @@ export function ReservationModal({
             <div className="space-y-2">
               <Label htmlFor="time">
                 <Clock className="inline w-4 h-4 mr-2" />
-                Time *
+                Цаг *
               </Label>
-              <Select
+              <Input
+                id="time"
+                type="text"
                 value={formData.time}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, time: value })
+                onChange={(e) =>
+                  setFormData({ ...formData, time: e.target.value })
                 }
-              >
-                <SelectTrigger className="text-base sm:text-sm">
-                  <SelectValue placeholder="Select time" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableTimes.map((time) => {
-                    const hasConflict =
-                      formData.tableId && formData.date
-                        ? checkTableConflict(
-                            formData.tableId,
-                            formData.date,
-                            time
-                          )
-                        : false;
-
-                    return (
-                      <SelectItem
-                        key={time}
-                        value={time}
-                        className={
-                          hasConflict ? "text-red-500 line-through" : ""
-                        }
-                        disabled={hasConflict}
-                      >
-                        {time} {hasConflict && "(Unavailable)"}
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
+                placeholder="14:30 (цц:мм)"
+                required
+                className="text-base sm:text-sm"
+                maxLength={5}
+              />
+              {currentTimeError && (
+                <p className="text-xs text-red-600">⚠️ {currentTimeError}</p>
+              )}
               {currentConflict && (
                 <p className="text-xs text-orange-600">
-                  ⚠️ This time conflicts with existing reservation at{" "}
-                  {currentConflict.time}
+                  ⚠️ Энэ цаг {currentConflict.time} цагтай давхцаж байна
                 </p>
               )}
+              <p className="text-xs text-gray-500">
+                Жишээ: 14:30, 09:00, 21:15
+              </p>
             </div>
           </div>
 
@@ -441,27 +458,51 @@ export function ReservationModal({
             <div className="space-y-2">
               <Label htmlFor="partySize">
                 <Users className="inline w-4 h-4 mr-2" />
-                Party Size *
+                Хүний тоо *
               </Label>
               <Input
                 id="partySize"
                 type="number"
                 min="1"
                 max="20"
-                value={formatNumberForInput(formData.partySize, 1)}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    partySize: parseInt(e.target.value) || 1,
-                  })
-                }
+                value={partySizeInput}
+                onChange={(e) => {
+                  const inputValue = e.target.value;
+                  setPartySizeInput(inputValue);
+
+                  // Хэрэв хоосон string бол парамтерыг 1 болгох, харин display хэвээр үлдээх
+                  if (inputValue === "") {
+                    setFormData({
+                      ...formData,
+                      partySize: 1,
+                    });
+                  } else {
+                    const numValue = parseInt(inputValue);
+                    if (!isNaN(numValue) && numValue >= 1) {
+                      setFormData({
+                        ...formData,
+                        partySize: numValue,
+                      });
+                    }
+                  }
+                }}
+                onBlur={(e) => {
+                  // Focus алдах үед хэрэв хоосон бол 1 болгож харуулах
+                  if (partySizeInput === "" || parseInt(partySizeInput) <= 0) {
+                    setPartySizeInput("1");
+                    setFormData({
+                      ...formData,
+                      partySize: 1,
+                    });
+                  }
+                }}
                 required
                 className="text-base sm:text-sm"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="tableId">Table *</Label>
+              <Label htmlFor="tableId">Ширээ *</Label>
               <Select
                 value={formData.tableId}
                 onValueChange={(value) =>
@@ -469,13 +510,13 @@ export function ReservationModal({
                 }
               >
                 <SelectTrigger className="text-base sm:text-sm">
-                  <SelectValue placeholder="Select table" />
+                  <SelectValue placeholder="Ширээ сонгоно уу" />
                 </SelectTrigger>
                 <SelectContent>
                   {tables.map((table) => (
                     <SelectItem key={table._id} value={table._id}>
                       <div className="flex items-center justify-between w-full">
-                        <span>Table {table.number}</span>
+                        <span>{table.number}-р ширээ</span>
                         <span
                           className={cn(
                             "text-xs",
@@ -494,14 +535,14 @@ export function ReservationModal({
 
           {/* Special Requests */}
           <div className="space-y-2">
-            <Label htmlFor="specialRequests">Special Requests</Label>
+            <Label htmlFor="specialRequests">Тусгай хүсэлт</Label>
             <Input
               id="specialRequests"
               value={formData.specialRequests}
               onChange={(e) =>
                 setFormData({ ...formData, specialRequests: e.target.value })
               }
-              placeholder="Any special requests or notes"
+              placeholder="Тусгай хүсэлт эсвэл тэмдэглэл"
               className="text-base sm:text-sm"
             />
           </div>
@@ -530,7 +571,7 @@ export function ReservationModal({
                   <span className="text-xl text-red-700">🚫</span>
                   <div>
                     <p className="text-sm font-bold text-red-700">
-                      Reservation Creation Failed
+                      Захиалга үүсгэх амжилтгүй
                     </p>
                     <p className="mt-1 text-sm text-red-600">
                       {validationError}
@@ -560,17 +601,22 @@ export function ReservationModal({
                     isTimeSlotAvailable ? "text-green-800" : "text-red-800"
                   }`}
                 >
-                  {isTimeSlotAvailable
-                    ? "Time slot available"
-                    : "Time slot unavailable"}
+                  {isTimeSlotAvailable ? "Цаг боломжтой" : "Цаг боломжгүй"}
                 </span>
               </div>
+              {currentTimeError && (
+                <div className="p-2 mt-2 bg-white border border-red-300 rounded-md">
+                  <p className="text-xs font-medium text-red-600">
+                    ⚠️ Цагийн алдаа: {currentTimeError}
+                  </p>
+                </div>
+              )}
               {currentConflict && (
                 <div className="p-2 mt-2 bg-white border border-red-300 rounded-md">
                   <p className="text-xs font-medium text-red-600">
-                    ⚠️ Conflicts with: {currentConflict.customerName} at{" "}
-                    {currentConflict.time}
-                    (Status: {currentConflict.status})
+                    ⚠️ Давхцал: {currentConflict.customerName}-ын{" "}
+                    {currentConflict.time} цагийн захиалгатай (Статус:{" "}
+                    {currentConflict.status})
                   </p>
                 </div>
               )}
@@ -584,7 +630,7 @@ export function ReservationModal({
               onClick={editingReservation ? handleCancelReservation : onClose}
               className="w-full sm:w-auto"
             >
-              {editingReservation ? "Захиалга цуцлах" : "Cancel"}
+              {editingReservation ? "Захиалга цуцлах" : "Хаах"}
             </Button>
             <Button
               type="submit"
@@ -593,11 +639,11 @@ export function ReservationModal({
             >
               {loading
                 ? editingReservation
-                  ? "Updating..."
-                  : "Creating..."
+                  ? "Шинэчилж байна..."
+                  : "Үүсгэж байна..."
                 : editingReservation
-                ? "Update Reservation"
-                : "Create Reservation"}
+                ? "Захиалга шинэчлэх"
+                : "Захиалга үүсгэх"}
             </Button>
           </DialogFooter>
         </form>

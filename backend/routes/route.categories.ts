@@ -3,6 +3,7 @@ import {
   getAllCategories,
   getCategoryById,
   createCategory,
+  deleteCategory,
 } from "../controllers/category.controller.js";
 
 const router = express.Router();
@@ -15,5 +16,8 @@ router.post("/", createCategory);
 
 // GET /api/categories/:id - Get single category
 router.get("/:id", getCategoryById);
+
+// DELETE /api/categories/:id - Delete category
+router.delete("/:id", deleteCategory);
 
 export default router;

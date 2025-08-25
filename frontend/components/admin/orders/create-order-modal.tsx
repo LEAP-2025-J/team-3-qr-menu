@@ -16,6 +16,8 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Minus, ShoppingCart, X } from "lucide-react";
 import { formatPrice } from "../utils";
+import { useRestaurant } from "@/hooks/use-restaurant";
+import CloudinaryImage from "@/components/CloudinaryImage";
 
 // Menu item интерфейс
 interface MenuItem {
@@ -69,6 +71,9 @@ export function CreateOrderModal({
   const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
+  // Хөнгөлөлтийн логик QR захиалгатай адил
+  const { isBefore7PM, getDiscountedPrice } = useRestaurant("mn");
+
   // Категориудыг цэвэрлэх
   const categories = Array.from(
     new Set(menuItems.map((item) => item.category.name))
@@ -80,7 +85,7 @@ export function CreateOrderModal({
   // Категориар шүүх
   const filteredMenuItems =
     selectedCategory === "all"
-      ? menuItems
+      ? menuItems.sort((a, b) => a.category.name.localeCompare(b.category.name))
       : menuItems.filter((item) => item.category.name === selectedCategory);
 
   // Cart-д item нэмэх
@@ -98,13 +103,16 @@ export function CreateOrderModal({
             : item
         );
       } else {
-        // Шинэ item нэмэх
+        // Шинэ item нэмэх - хөнгөлөлт ороосон үнээр
+        const finalPrice = isBefore7PM()
+          ? getDiscountedPrice(menuItem.price)
+          : menuItem.price;
         return [
           ...prevCart,
           {
             menuItem,
             quantity: 1,
-            price: menuItem.price,
+            price: finalPrice,
           },
         ];
       }
@@ -177,7 +185,7 @@ export function CreateOrderModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
+      <DialogContent className="max-w-7xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle>Захиалга үүсгэх - Ширээ {tableNumber}</DialogTitle>
           <DialogDescription>
@@ -185,9 +193,9 @@ export function CreateOrderModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex gap-6 h-[60vh] overflow-hidden">
+        <div className="flex gap-4 h-[65vh] overflow-hidden">
           {/* Зүүн тал - Хоолнуудын жагсаалт */}
-          <div className="flex-[3] overflow-y-auto">
+          <div className="flex-[4] overflow-y-auto pr-2">
             {/* Категори шүүлт */}
             <div className="mb-4">
               <Label className="block mb-2 text-sm font-medium">Ангилал:</Label>
@@ -219,30 +227,85 @@ export function CreateOrderModal({
               {filteredMenuItems.map((menuItem) => (
                 <Card key={menuItem._id} className="p-3">
                   <CardContent className="p-0">
-                    <div className="relative">
-                      <Button
-                        size="sm"
-                        onClick={() => addToCart(menuItem)}
-                        className="absolute top-0 right-0 w-8 h-8 p-0"
-                      >
-                        <Plus className="w-4 h-4" />
-                      </Button>
-                      <div className="flex-1 pr-10">
-                        <div className="text-lg font-semibold">
-                          {menuItem.nameMn || menuItem.name}
-                        </div>
-                        {menuItem.nameJp && (
-                          <div className="text-sm text-gray-500">
-                            {menuItem.nameJp}
+                    <div className="flex gap-3">
+                      {/* Хоолны зураг */}
+                      <div className="flex-shrink-0">
+                        {menuItem.image ? (
+                          <CloudinaryImage
+                            src={menuItem.image}
+                            alt={menuItem.nameEn || menuItem.name}
+                            width={80}
+                            height={60}
+                            className="object-cover w-20 h-16 rounded-lg"
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center w-20 h-16 bg-gray-200 rounded-lg">
+                            <span className="text-xs text-gray-500">
+                              No image
+                            </span>
                           </div>
                         )}
-                        {menuItem.description && (
-                          <div className="mt-1 text-sm text-gray-600">
-                            {menuItem.description}
+                      </div>
+
+                      {/* Хоолны мэдээлэл */}
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="text-lg font-semibold">
+                              {menuItem.nameMn || menuItem.name}
+                            </div>
+                            {menuItem.nameJp && (
+                              <div className="text-sm text-gray-500">
+                                {menuItem.nameJp}
+                              </div>
+                            )}
+                            {menuItem.description && (
+                              <div className="mt-1 text-sm text-gray-600 line-clamp-2">
+                                {menuItem.description}
+                              </div>
+                            )}
+
+                            {/* Үнийн мэдээлэл */}
+                            <div className="flex items-center gap-2 mt-2">
+                              {isBefore7PM() ? (
+                                <>
+                                  <span className="text-sm text-gray-500 line-through">
+                                    {formatPrice(menuItem.price)}
+                                  </span>
+                                  <Badge
+                                    style={{
+                                      backgroundColor: "#90EE90",
+                                      color: "#2D5016",
+                                    }}
+                                    className="px-2 py-1 text-sm font-bold whitespace-nowrap"
+                                  >
+                                    {formatPrice(
+                                      getDiscountedPrice(menuItem.price)
+                                    )}
+                                  </Badge>
+                                </>
+                              ) : (
+                                <Badge
+                                  style={{
+                                    backgroundColor: "#E5E7EB",
+                                    color: "#374151",
+                                  }}
+                                  className="px-2 py-1 text-sm font-bold whitespace-nowrap"
+                                >
+                                  {formatPrice(menuItem.price)}
+                                </Badge>
+                              )}
+                            </div>
                           </div>
-                        )}
-                        <div className="mt-1 text-lg font-bold text-green-600">
-                          {formatPrice(menuItem.price)}
+
+                          {/* Нэмэх товч */}
+                          <Button
+                            size="sm"
+                            onClick={() => addToCart(menuItem)}
+                            className="w-8 h-8 p-0 ml-2"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -253,7 +316,7 @@ export function CreateOrderModal({
           </div>
 
           {/* Баруун тал - Сагс */}
-          <div className="flex flex-col pl-6 border-l border-gray-200 w-80">
+          <div className="flex flex-col pl-4 border-l border-gray-200 w-72 flex-shrink-0">
             <div className="flex items-center gap-2 mb-4">
               <ShoppingCart className="w-5 h-5" />
               <h3 className="text-lg font-semibold">Сагс</h3>
@@ -343,7 +406,7 @@ export function CreateOrderModal({
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
-            Цуцлах
+            Хаах
           </Button>
           <Button
             onClick={handleSubmit}

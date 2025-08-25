@@ -49,15 +49,10 @@ export function TablesGrid({
             ({groupedTables["main-hall"]?.length || 0} ширээ)
           </span>
         </div>
+        {/* Хуучин товчуудыг арилгасан - одоо дээд header дээр байна */}
         <div className="flex gap-2">
-          <Button onClick={() => setShowCreateReservationModal(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Reservation
-          </Button>
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Table
-          </Button>
+          {/* Add Reservation товч header рүү шилжсэн */}
+          {/* Add Table товч түр нуугдсан */}
         </div>
       </div>
 

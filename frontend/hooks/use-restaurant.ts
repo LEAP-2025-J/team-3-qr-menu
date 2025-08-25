@@ -9,9 +9,11 @@ export function useRestaurant(currentLanguage: "en" | "mn" | "ja") {
   useEffect(() => {
     const fetchRestaurantData = async () => {
       try {
-        const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/restaurant`);
+        const response = await fetch(
+          `${API_CONFIG.BACKEND_URL}/api/restaurant`
+        );
         const data = await response.json();
-        
+
         if (data.success) {
           const restaurant = data.data;
           setRestaurantData(restaurant);
@@ -35,7 +37,7 @@ export function useRestaurant(currentLanguage: "en" | "mn" | "ja") {
   // Update restaurant name based on language
   const updateRestaurantName = (restaurant: any) => {
     if (!restaurant) return;
-    
+
     let newName: string;
     switch (currentLanguage) {
       case "en":
@@ -58,23 +60,29 @@ export function useRestaurant(currentLanguage: "en" | "mn" | "ja") {
     let description: string;
     switch (currentLanguage) {
       case "en":
-        description = restaurantData.descriptionEn || "Experience the perfect blend of tradition and innovation";
+        description =
+          restaurantData.descriptionEn ||
+          "Experience the perfect blend of tradition and innovation";
         break;
       case "ja":
-        description = restaurantData.description || "街の中心で本格的な日本料理をお楽しみください";
+        description =
+          restaurantData.description ||
+          "街の中心で本格的な日本料理をお楽しみください";
         break;
       default:
-        description = restaurantData.descriptionMn || "Хотын төвд байрлах жинхэнэ Япон хоол";
+        description =
+          restaurantData.descriptionMn ||
+          "Хотын төвд байрлах жинхэнэ Япон хоол";
         break;
     }
     return description;
   };
 
-  // Check if current time is before 7pm for discount
+  // Check if current time is before 10pm for discount (тест хийхээр 22 цаг болгосон)
   const isBefore7PM = () => {
     const now = new Date();
     const currentHour = now.getHours();
-    return currentHour < 19; // 7pm = 19:00
+    return currentHour < 22; // 10pm = 22:00 (тест хийхээр өөрчилсөн)
   };
 
   // Calculate discounted price (10% off)
@@ -89,4 +97,4 @@ export function useRestaurant(currentLanguage: "en" | "mn" | "ja") {
     isBefore7PM,
     getDiscountedPrice,
   };
-} 
+}

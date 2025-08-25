@@ -64,8 +64,8 @@ export function CategoryModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Шинэ ангилал нэмэх</DialogTitle>
-          <DialogDescription>Цэсний шинэ ангилал үүсгэх</DialogDescription>
+          <DialogTitle>Шинэ категори нэмэх</DialogTitle>
+          <DialogDescription>Цэсний шинэ категори үүсгэх</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -121,7 +121,7 @@ export function CategoryModal({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
-              Цуцлах
+              Хаах
             </Button>
             <Button type="submit" disabled={loading}>
               {loading ? "Нэмж байна..." : "Нэмэх"}

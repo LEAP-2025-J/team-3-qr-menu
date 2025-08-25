@@ -153,7 +153,7 @@ export function PrintModal({
           <div className="flex gap-2 pt-4">
             <Button variant="outline" className="flex-1" onClick={onClose}>
               <X className="w-4 h-4 mr-2" />
-              Цуцлах
+              Хаах
             </Button>
             <Button
               className="flex-1 bg-black hover:bg-gray-800"
