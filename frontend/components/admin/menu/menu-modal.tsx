@@ -22,6 +22,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Save, X } from "lucide-react";
+import {
+  formatPriceForInput,
+  parsePriceFromText,
+  formatNumberForInput,
+} from "../utils";
 
 interface MenuItem {
   _id: string;
@@ -151,10 +156,10 @@ export const MenuModal = ({
         formData.preparationTime.toString()
       );
 
-          // Хэрэв шинэ файл сонгосон бол нэмэх
-    if (selectedFile) {
-      formDataToSend.append("image", selectedFile);
-    }
+      // Хэрэв шинэ файл сонгосон бол нэмэх
+      if (selectedFile) {
+        formDataToSend.append("image", selectedFile);
+      }
       // Note: Don't send existing image URL when editing - backend will keep existing image
 
       const result = await onSubmit(formDataToSend);
@@ -300,19 +305,19 @@ export const MenuModal = ({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="price">Үнэ</Label>
+              <Label htmlFor="price">Үнэ (₮)</Label>
               <Input
                 id="price"
                 type="number"
-                step="0.01"
-                value={formData.price}
+                step="1"
+                value={formatPriceForInput(formData.price)}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
                     price: parseFloat(e.target.value) || 0,
                   })
                 }
-                placeholder="0.00"
+                placeholder="10000"
                 required
               />
             </div>
@@ -363,7 +368,7 @@ export const MenuModal = ({
               <Input
                 id="preparationTime"
                 type="number"
-                value={formData.preparationTime}
+                value={formatNumberForInput(formData.preparationTime, 15)}
                 onChange={(e) =>
                   setFormData({
                     ...formData,

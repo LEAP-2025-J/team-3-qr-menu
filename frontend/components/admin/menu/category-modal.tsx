@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { formatNumberForInput } from "../utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,7 +22,12 @@ interface CategoryModalProps {
   defaultOrder?: number;
 }
 
-export function CategoryModal({ isOpen, onClose, onSubmit, defaultOrder = 1 }: CategoryModalProps) {
+export function CategoryModal({
+  isOpen,
+  onClose,
+  onSubmit,
+  defaultOrder = 1,
+}: CategoryModalProps) {
   const [formData, setFormData] = useState({
     nameEn: "",
     nameMn: "",
@@ -33,17 +39,22 @@ export function CategoryModal({ isOpen, onClose, onSubmit, defaultOrder = 1 }: C
   // Modal нээгдэх үед defaultOrder-ыг шинэчлэх
   useEffect(() => {
     if (isOpen) {
-      setFormData(prev => ({ ...prev, order: defaultOrder }));
+      setFormData((prev) => ({ ...prev, order: defaultOrder }));
     }
   }, [isOpen, defaultOrder]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
+
     const result = await onSubmit(formData);
     if (result.success) {
-      setFormData({ nameEn: "", nameMn: "", description: "", order: defaultOrder });
+      setFormData({
+        nameEn: "",
+        nameMn: "",
+        description: "",
+        order: defaultOrder,
+      });
       onClose();
     }
     setLoading(false);
@@ -54,9 +65,7 @@ export function CategoryModal({ isOpen, onClose, onSubmit, defaultOrder = 1 }: C
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Шинэ ангилал нэмэх</DialogTitle>
-          <DialogDescription>
-            Цэсний шинэ ангилал үүсгэх
-          </DialogDescription>
+          <DialogDescription>Цэсний шинэ ангилал үүсгэх</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -100,9 +109,12 @@ export function CategoryModal({ isOpen, onClose, onSubmit, defaultOrder = 1 }: C
             <Input
               id="order"
               type="number"
-              value={formData.order}
+              value={formatNumberForInput(formData.order, 0)}
               onChange={(e) =>
-                setFormData({ ...formData, order: parseInt(e.target.value) || 0 })
+                setFormData({
+                  ...formData,
+                  order: parseInt(e.target.value) || 0,
+                })
               }
             />
           </div>

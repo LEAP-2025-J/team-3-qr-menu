@@ -17,7 +17,8 @@ const nextConfig = {
   generateBuildId: async () => {
     const timestamp = Date.now();
     const random = Math.random().toString(36).substr(2, 9);
-    const previewMode = process.env.NEXT_PUBLIC_PREVIEW_MODE === 'true' ? 'preview' : 'prod';
+    const previewMode =
+      process.env.NEXT_PUBLIC_PREVIEW_MODE === "true" ? "preview" : "prod";
     const cacheBuster = Math.floor(Math.random() * 1000000);
     return `build-${previewMode}-${timestamp}-${random}-${cacheBuster}`;
   },
@@ -26,11 +27,12 @@ const nextConfig = {
     maxInactiveAge: 25 * 1000,
     pagesBufferLength: 2,
   },
-  // Vercel дээр ажиллахад зориулсан
-  swcMinify: true,
+  // swcMinify нь Next.js 15-д аль хэдийн default болсон
+  // Cross origin request анхааруулгыг арилгах
+  allowedDevOrigins: ['192.168.0.104'],
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
+    removeConsole: process.env.NODE_ENV === "production",
   },
-}
+};
 
-export default nextConfig
+export default nextConfig;

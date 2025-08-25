@@ -138,8 +138,27 @@ const OrderSchema = new Schema<IOrder>(
 // Generate order number before saving
 OrderSchema.pre("save", async function (next) {
   if (this.isNew) {
-    const count = (await mongoose.models["Order"]?.countDocuments()) || 0;
-    this.orderNumber = `ORD-${String(count + 1).padStart(4, "0")}`;
+    try {
+      // Хамгийн сүүлийн orderNumber-г олж, дараагийн дугаарыг үүсгэх
+      const lastOrder = await mongoose.models["Order"]?.findOne(
+        {},
+        { orderNumber: 1 },
+        { sort: { orderNumber: -1 } }
+      );
+
+      let nextNumber = 1;
+      if (lastOrder && lastOrder.orderNumber) {
+        const lastNumber = parseInt(lastOrder.orderNumber.replace("ORD-", ""));
+        nextNumber = lastNumber + 1;
+      }
+
+      this.orderNumber = `ORD-${String(nextNumber).padStart(4, "0")}`;
+    } catch (error) {
+      console.error("Error generating order number:", error);
+      // Fallback: timestamp-based order number
+      const timestamp = Date.now().toString().slice(-6);
+      this.orderNumber = `ORD-${timestamp}`;
+    }
   }
   next();
 });

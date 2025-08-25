@@ -13,7 +13,8 @@
     "assign-categories": "tsx scripts/assign-categories.ts",
     "check-images": "tsx scripts/check-cloudinary-images.ts",
     "connect-images": "tsx scripts/connect-cloudinary-images.ts",
-    "fix-orders": "tsx scripts/fix-broken-orders.ts"
+    "fix-orders": "tsx scripts/fix-broken-orders.ts",
+    "postinstall": "npm list @tailwindcss/line-clamp > /dev/null 2>&1 && npm uninstall @tailwindcss/line-clamp --silent || true"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -44,7 +45,6 @@
     "@radix-ui/react-toggle": "1.1.1",
     "@radix-ui/react-toggle-group": "1.1.1",
     "@radix-ui/react-tooltip": "1.1.6",
-    "@tailwindcss/line-clamp": "^0.4.4",
     "axios": "latest",
     "class-variance-authority": "^0.7.1",
     "cloudinary": "^2.7.0",

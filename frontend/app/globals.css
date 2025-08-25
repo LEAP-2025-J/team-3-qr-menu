@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -53,7 +55,21 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+    font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+    font-weight: 400;
+  }
+
+  /* Semibold text */
+  .font-semibold {
+    font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+    font-weight: 600;
+  }
+
+  /* Semilight text */
+  .font-semilight {
+    font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+    font-weight: 300;
   }
 }
 
@@ -65,8 +81,8 @@
 
   /* Hide scrollbar for IE, Edge and Firefox */
   .scrollbar-hide {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
   }
 
   /* Smooth scrolling for all browsers */
@@ -120,7 +136,7 @@
     .category-grid-mobile {
       display: grid !important;
     }
-    
+
     .category-mobile-item {
       flex: none !important;
     }
@@ -135,11 +151,11 @@
       padding: 0 0.5rem !important;
       justify-content: space-between !important;
     }
-    
+
     .category-grid-mobile::-webkit-scrollbar {
       display: none !important;
     }
-    
+
     .category-mobile-item {
       flex: 1 !important;
       padding: 0 !important;

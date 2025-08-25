@@ -8,29 +8,100 @@ import { formatDate } from "../utils";
 interface ReservationTabProps {
   table: Table;
   onEditReservation?: (reservation: any, tableId: string) => void;
+  onReservationStatusChange?: (
+    reservationId: string,
+    newStatus: string
+  ) => void;
+  allReservations?: any[]; // Бүх reservation-ууд дараагийн харуулахад хэрэг
 }
 
 export function ReservationTab({
   table,
   onEditReservation,
+  onReservationStatusChange,
+  allReservations = [],
 }: ReservationTabProps) {
   // Өнөөдрийн огноог UTC+8 timezone-тай болгож авах (Mongolia timezone)
   const now = new Date();
   const utc8Date = new Date(now.getTime() + 8 * 60 * 60 * 1000); // UTC+8
   const todayString = utc8Date.toISOString().split("T")[0]; // YYYY-MM-DD формат
 
+  // Дараагийн reservation олох логик
+  const getDisplayReservation = () => {
+    // Хэрэв одоогийн reservation pending төлөвт байвал түүнийг харуулах
+    if (
+      table.currentReservation &&
+      table.currentReservation.status === "pending" &&
+      table.currentReservation.date === todayString
+    ) {
+      return table.currentReservation;
+    }
+
+    // Хэрэв confirmed эсвэл cancelled бол дараагийн reservation хайх
+    if (
+      table.currentReservation &&
+      (table.currentReservation.status === "confirmed" ||
+        table.currentReservation.status === "cancelled")
+    ) {
+      // Энэ ширээний өнөөдрийн дараагийн reservation хайх
+      const todayReservations = allReservations
+        .filter(
+          (res) =>
+            res.table?._id === table._id &&
+            res.date === todayString &&
+            res.status === "pending" &&
+            res._id !== table.currentReservation?._id
+        )
+        .sort((a, b) => a.time.localeCompare(b.time));
+
+      return todayReservations[0] || null;
+    }
+
+    return table.currentReservation;
+  };
+
+  const displayReservation = getDisplayReservation();
+
   // Зөвхөн өнөөдрийн огноотой захиалгыг шалгах
   const isTodayReservation =
-    table.currentReservation && table.currentReservation.date === todayString;
+    displayReservation && displayReservation.date === todayString;
+
+  // Reservation статус өөрчлөх функц
+  const handleStatusChange = () => {
+    if (!displayReservation || !onReservationStatusChange) return;
+
+    const currentStatus = displayReservation.status;
+    let nextStatus = "";
+
+    // Статусын дарааллын дагуу дараагийн статус тодорхойлох
+    switch (currentStatus) {
+      case "pending":
+        nextStatus = "confirmed";
+        break;
+      default:
+        return; // confirmed статусаас цааш өөрчлөхгүй
+    }
+
+    onReservationStatusChange(displayReservation._id, nextStatus);
+  };
+
+  // Дараагийн статусын текстийг авах
+  const getNextStatusText = () => {
+    if (!displayReservation) return "";
+
+    const currentStatus = displayReservation.status;
+    switch (currentStatus) {
+      case "pending":
+        return "Батлах";
+      default:
+        return "Батлагдсан"; // confirmed статусад товч идэвхгүй
+    }
+  };
 
   if (!isTodayReservation) {
     return (
       <div className="py-4 text-center text-gray-500">
-        <div className="text-sm">
-          {table.currentReservation
-            ? "Өнөөдөр ширээ захиалга байхгүй"
-            : "No reservation"}
-        </div>
+        <div className="text-sm">Өнөөдөр ширээ захиалга байхгүй</div>
       </div>
     );
   }
@@ -40,22 +111,22 @@ export function ReservationTab({
       {/* Reservation header */}
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-blue-700">
-          Захиалга #{table.currentReservation!.reservationNumber}
+          Захиалга #{displayReservation!.reservationNumber}
         </span>
         <Badge className="text-xs text-blue-800 bg-blue-100 border-blue-200">
-          {table.currentReservation!.status === "pending"
+          {displayReservation!.status === "pending"
             ? "Хүлээгдэж буй"
-            : table.currentReservation!.status === "confirmed"
+            : displayReservation!.status === "confirmed"
             ? "Баталгаажсан"
-            : table.currentReservation!.status === "seated"
+            : displayReservation!.status === "seated"
             ? "Сууж байна"
-            : table.currentReservation!.status === "completed"
+            : displayReservation!.status === "completed"
             ? "Дууссан"
-            : table.currentReservation!.status === "cancelled"
+            : displayReservation!.status === "cancelled"
             ? "Цуцлагдсан"
-            : table.currentReservation!.status === "no-show"
+            : displayReservation!.status === "no-show"
             ? "Ирээгүй"
-            : table.currentReservation!.status}
+            : displayReservation!.status}
         </Badge>
       </div>
 
@@ -63,35 +134,35 @@ export function ReservationTab({
       <div className="space-y-2">
         <div className="flex items-center justify-between text-sm">
           <span className="text-gray-600">Захиалагч:</span>
-          {table.currentReservation!.customerName}
+          {displayReservation!.customerName}
         </div>
         <div className="flex items-center justify-between text-sm">
           <span className="text-gray-600">Утас:</span>
           <span className="font-medium">
-            {table.currentReservation!.customerPhone}
+            {displayReservation!.customerPhone}
           </span>
         </div>
         <div className="flex items-center justify-between text-sm">
           <span className="text-gray-600">Огноо:</span>
           <span className="font-medium">
-            {formatDate(table.currentReservation!.date)}
+            {formatDate(displayReservation!.date)}
           </span>
         </div>
         <div className="flex items-center justify-between text-sm">
           <span className="text-gray-600">Цаг:</span>
-          <span className="font-medium">{table.currentReservation!.time}</span>
+          <span className="font-medium">{displayReservation!.time}</span>
         </div>
         <div className="flex items-center justify-between text-sm">
           <span className="text-gray-600">Хүний тоо:</span>
           <span className="font-medium">
-            {table.currentReservation!.partySize} хүн
+            {displayReservation!.partySize} хүн
           </span>
         </div>
-        {table.currentReservation!.specialRequests && (
+        {displayReservation!.specialRequests && (
           <div className="pt-1 border-t border-gray-200">
             <div className="mb-1 text-xs text-gray-600">Тусгай хүсэлт:</div>
             <div className="p-2 text-xs italic text-blue-600 rounded bg-blue-50">
-              {table.currentReservation!.specialRequests}
+              {displayReservation!.specialRequests}
             </div>
           </div>
         )}
@@ -102,18 +173,23 @@ export function ReservationTab({
         <Button
           size="sm"
           className="flex-1 text-black bg-blue-100 hover:bg-blue-200"
-          onClick={() => {
-            // Handle reservation status update
-          }}
+          onClick={handleStatusChange}
+          disabled={
+            !displayReservation ||
+            displayReservation.status === "confirmed" ||
+            displayReservation.status === "completed" ||
+            displayReservation.status === "cancelled" ||
+            displayReservation.status === "no-show"
+          }
         >
-          Статус өөрчлөх
+          {getNextStatusText()}
         </Button>
         <Button
           size="sm"
           variant="outline"
           onClick={() => {
-            if (onEditReservation && table.currentReservation) {
-              onEditReservation(table.currentReservation, table._id);
+            if (onEditReservation && displayReservation) {
+              onEditReservation(displayReservation, table._id);
             }
           }}
         >

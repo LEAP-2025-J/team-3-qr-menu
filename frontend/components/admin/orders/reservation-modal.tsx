@@ -27,6 +27,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { CalendarIcon, Clock, Users, Phone, User } from "lucide-react";
+import { formatNumberForInput } from "../utils";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -47,6 +48,7 @@ interface ReservationModalProps {
   existingReservations?: any[]; // Add this to check for conflicts
   editingReservation?: any; // For editing existing reservation
   selectedTableId?: string; // For pre-selecting table
+  onRefresh?: () => void; // For refreshing data after cancellation
 }
 
 export function ReservationModal({
@@ -57,6 +59,7 @@ export function ReservationModal({
   existingReservations = [],
   editingReservation,
   selectedTableId,
+  onRefresh,
 }: ReservationModalProps) {
   const [formData, setFormData] = useState({
     customerName: "",
@@ -239,6 +242,48 @@ export function ReservationModal({
     }
   };
 
+  // Захиалга цуцлах функц
+  const handleCancelReservation = async () => {
+    if (loading || !editingReservation) return;
+
+    const confirmCancel = window.confirm(
+      `${editingReservation.reservationNumber || "Энэ"} захиалгыг цуцлах уу?`
+    );
+
+    if (!confirmCancel) return;
+
+    setLoading(true);
+    try {
+      const API_CONFIG = (await import("@/config/api")).API_CONFIG;
+      const response = await fetch(
+        `${API_CONFIG.BACKEND_URL}/api/reservations/${editingReservation._id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ status: "cancelled" }),
+        }
+      );
+
+      const result = await response.json();
+      if (result.success) {
+        alert("Захиалга амжилттай цуцлагдлаа!");
+        // Refresh data after cancellation
+        if (onRefresh) {
+          onRefresh();
+        }
+        onClose();
+      } else {
+        alert(result.error || "Захиалга цуцлахад алдаа гарлаа");
+      }
+    } catch (error) {
+      alert("Захиалга цуцлахад алдаа гарлаа");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getTableStatusColor = (status: string) => {
     switch (status) {
       case "available":
@@ -403,7 +448,7 @@ export function ReservationModal({
                 type="number"
                 min="1"
                 max="20"
-                value={formData.partySize}
+                value={formatNumberForInput(formData.partySize, 1)}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
@@ -535,11 +580,11 @@ export function ReservationModal({
           <DialogFooter className="flex-col gap-2 sm:flex-row sm:gap-0">
             <Button
               type="button"
-              variant="outline"
-              onClick={onClose}
+              variant={editingReservation ? "destructive" : "outline"}
+              onClick={editingReservation ? handleCancelReservation : onClose}
               className="w-full sm:w-auto"
             >
-              Cancel
+              {editingReservation ? "Захиалга цуцлах" : "Cancel"}
             </Button>
             <Button
               type="submit"

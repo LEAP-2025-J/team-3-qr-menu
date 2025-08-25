@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import CloudinaryImage from "@/components/CloudinaryImage";
 import { useLanguage } from "@/contexts/language-context";
+import { formatPrice } from "@/components/admin/utils/price-utils";
 
 interface CartModalProps {
   cart: any[];
@@ -98,9 +99,9 @@ export function CartModal({
                       {getText(item.nameEn, item.nameMn, item.nameJp)}
                     </div>
                     <div className="mb-2 text-sm text-gray-600">
-                      ${typeof item.price === "number" && !isNaN(item.price)
-                        ? item.price.toFixed(2)
-                        : "0.00"}
+                      {typeof item.price === "number" && !isNaN(item.price)
+                        ? formatPrice(item.price)
+                        : "0 ₮"}
                     </div>
                     <div className="flex items-center gap-2">
                       <Button
@@ -123,7 +124,9 @@ export function CartModal({
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => onChangeQuantity(item.id, item.quantity + 1)}
+                        onClick={() =>
+                          onChangeQuantity(item.id, item.quantity + 1)
+                        }
                         className="w-8 h-8 p-0"
                       >
                         +
@@ -146,7 +149,7 @@ export function CartModal({
             <div className="sticky bottom-0 pt-4 bg-white border-t">
               <div className="flex items-center justify-between mb-4 text-lg font-bold">
                 <span>Total</span>
-                <span>${total.toFixed(2)}</span>
+                <span>{formatPrice(total)}</span>
               </div>
               <div className="flex gap-3">
                 <Button
@@ -154,11 +157,7 @@ export function CartModal({
                   onClick={onClearCart}
                   className="flex-1 py-3 text-base font-medium text-red-600 border-red-200 rounded-lg hover:bg-red-50 hover:border-red-300"
                 >
-                  {getText(
-                    "Empty Cart",
-                    "Сагсыг цэвэрлэх",
-                    "カートを空にする"
-                  )}
+                  {getText("Empty Cart", "Сагсыг цэвэрлэх", "カートを空にする")}
                 </Button>
                 <Button
                   className="flex-1 py-3 text-base font-medium rounded-lg"
@@ -177,4 +176,4 @@ export function CartModal({
       </DialogContent>
     </Dialog>
   );
-} 
+}

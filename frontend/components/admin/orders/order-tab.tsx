@@ -1,10 +1,15 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { QrCode, Plus, Printer } from "lucide-react";
+import { QrCode, Plus, Printer, Receipt, Clock } from "lucide-react";
 import { Table } from "../types";
-import { getPrimaryActionLabel } from "../utils/order-utils";
+import {
+  getPrimaryActionLabel,
+  calculateOrderTime,
+} from "../utils/order-utils";
 import { formatTime } from "../utils/date-utils";
+import { TotalOrdersModal } from "./total-orders-modal";
+import { useState, useEffect } from "react";
 
 // isOrderActive функцийг import хийх
 function isOrderActive(order: any): boolean {
@@ -31,6 +36,7 @@ interface OrderTabProps {
   onCancelOrder: (orderId: string) => void;
   onCreateOrder: () => void;
   onPrintOrder?: (orderId: string) => void;
+  onRefresh?: () => void;
 }
 
 export function OrderTab({
@@ -40,7 +46,20 @@ export function OrderTab({
   onCancelOrder,
   onCreateOrder,
   onPrintOrder,
+  onRefresh,
 }: OrderTabProps) {
+  const [showTotalOrdersModal, setShowTotalOrdersModal] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0); // Auto refresh-д хэрэгтэй
+
+  // Auto refresh логик - 2 минут тутамд хугацааг шинэчлэх
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setRefreshKey((prev) => prev + 1);
+    }, 2 * 60 * 1000); // 2 минут
+
+    return () => clearInterval(interval);
+  }, []);
+
   // Тухайн ширээнд сууснаас хойшхи бүх захиалга (completed, cancelled биш, өчигдрийн захиалга биш)
   const sessionOrders =
     (table as any).orders?.filter(
@@ -64,6 +83,14 @@ export function OrderTab({
             Захиалга үүсгэх
           </Button>
         </div>
+
+        {/* Нийт захиалга Modal */}
+        <TotalOrdersModal
+          isOpen={showTotalOrdersModal}
+          onClose={() => setShowTotalOrdersModal(false)}
+          table={table}
+          onRefresh={onRefresh}
+        />
       </div>
     );
   }
@@ -81,9 +108,20 @@ export function OrderTab({
             <span className="text-xs font-medium text-gray-700">
               #{order.orderNumber}
             </span>
-            <span className="text-sm font-bold">
-              {formatTime(order.createdAt)}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold">
+                {formatTime(order.createdAt)}
+              </span>
+              {/* Хугацаа тоолуур */}
+              {calculateOrderTime(order) && (
+                <span
+                  key={`${order._id}-${refreshKey}`}
+                  className="flex h-6 min-w-6 items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold"
+                >
+                  {calculateOrderTime(order)}
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Хоолны жагсаалт */}
@@ -162,18 +200,34 @@ export function OrderTab({
         </div>
       ))}
 
-      {/* Захиалга нэмэх товч (tab-ны голд) */}
-      <div className="flex justify-center pt-2">
+      {/* Захиалга нэмэх болон нийт захиалга товчнууд */}
+      <div className="flex gap-2 pt-2">
         <Button
           size="sm"
-          className="text-black bg-blue-100 hover:bg-blue-200 px-3"
+          className="flex-1 text-black bg-blue-100 hover:bg-blue-200"
           onClick={onCreateOrder}
           disabled={isUpdating}
         >
-          <Plus className="w-4 h-4 mr-1" />
           Захиалга нэмэх
         </Button>
+        <Button
+          size="sm"
+          className="flex-1 text-black bg-green-100 hover:bg-green-200"
+          onClick={() => setShowTotalOrdersModal(true)}
+          disabled={isUpdating || sessionOrders.length === 0}
+        >
+          <Receipt className="w-4 h-4 mr-1" />
+          Нийт
+        </Button>
       </div>
+
+      {/* Нийт захиалга Modal */}
+      <TotalOrdersModal
+        isOpen={showTotalOrdersModal}
+        onClose={() => setShowTotalOrdersModal(false)}
+        table={table}
+        onRefresh={onRefresh}
+      />
     </div>
   );
 }

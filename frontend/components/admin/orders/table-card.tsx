@@ -52,6 +52,7 @@ export function TableCard({
   onCreateOrder,
   onRefresh,
   onEditReservation,
+  onReservationStatusChange,
 }: TableCardProps) {
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [showCreateOrderModal, setShowCreateOrderModal] = useState(false);
@@ -131,11 +132,52 @@ export function TableCard({
             table.currentOrder && isOrderActive(table.currentOrder);
           const bgColor = hasActiveOrder ? "bg-white" : "bg-green-200";
 
-          // 2. Border өнгө: active reservation-тай бол pink, үгүй бол gray
-          const hasActiveReservation =
-            table.currentReservation &&
-            isReservationActive(table.currentReservation);
-          const borderColor = hasActiveReservation
+          // 2. Border өнгө: reservation-tab-тай ижил логик ашиглах
+          // Өнөөдрийн огноог UTC+8 timezone-тай болгож авах (Mongolia timezone)
+          const now = new Date();
+          const utc8Date = new Date(now.getTime() + 8 * 60 * 60 * 1000); // UTC+8
+          const todayString = utc8Date.toISOString().split("T")[0]; // YYYY-MM-DD формат
+
+          // Reservation-tab-тай ижил логик
+          const getDisplayReservation = () => {
+            // Хэрэв одоогийн reservation pending төлөвт байвал түүнийг харуулах
+            if (
+              table.currentReservation &&
+              table.currentReservation.status === "pending" &&
+              table.currentReservation.date === todayString
+            ) {
+              return table.currentReservation;
+            }
+
+            // Хэрэв confirmed эсвэл cancelled бол дараагийн reservation хайх
+            if (
+              table.currentReservation &&
+              (table.currentReservation.status === "confirmed" ||
+                table.currentReservation.status === "cancelled")
+            ) {
+              // Энэ ширээний өнөөдрийн дараагийн reservation хайх
+              const todayReservations = (table.currentReservations || [])
+                .filter(
+                  (res) =>
+                    res.date === todayString &&
+                    res.status === "pending" &&
+                    res._id !== table.currentReservation?._id
+                )
+                .sort((a, b) => a.time.localeCompare(b.time));
+
+              return todayReservations[0] || null;
+            }
+
+            return table.currentReservation;
+          };
+
+          const displayReservation = getDisplayReservation();
+          const hasPendingReservation =
+            displayReservation &&
+            displayReservation.status === "pending" &&
+            displayReservation.date === todayString;
+
+          const borderColor = hasPendingReservation
             ? "border-pink-400"
             : "border-gray-100";
 
@@ -167,7 +209,7 @@ export function TableCard({
         </div>
 
         {/* Tabs for Orders and Reservations - connected to card */}
-        <div className="h-full px-4 py-0">
+        <div className="h-full px-4 pb-4">
           <Tabs defaultValue="orders" className="w-full mb-0">
             <TabsList className="flex w-full gap-0 bg-white border-b-0">
               <TabsTrigger
@@ -198,6 +240,7 @@ export function TableCard({
                 onCancelOrder={(orderId) => onCancelOrder?.(orderId)}
                 onCreateOrder={() => setShowCreateOrderModal(true)}
                 onPrintOrder={handlePrint}
+                onRefresh={onRefresh}
               />
             </TabsContent>
 
@@ -209,6 +252,10 @@ export function TableCard({
               <ReservationTab
                 table={table}
                 onEditReservation={onEditReservation}
+                onReservationStatusChange={onReservationStatusChange}
+                allReservations={tables.flatMap(
+                  (t) => t.currentReservations || []
+                )}
               />
             </TabsContent>
           </Tabs>

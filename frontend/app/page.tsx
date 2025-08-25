@@ -128,6 +128,15 @@ function QRMenuContent() {
             };
 
             // Send order to backend
+            console.log("=== QR ORDER DEBUG INFO ===");
+            console.log("Backend URL:", API_CONFIG.BACKEND_URL);
+            console.log(
+              "Full API URL:",
+              `${API_CONFIG.BACKEND_URL}/api/orders`
+            );
+            console.log("Order data:", orderData);
+            console.log("===========================");
+
             const response = await fetch(
               `${API_CONFIG.BACKEND_URL}/api/orders`,
               {
@@ -140,7 +149,13 @@ function QRMenuContent() {
             );
 
             if (!response.ok) {
-              throw new Error("Failed to submit order");
+              console.log("=== ERROR DETAILS ===");
+              console.log("Response status:", response.status);
+              console.log("Response status text:", response.statusText);
+              console.log("Response URL:", response.url);
+              throw new Error(
+                `Failed to submit order - Status: ${response.status}`
+              );
             }
 
             const result = await response.json();

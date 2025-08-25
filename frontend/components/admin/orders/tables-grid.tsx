@@ -25,6 +25,7 @@ export function TablesGrid({
   onCreateOrder,
   onRefresh,
   onEditReservation,
+  onReservationStatusChange,
 }: TablesGridProps) {
   const [showCreateReservationModal, setShowCreateReservationModal] =
     useState(false);
@@ -61,7 +62,7 @@ export function TablesGrid({
       </div>
 
       {/* Ширээний grid - бодит байрлалд */}
-      <div className="flex gap-16">
+      <div className="grid grid-cols-[auto_auto] gap-16 items-start">
         {/* Зүүн тал - 3 багана, контентын өндөр */}
         <TableGridLeft
           tables={tables}
@@ -75,6 +76,7 @@ export function TablesGrid({
           onCreateOrder={onCreateOrder}
           onRefresh={onRefresh}
           onEditReservation={onEditReservation}
+          onReservationStatusChange={onReservationStatusChange}
         />
 
         {/* Баруун тал - 2 багана, контентын өндөр */}
@@ -90,6 +92,7 @@ export function TablesGrid({
           onCreateOrder={onCreateOrder}
           onRefresh={onRefresh}
           onEditReservation={onEditReservation}
+          onReservationStatusChange={onReservationStatusChange}
         />
       </div>
 
