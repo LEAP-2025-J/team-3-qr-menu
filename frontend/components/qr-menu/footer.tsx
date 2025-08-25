@@ -11,6 +11,33 @@ interface FooterProps {
 export function Footer({ restaurantName, restaurantData }: FooterProps) {
   const { getText } = useLanguage();
 
+  // Day translation mapping
+  const dayTranslations: { [key: string]: { mn: string; jp: string } } = {
+    "Monday": { mn: "Даваа", jp: "月曜日" },
+    "Tuesday": { mn: "Мягмар", jp: "火曜日" },
+    "Wednesday": { mn: "Лхагва", jp: "水曜日" },
+    "Thursday": { mn: "Пүрэв", jp: "木曜日" },
+    "Friday": { mn: "Баасан", jp: "金曜日" },
+    "Saturday": { mn: "Бямба", jp: "土曜日" },
+    "Sunday": { mn: "Ням", jp: "日曜日" },
+    "Mon": { mn: "Да", jp: "月" },
+    "Tue": { mn: "Мя", jp: "火" },
+    "Wed": { mn: "Лх", jp: "水" },
+    "Thu": { mn: "Пү", jp: "木" },
+    "Fri": { mn: "Ба", jp: "金" },
+    "Sat": { mn: "Бя", jp: "土" },
+    "Sun": { mn: "Ня", jp: "日" }
+  };
+
+  // Function to translate day names
+  const translateDay = (day: string) => {
+    const translations = dayTranslations[day];
+    if (translations) {
+      return getText(day, translations.mn, translations.jp);
+    }
+    return day; // fallback to original if no translation found
+  };
+
   return (
     <>
       {/* Simple footer */}
@@ -18,7 +45,7 @@ export function Footer({ restaurantName, restaurantData }: FooterProps) {
         <p className="mb-2">
           {getText(
             "Thank you for dining with us!",
-            "Бидэнтэй хооллохдод баярлалаа!",
+            "Бидэнтэй хооллосонд баярлалаа!",
             "ご利用いただきありがとうございます！"
           )}
         </p>
@@ -46,7 +73,11 @@ export function Footer({ restaurantName, restaurantData }: FooterProps) {
                 {restaurantName}
               </h3>
               <p className="text-xs text-gray-700 md:text-sm">
-                Experience the perfect blend of tradition and innovation
+                {getText(
+                  "Experience the perfect blend of tradition and innovation",
+                  "Уламжлал ба шинэчлэлийн төгс хослолыг мэдрээрэй",
+                  "伝統と革新の完璧な調和をお楽しみください"
+                )}
               </p>
             </div>
             <div>
@@ -54,22 +85,22 @@ export function Footer({ restaurantName, restaurantData }: FooterProps) {
                 className="mb-3 font-semibold md:mb-4"
                 style={{ color: "#8B4513" }}
               >
-                Hours
+                {getText("Hours", "Цагийн хуваарь", "営業時間")}
               </h4>
               <div className="space-y-1 text-xs text-gray-700 md:text-sm">
                 {restaurantData?.operatingHours ? (
                   restaurantData.operatingHours.map(
                     (hours: any, index: number) => (
                       <div key={index}>
-                        {hours.day}: {hours.openTime} - {hours.closeTime}
+                        {translateDay(hours.day)}: {hours.openTime} - {hours.closeTime}
                       </div>
                     )
                   )
                 ) : (
                   <>
-                    <div>Mon-Thu: 11:00 AM - 10:00 PM</div>
-                    <div>Fri-Sat: 11:00 AM - 12:00 PM</div>
-                    <div>Sunday: 12:00 PM - 9:00 PM</div>
+                    <div>{getText("Mon-Thu", "Да-Бя", "月-木")}: 11:00 AM - 10:00 PM</div>
+                    <div>{getText("Fri-Sat", "Ба-Бя", "金-土")}: 11:00 AM - 12:00 PM</div>
+                    <div>{getText("Sunday", "Ням", "日")}: 12:00 PM - 9:00 PM</div>
                   </>
                 )}
               </div>
@@ -79,12 +110,16 @@ export function Footer({ restaurantName, restaurantData }: FooterProps) {
                 className="mb-3 font-semibold md:mb-4"
                 style={{ color: "#8B4513" }}
               >
-                Location
+                {getText("Location", "Байршил", "所在地")}
               </h4>
               <div className="text-xs text-gray-700 md:text-sm">
-                <div>{restaurantData?.addressEn || "123 Fusion Street"}</div>
-                <div>Downtown District</div>
-                <div>Phone: {restaurantData?.phone || "(555) 123-4567"}</div>
+                <div>{getText(
+                  restaurantData?.addressEn || "123 Fusion Street",
+                  restaurantData?.addressMn || "123 Fusion Street",
+                  restaurantData?.addressJp || "123 Fusion Street"
+                )}</div>
+                <div>{getText("Downtown District", "Төв дүүрэг", "ダウンタウン地区")}</div>
+                <div>{getText("Phone", "Утас", "電話")}: {restaurantData?.phone || "(555) 123-4567"}</div>
               </div>
             </div>
             <div>
@@ -92,7 +127,7 @@ export function Footer({ restaurantName, restaurantData }: FooterProps) {
                 className="mb-3 font-semibold md:mb-4"
                 style={{ color: "#8B4513" }}
               >
-                Follow Us
+                {getText("Follow Us", "Биднийг дага", "フォローする")}
               </h4>
               <div className="flex space-x-3 text-xs md:space-x-4 md:text-sm">
                 <span className="text-gray-700 cursor-pointer hover:text-gray-900">
@@ -109,7 +144,7 @@ export function Footer({ restaurantName, restaurantData }: FooterProps) {
           </div>
           <div className="pt-6 mt-6 text-center border-t border-gray-400 md:mt-8 md:pt-8">
             <p className="text-xs text-gray-600 md:text-sm">
-              © 2025 {restaurantName}. All rights reserved.
+              © 2025 {restaurantName}. {getText("All rights reserved.", "Бүх эрх хуулиар хамгаалагдсан.", "All rights reserved.")}
             </p>
           </div>
         </div>
