@@ -16,10 +16,16 @@ export default function SignInPage() {
 
   const router = useRouter();
 
-  // Mock admin credentials
-  const adminCredentials = {
-    username: "admin",
-    password: "admin123"
+  // Mock credentials for both admin and user
+  const credentials = {
+    admin: {
+      username: "admin",
+      password: "admin123"
+    },
+    user: {
+      username: "user",
+      password: "user123"
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,17 +34,30 @@ export default function SignInPage() {
     setError("");
 
     try {
-      // Simple credential check
-      if (username === adminCredentials.username && password === adminCredentials.password) {
+      // Check admin credentials
+      if (username === credentials.admin.username && password === credentials.admin.password) {
         // Store admin session
         localStorage.setItem("admin", "true");
         localStorage.setItem("username", username);
         
         // Redirect to admin dashboard
         router.push("/admin");
-      } else {
-        setError("Invalid username or password");
+        return;
       }
+      
+      // Check user credentials
+      if (username === credentials.user.username && password === credentials.user.password) {
+        // Store user session
+        localStorage.setItem("user", "true");
+        localStorage.setItem("username", username);
+        
+        // Redirect to user dashboard
+        router.push("/user");
+        return;
+      }
+      
+      // Invalid credentials
+      setError("Invalid username or password");
     } catch (error) {
       setError("An error occurred during login");
     } finally {
@@ -109,7 +128,8 @@ export default function SignInPage() {
 
             <div className="text-xs text-gray-500 text-center">
               <p>Demo Credentials:</p>
-              <p>Username: admin | Password: admin123</p>
+              <p>Admin: admin | admin123</p>
+              <p>User: user | user123</p>
             </div>
 
             <div className="text-center">

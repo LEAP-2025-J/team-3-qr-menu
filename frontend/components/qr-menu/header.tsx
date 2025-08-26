@@ -74,6 +74,8 @@ export function Header({ restaurantName, restaurantDescription, tableNumber }: H
           </div>
         </div>
 
+
+
         {/* Table Number Display */}
         {tableNumber && (
           <div className="mt-2">
