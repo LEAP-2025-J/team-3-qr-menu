@@ -14,6 +14,7 @@ interface NotificationContextType {
   addNotification: (tableNumber: number) => void;
   clearNotifications: () => void;
   markAsRead: () => void;
+  triggerToast: (tableNumber: number) => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(
@@ -26,6 +27,7 @@ export function NotificationProvider({
   children: React.ReactNode;
 }) {
   const [notificationCount, setNotificationCount] = useState(0);
+  const [lastNotificationCount, setLastNotificationCount] = useState(0);
 
   // Backend-аас notification count авах функц
   const fetchNotificationCount = useCallback(async () => {
@@ -43,11 +45,23 @@ export function NotificationProvider({
         const data = await response.json();
         console.log("✅ Notification data:", data);
         if (data.success) {
-          console.log(
-            "📊 Setting notification count to:",
-            data.data.unreadTableCount
-          );
-          setNotificationCount(data.data.unreadTableCount);
+          const newCount = data.data.unreadTableCount;
+          console.log("📊 Setting notification count to:", newCount);
+
+          // Хэрэв notification count нэмэгдсэн бол toast trigger хийх
+          if (newCount > lastNotificationCount && lastNotificationCount > 0) {
+            console.log("🔔 New notification detected, triggering toast");
+            // Custom event trigger хийх (toast notification-д хэрэгтэй)
+            if (typeof window !== "undefined") {
+              const event = new CustomEvent("new-notification-detected", {
+                detail: { count: newCount },
+              });
+              window.dispatchEvent(event);
+            }
+          }
+
+          setLastNotificationCount(notificationCount);
+          setNotificationCount(newCount);
         }
       } else {
         console.error(
@@ -70,7 +84,7 @@ export function NotificationProvider({
 
     fetchNotificationCount(); // Анх удаа ачаалах
 
-    const interval = setInterval(fetchNotificationCount, 10000); // 10 секунд тутам шалгах
+    const interval = setInterval(fetchNotificationCount, 5000); // 5 секунд тутам шалгах (deploy дээр хурдан мэдэгдэхээр)
     return () => clearInterval(interval);
   }, [fetchNotificationCount]);
 
@@ -97,6 +111,16 @@ export function NotificationProvider({
     },
     [fetchNotificationCount]
   );
+
+  // Toast notification trigger функц (deploy дээр ашиглах)
+  const triggerToast = useCallback((tableNumber: number) => {
+    if (typeof window !== "undefined") {
+      const event = new CustomEvent("qr-order-notification", {
+        detail: { tableNumber },
+      });
+      window.dispatchEvent(event);
+    }
+  }, []);
 
   // Бүх notification-г цэвэрлэх (backend дамжуулж шинэчлэх)
   const clearNotifications = useCallback(() => {
@@ -152,6 +176,7 @@ export function NotificationProvider({
         addNotification,
         clearNotifications,
         markAsRead,
+        triggerToast,
       }}
     >
       {children}

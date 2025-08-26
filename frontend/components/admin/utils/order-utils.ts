@@ -93,7 +93,7 @@ export async function requestUpdateStatus(
   }
 }
 
-// Захиалгын хугацаа тооцоолох функц
+// Захиалгын хугацаа тооцоолох функц - зөв цагийн тооцоолол
 export function calculateOrderTime(order: any): string | null {
   if (!order || !order.createdAt) {
     return null;
@@ -104,17 +104,21 @@ export function calculateOrderTime(order: any): string | null {
     return null;
   }
 
+  // Захиалгын цаг (UTC+0 дээр хадгалагдсан)
   const startTime = new Date(order.createdAt);
-  const endTime = new Date(); // Одоогийн цаг
 
-  const timeDiff = endTime.getTime() - startTime.getTime();
+  // Одоогийн цаг (browser-ийн local timezone)
+  const now = new Date();
+
+  // Цагийн зөрүүг тооцоолох
+  const timeDiff = now.getTime() - startTime.getTime();
   const minutes = Math.floor(timeDiff / (1000 * 60));
 
   // Зөвхөн тоогоор харагдах (мин гэдэг үггүй)
   return `${minutes}`;
 }
 
-// Захиалгын хугацааг секундээр тооцоолох (auto refresh-д хэрэгтэй)
+// Захиалгын хугацааг секундээр тооцоолох (auto refresh-д хэрэгтэй) - зөв цагийн тооцоолол
 export function getOrderTimeInSeconds(order: any): number | null {
   if (!order || !order.createdAt) {
     return null;
@@ -124,10 +128,14 @@ export function getOrderTimeInSeconds(order: any): number | null {
     return null;
   }
 
+  // Захиалгын цаг (UTC+0 дээр хадгалагдсан)
   const startTime = new Date(order.createdAt);
-  const endTime = new Date(); // Одоогийн цаг
 
-  return Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
+  // Одоогийн цаг (browser-ийн local timezone)
+  const now = new Date();
+
+  // Цагийн зөрүүг секундээр тооцоолох
+  return Math.floor((now.getTime() - startTime.getTime()) / 1000);
 }
 
 // Бүх захиалгыг дуусгах функц

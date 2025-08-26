@@ -63,17 +63,20 @@ export function NotificationDialog({
         ? "http://localhost:5000"
         : API_CONFIG.BACKEND_URL;
       const url = `${backendUrl}/api/orders/notifications`;
-      console.log("🌐 NotificationDialog fetching from URL:", url);
       const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
-        console.log("📱 Notification Dialog Data:", data);
         if (data.success) {
-          console.log(
-            "✅ Setting orders in dialog:",
-            data.data.todayQROrders?.length
+          // Захиалгуудыг үүссэн хугацаагаар нь эрэмбэлэх (сүүлд үүссэн нь дээр)
+          const sortedOrders = (data.data.todayQROrders || []).sort(
+            (a: any, b: any) => {
+              return (
+                new Date(b.createdAt).getTime() -
+                new Date(a.createdAt).getTime()
+              );
+            }
           );
-          setTodayOrders(data.data.todayQROrders || []);
+          setTodayOrders(sortedOrders);
         }
       }
     } catch (error) {
@@ -107,7 +110,7 @@ export function NotificationDialog({
         sideOffset={8}
       >
         <div className="p-4 border-b">
-          <h3 className="text-lg font-semibold">Өнөөдрийн QR захиалгын түүх</h3>
+          <h3 className="text-lg font-semibold">Өнөөдрийн захиалгын түүх</h3>
           <div className="text-sm text-gray-600">
             Нийт {todayOrders.length} захиалга
           </div>
@@ -122,11 +125,9 @@ export function NotificationDialog({
             <div className="text-center py-8 px-4 text-gray-500">
               <div className="text-4xl mb-2">📱</div>
               <div className="text-base font-medium mb-2">
-                Өнөөдөр QR захиалга алга
+                Өнөөдөр захиалга алга
               </div>
-              <div className="text-sm">
-                QR код ашиглан захиалга орж ирэхэд энд харагдана
-              </div>
+              <div className="text-sm">Захиалга орж ирэхэд энд харагдана</div>
             </div>
           ) : (
             <div className="p-4 space-y-3">
@@ -157,14 +158,7 @@ export function NotificationDialog({
                           ? "Хүлээгдэж буй"
                           : order.status}
                       </Badge>
-                      {!order.isReadByAdmin && (
-                        <Badge
-                          variant="outline"
-                          className="text-xs bg-blue-50 text-blue-600 border-blue-200"
-                        >
-                          Шинэ
-                        </Badge>
-                      )}
+                      {/* "Шинэ" badge хасагдсан - суурь өнгө нь цагаан байгаа тул админ оруулсан захиалга гэж ялгагдана */}
                     </div>
                     <div className="text-right">
                       <div className="font-semibold">

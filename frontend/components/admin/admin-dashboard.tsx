@@ -51,7 +51,8 @@ export function AdminDashboard() {
   const [selectedReservation, setSelectedReservation] = useState<any>(null);
 
   const { toast, dismiss } = useToast();
-  const { notificationCount, addNotification, markAsRead } = useNotification();
+  const { notificationCount, addNotification, markAsRead, triggerToast } =
+    useNotification();
 
   const {
     orders,
@@ -77,7 +78,7 @@ export function AdminDashboard() {
   // MenuGrid ref
   const menuGridRef = React.useRef<any>(null);
 
-  // QR notification listener болон polling
+  // QR notification listener болон backend polling toast
   useEffect(() => {
     const handleQRNotification = (event: CustomEvent) => {
       const { tableNumber } = event.detail;
@@ -103,7 +104,31 @@ export function AdminDashboard() {
       });
     };
 
-    // localStorage өөрчлөгдөхийг сонсох
+    // Backend polling-ээр шинэ notification илрэхэд toast харуулах
+    const handleNewNotificationDetected = (event: CustomEvent) => {
+      console.log("🔔 New notification detected via polling, showing toast");
+      // Хамгийн сүүлийн захиалгын table number-г олох (backend-аас)
+      // Энэ нь deploy дээр өөр төхөөрөмжөөс захиалга үүсгэхэд ажиллана
+      toast({
+        title: `Шинэ QR захиалга ирлээ`,
+        description: "OK дарж шинэчлэх",
+        action: (
+          <Button
+            size="sm"
+            onClick={() => {
+              markAsRead();
+              handleAutoRefresh();
+              dismiss();
+            }}
+          >
+            OK
+          </Button>
+        ),
+        duration: Infinity,
+      });
+    };
+
+    // localStorage өөрчлөгдөхийг сонсох (local орчинд)
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === "qr-notification-count") {
         const newCount = e.newValue ? parseInt(e.newValue) : 0;
@@ -142,12 +167,21 @@ export function AdminDashboard() {
       handleQRNotification as EventListener
     );
 
+    window.addEventListener(
+      "new-notification-detected",
+      handleNewNotificationDetected as EventListener
+    );
+
     window.addEventListener("storage", handleStorageChange);
 
     return () => {
       window.removeEventListener(
         "qr-order-notification",
         handleQRNotification as EventListener
+      );
+      window.removeEventListener(
+        "new-notification-detected",
+        handleNewNotificationDetected as EventListener
       );
       window.removeEventListener("storage", handleStorageChange);
     };

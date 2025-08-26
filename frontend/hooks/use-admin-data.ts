@@ -403,14 +403,14 @@ export function useAdminData() {
 
     initializeData();
 
-    // Polling механизмийг бүрэн зогсоох (refresh ажилладаг болгосны дараа)
-    // const interval = setInterval(() => {
-    //   fetchOrders();
-    //   fetchTables();
-    //   fetchReservations();
-    // }, 30000); // 30 секунд
+    // Polling механизм - deploy дээр илүү найдвартай ажиллахын тулд
+    const interval = setInterval(() => {
+      fetchOrders();
+      fetchTables();
+      fetchReservations();
+    }, 10000); // 10 секунд тутам шинэчлэх
 
-    // return () => clearInterval(interval);
+    return () => clearInterval(interval);
   }, []);
 
   return {
