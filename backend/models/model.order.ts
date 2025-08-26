@@ -28,6 +28,7 @@ export interface IOrder extends Document {
   actualTime?: number;
   paymentStatus: "pending" | "paid" | "failed";
   paymentMethod?: "cash" | "card" | "mobile";
+  isReadByAdmin: boolean; // Admin харсан эсэх
   createdAt: Date;
   updatedAt: Date;
 }
@@ -128,6 +129,10 @@ const OrderSchema = new Schema<IOrder>(
     paymentMethod: {
       type: String,
       enum: ["cash", "card", "mobile"],
+    },
+    isReadByAdmin: {
+      type: Boolean,
+      default: false,
     },
   },
   {

@@ -366,6 +366,27 @@ export function useAdminData() {
     }
   };
 
+  const deleteCategory = async (categoryId: string) => {
+    try {
+      const response = await fetch(
+        `${API_ENDPOINTS.CATEGORIES}/${categoryId}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (response.ok) {
+        fetchCategories();
+        return { success: true };
+      } else {
+        return { success: false };
+      }
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      return { success: false };
+    }
+  };
+
   // Initialize data
   useEffect(() => {
     const initializeData = async () => {
@@ -410,5 +431,6 @@ export function useAdminData() {
     updateMenuItem,
     deleteMenuItem,
     addCategory,
+    deleteCategory,
   };
 }
