@@ -22,6 +22,7 @@ import { OrdersList } from "./orders/orders-list";
 import { ReservationsList } from "./orders/reservations-list";
 import { TableLayout } from "./orders/table-layout";
 import { SettingsForm } from "./settings/settings-form";
+import { UserManagement } from "./users/user-management";
 import { ReservationModal } from "./orders/reservation-modal";
 import { EditReservationModal } from "./orders/edit-reservation-modal-new";
 import { CreateOrderModal } from "./orders/create-order-modal";
@@ -597,6 +598,11 @@ export function AdminDashboard() {
                   onDeleteCategory={deleteCategory}
                 />
               )}
+            </TabsContent>
+
+            {/* Users Tab */}
+            <TabsContent value="users" className="space-y-6">
+              <UserManagement />
             </TabsContent>
 
             {/* Settings Tab */}
