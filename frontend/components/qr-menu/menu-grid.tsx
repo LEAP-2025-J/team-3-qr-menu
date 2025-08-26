@@ -43,16 +43,20 @@ export function MenuGrid({
   onAddToCart,
   getCartQuantity,
 }: MenuGridProps) {
-  const { getText } = useLanguage();
+  const { getText, currentLanguage } = useLanguage();
   const [activeTab, setActiveTab] = useState<string>("");
   const tabsListRef = useRef<HTMLDivElement>(null);
 
-  // Set default active tab to first category
+  // Set default active tab to first category and update when language changes
   useEffect(() => {
-    if (Object.keys(groupedMenu).length > 0 && !activeTab) {
-      setActiveTab(Object.keys(groupedMenu)[0]);
+    if (Object.keys(groupedMenu).length > 0) {
+      // Always set to first category when groupedMenu changes or language changes
+      const firstCategory = Object.keys(groupedMenu)[0];
+      if (firstCategory && firstCategory !== activeTab) {
+        setActiveTab(firstCategory);
+      }
     }
-  }, [groupedMenu, activeTab]);
+  }, [groupedMenu, currentLanguage]);
 
   if (loadingMenu || Object.keys(groupedMenu).length === 0) {
     return (

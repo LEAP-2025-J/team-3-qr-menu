@@ -7,6 +7,6 @@ export interface MenuItem {
   nameJp?: string;
   description?: string;
   price: number;
-  category: { name: string; nameEn: string; nameMn?: string };
+  category: { name: string; nameEn: string; nameMn?: string; nameJa?: string };
   image?: string;
 }

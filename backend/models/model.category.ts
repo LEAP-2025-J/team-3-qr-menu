@@ -4,9 +4,11 @@ export interface ICategory extends Document {
   name: string;
   nameEn: string;
   nameMn: string;
+  nameJa: string; // Added Japanese name
   description?: string;
   descriptionEn?: string;
   descriptionMn?: string;
+  descriptionJa?: string; // Added Japanese description
   icon?: string;
   order: number;
   isActive: boolean;
@@ -32,6 +34,11 @@ const CategorySchema = new Schema<ICategory>(
       required: [true, "Mongolian name is required"],
       trim: true,
     },
+    nameJa: {
+      type: String,
+      required: [true, "Japanese name is required"],
+      trim: true,
+    },
     description: {
       type: String,
       trim: true,
@@ -41,6 +48,10 @@ const CategorySchema = new Schema<ICategory>(
       trim: true,
     },
     descriptionMn: {
+      type: String,
+      trim: true,
+    },
+    descriptionJa: {
       type: String,
       trim: true,
     },
