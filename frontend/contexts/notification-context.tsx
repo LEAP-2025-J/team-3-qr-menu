@@ -37,20 +37,15 @@ export function NotificationProvider({
         ? "http://localhost:5000"
         : API_CONFIG.BACKEND_URL;
       const url = `${backendUrl}/api/orders/notifications`;
-      console.log("🌐 NotificationContext fetching from URL:", url);
       const response = await fetch(url);
-      console.log("📡 Response status:", response.status);
 
       if (response.ok) {
         const data = await response.json();
-        console.log("✅ Notification data:", data);
         if (data.success) {
           const newCount = data.data.unreadTableCount;
-          console.log("📊 Setting notification count to:", newCount);
 
           // Хэрэв notification count нэмэгдсэн бол toast trigger хийх
           if (newCount > lastNotificationCount && lastNotificationCount > 0) {
-            console.log("🔔 New notification detected, triggering toast");
             // Custom event trigger хийх (toast notification-д хэрэгтэй)
             if (typeof window !== "undefined") {
               const event = new CustomEvent("new-notification-detected", {
@@ -64,18 +59,12 @@ export function NotificationProvider({
           setNotificationCount(newCount);
         }
       } else {
-        console.error(
-          "❌ Response not ok:",
-          response.status,
-          response.statusText
-        );
-        const errorText = await response.text();
-        console.error("❌ Error response body:", errorText);
+        console.error("❌ Notification request failed");
       }
     } catch (error) {
       console.error("💥 Error fetching notifications:", error);
     }
-  }, []);
+  }, [lastNotificationCount, notificationCount]);
 
   // Backend-аас notification count унших (polling every 10 seconds)
   useEffect(() => {
@@ -146,7 +135,6 @@ export function NotificationProvider({
       });
 
       if (response.ok) {
-        console.log("✅ Orders marked as read");
         // Шинэ count авах
         fetchNotificationCount();
       } else {

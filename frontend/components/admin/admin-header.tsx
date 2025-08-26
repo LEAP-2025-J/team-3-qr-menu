@@ -3,7 +3,8 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Bell } from "lucide-react";
+import { Bell, Percent, Clock } from "lucide-react";
+import { useDiscount } from "@/hooks/use-discount";
 
 interface AdminHeaderProps {
   notificationCount?: number;
@@ -14,10 +15,28 @@ export function AdminHeader({
   notificationCount = 0,
   notificationDialog,
 }: AdminHeaderProps) {
+  const { isDiscountTime, getDiscountInfo } = useDiscount();
+  const discountInfo = getDiscountInfo();
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-end">
         <div className="flex items-center gap-4">
+          {/* Хөнгөлөлтийн мэдээлэл */}
+          {discountInfo && (
+            <div className="flex items-center gap-2 px-3 py-1 bg-yellow-100 border border-yellow-300 rounded-lg">
+              <span className="text-sm font-medium text-yellow-800">
+                Өнөөдрийн хөнгөлөлт:
+              </span>
+              <Percent className="w-4 h-4 text-yellow-600" />
+              <span className="text-sm font-medium text-yellow-800">
+                {discountInfo.percentage}% хөнгөлөлт
+              </span>
+              <Clock className="w-4 h-4 text-yellow-600" />
+              <span className="text-sm text-yellow-700">
+                {discountInfo.endTime} хүртэл
+              </span>
+            </div>
+          )}
           {notificationDialog ? (
             React.cloneElement(notificationDialog as React.ReactElement, {
               children: (

@@ -18,7 +18,6 @@ export async function handleCreateReservation(
     const result = await response.json();
 
     if (response.ok) {
-      console.log("Reservation created successfully:", result);
       // Refresh tables to update currentReservation fields
       onRefresh?.();
       return { success: true, message: "Reservation created successfully!" };

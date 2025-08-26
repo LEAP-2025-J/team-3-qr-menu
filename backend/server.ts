@@ -16,6 +16,7 @@ import "./models/model.table.js";
 import "./models/model.reservation.js";
 import "./models/model.restaurant.js";
 import "./models/model.user.js";
+import "./models/model.discount.js";
 
 // Import routes
 import menuRoutes from "./routes/route.menu.js";
@@ -26,6 +27,7 @@ import categoryRoutes from "./routes/route.categories.js";
 import restaurantRoutes from "./routes/route.restaurant.js";
 import authRoutes from "./routes/route.auth.js";
 import userRoutes from "./routes/route.users.js";
+import discountRoutes from "./routes/discount.routes.js";
 
 // Import cleanup function
 import { cleanupOldReservations } from "./controllers/reservation.controller.js";
@@ -99,6 +101,7 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/restaurant", restaurantRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/discount", discountRoutes);
 
 // Health check endpoint
 app.get("/api/health", (req: Request, res: Response) => {
@@ -131,44 +134,30 @@ app.use("*", (req: Request, res: Response) => {
 export default app;
 
 // Local development-д зориулсан server start
-if (process.env.NODE_ENV !== 'production' || process.env.VERCEL !== '1') {
+if (process.env.NODE_ENV !== "production" || process.env.VERCEL !== "1") {
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`🌐 Server accessible at: http://0.0.0.0:${PORT}`);
     console.log(
-      `📱 Frontend URL: ${process.env["FRONTEND_URL"] || "http://localhost:3000"}`
+      `📱 Frontend URL: ${
+        process.env["FRONTEND_URL"] || "http://localhost:3000"
+      }`
     );
 
-  // Schedule automatic cleanup every day at 2 AM
-  const scheduleCleanup = () => {
-    const now = new Date();
-    const nextRun = new Date(now);
-    nextRun.setHours(2, 0, 0, 0); // 2 AM
+    // Schedule automatic cleanup every day at 2 AM
+    const scheduleCleanup = () => {
+      const now = new Date();
+      const nextRun = new Date(now);
+      nextRun.setHours(2, 0, 0, 0); // 2 AM
 
-    // If it's already past 2 AM today, schedule for tomorrow
-    if (now.getHours() >= 2) {
-      nextRun.setDate(nextRun.getDate() + 1);
-    }
-
-    const timeUntilNextRun = nextRun.getTime() - now.getTime();
-
-    setTimeout(async () => {
-      console.log("🧹 Starting automatic reservation cleanup...");
-      const result = await cleanupOldReservations();
-      if (result.success) {
-        console.log(
-          `✅ Cleanup completed: ${result.deleted?.completed || 0} completed, ${
-            result.deleted?.cancelled || 0
-          } cancelled, ${
-            result.deleted?.noShow || 0
-          } no-show reservations removed`
-        );
-      } else {
-        console.log("❌ Cleanup failed:", result.error);
+      // If it's already past 2 AM today, schedule for tomorrow
+      if (now.getHours() >= 2) {
+        nextRun.setDate(nextRun.getDate() + 1);
       }
 
-      // Schedule next cleanup (every 24 hours)
-      setInterval(async () => {
+      const timeUntilNextRun = nextRun.getTime() - now.getTime();
+
+      setTimeout(async () => {
         console.log("🧹 Starting automatic reservation cleanup...");
         const result = await cleanupOldReservations();
         if (result.success) {
@@ -182,12 +171,28 @@ if (process.env.NODE_ENV !== 'production' || process.env.VERCEL !== '1') {
         } else {
           console.log("❌ Cleanup failed:", result.error);
         }
-      }, 24 * 60 * 60 * 1000); // 24 hours
-    }, timeUntilNextRun);
 
-    console.log(`🧹 Next cleanup scheduled for: ${nextRun.toLocaleString()}`);
-  };
+        // Schedule next cleanup (every 24 hours)
+        setInterval(async () => {
+          console.log("🧹 Starting automatic reservation cleanup...");
+          const result = await cleanupOldReservations();
+          if (result.success) {
+            console.log(
+              `✅ Cleanup completed: ${
+                result.deleted?.completed || 0
+              } completed, ${result.deleted?.cancelled || 0} cancelled, ${
+                result.deleted?.noShow || 0
+              } no-show reservations removed`
+            );
+          } else {
+            console.log("❌ Cleanup failed:", result.error);
+          }
+        }, 24 * 60 * 60 * 1000); // 24 hours
+      }, timeUntilNextRun);
 
-  scheduleCleanup();
+      console.log(`🧹 Next cleanup scheduled for: ${nextRun.toLocaleString()}`);
+    };
+
+    scheduleCleanup();
   });
 }

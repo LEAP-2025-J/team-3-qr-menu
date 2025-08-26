@@ -56,12 +56,9 @@ export function MenuManagement({
   const handleDeleteCategory = async (categoryId: string) => {
     if (window.confirm("Энэ категорийг устгахдаа итгэлтэй байна уу?")) {
       try {
-        console.log("🗑️ Deleting category:", categoryId);
         const result = await onDeleteCategory(categoryId);
-        console.log("🗑️ Delete result:", result);
 
         if (result.success) {
-          console.log("✅ Category deleted successfully");
           // Амжилттай устгасны дараа:
           // 1. All dishes рүү шилжих
           onCategoryChange("all");

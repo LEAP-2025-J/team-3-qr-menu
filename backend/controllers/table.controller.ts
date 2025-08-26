@@ -248,13 +248,6 @@ export const clearTableOrder = async (req: Request, res: Response) => {
       });
     }
 
-    console.log(`Ширээний currentOrder цэвэрлэгдлээ:`, {
-      tableId: table._id,
-      tableNumber: table.number,
-      status: table.status,
-      currentOrder: table.currentOrder,
-    });
-
     res.json({
       success: true,
       message: "Ширээний захиалга амжилттай цэвэрлэгдлээ",

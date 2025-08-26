@@ -142,7 +142,6 @@ export async function completeAllOrders(orderIds: string[]): Promise<boolean> {
     const allSuccessful = results.every((result) => result === true);
 
     if (allSuccessful) {
-      console.log("Бүх захиалга амжилттай дууслаа");
       return true;
     } else {
       console.error("Зарим захиалга дуусгахад алдаа гарлаа");

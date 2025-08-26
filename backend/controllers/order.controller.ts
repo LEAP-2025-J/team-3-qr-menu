@@ -257,7 +257,6 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 // GET /api/orders/notifications - Get unread QR orders count for notifications
 export const getNotifications = async (req: Request, res: Response) => {
   try {
-    console.log("🚀 getNotifications endpoint called");
     // Өнөөдрийн QR захиалгуудыг авах (unread статустай) - MongoDB UTC+0 дээр хадгалагдсан захиалгуудыг шалгах
     const now = new Date();
     // Mongolia timezone (UTC+8) дээр өнөөдрийн огноог тооцоолох
@@ -271,12 +270,6 @@ export const getNotifications = async (req: Request, res: Response) => {
     const todayEnd = new Date(mongoliaTime);
     todayEnd.setHours(23, 59, 59, 999);
     const todayEndUTC = new Date(todayEnd.getTime() - 8 * 60 * 60 * 1000); // UTC+0 руу буцаах
-
-    console.log("📅 Date range (Mongolia timezone converted to UTC):", {
-      mongoliaTime,
-      todayStartUTC,
-      todayEndUTC,
-    });
 
     // Badge дээр харуулах зөвхөн unread захиалгууд
     const unreadQROrders = await Order.find({
@@ -302,32 +295,7 @@ export const getNotifications = async (req: Request, res: Response) => {
       .sort({ createdAt: -1 }) // Хамгийн сүүлд үүсгэсэн захиалга дээрээ
       .lean();
 
-    console.log(
-      "🔍 Raw todayQROrders query result:",
-      todayQROrders.length,
-      "orders"
-    );
-    todayQROrders.forEach((order, index) => {
-      console.log(`📋 Order ${index + 1}:`, {
-        id: order._id,
-        orderNumber: order.orderNumber,
-        tableNumber: order.table ? (order.table as any).number : "N/A",
-        status: order.status,
-        createdAt: order.createdAt,
-      });
-    });
 
-    // Debug: Хамгийн сүүлд үүсгэсэн захиалгуудыг шалгах
-    const recentOrders = todayQROrders.slice(0, 5); // Эхний 5 захиалга
-    console.log(
-      "🔍 Recent orders (first 5):",
-      recentOrders.map((order) => ({
-        orderNumber: order.orderNumber,
-        tableNumber: order.table ? (order.table as any).number : "N/A",
-        status: order.status,
-        createdAt: order.createdAt,
-      }))
-    );
 
     // Unread захиалгатай ширээний тоо (unique table count)
     const uniqueTables = new Set();
@@ -339,24 +307,7 @@ export const getNotifications = async (req: Request, res: Response) => {
 
     const unreadTableCount = uniqueTables.size;
 
-    console.log("🔍 Today QR Orders found:", todayQROrders.length);
-    console.log("📊 Unread QR Orders found:", unreadQROrders.length);
-    console.log("🏷️ Unique tables with unread orders:", uniqueTables.size);
 
-    // Debug: 3-р ширээний захиалгуудыг шалгах
-    const table3Orders = todayQROrders.filter(
-      (order) => order.table && (order.table as any).number === 3
-    );
-    console.log("🔍 Table 3 orders in todayQROrders:", table3Orders.length);
-    table3Orders.forEach((order) => {
-      console.log("📋 Table 3 order:", {
-        id: order._id,
-        orderNumber: order.orderNumber,
-        status: order.status,
-        createdAt: order.createdAt,
-        tableNumber: (order.table as any).number,
-      });
-    });
 
     res.json({
       success: true,

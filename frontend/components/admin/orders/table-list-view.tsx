@@ -53,7 +53,6 @@ export function TableListView({
         );
         const result = await response.json();
         if (result.success) {
-          console.log("Reservation cancelled successfully");
           onRefresh?.();
         } else {
           console.error("Failed to cancel reservation:", result.error);
@@ -77,7 +76,6 @@ export function TableListView({
         );
         const result = await response.json();
         if (result.success) {
-          console.log("Reservation deleted successfully");
           onRefresh?.();
         } else {
           console.error("Failed to delete reservation:", result.error);

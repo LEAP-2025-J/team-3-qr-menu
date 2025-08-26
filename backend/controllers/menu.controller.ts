@@ -113,14 +113,6 @@ export const createMenuItem = async (req: Request, res: Response) => {
     let imagePublicId = "";
 
     if (req.file) {
-      console.log("=== FILE UPLOAD DEBUG ===");
-      console.log(
-        "File buffer size:",
-        req.file.buffer ? req.file.buffer.length : "No buffer"
-      );
-      console.log("File size:", req.file.size);
-      console.log("File mimetype:", req.file.mimetype);
-      console.log("=========================");
 
       let uploadResult;
       if (req.file.buffer) {
@@ -139,7 +131,7 @@ export const createMenuItem = async (req: Request, res: Response) => {
         });
       }
 
-      console.log("Cloudinary upload result:", uploadResult);
+
 
       if (uploadResult.success) {
         imageUrl = uploadResult.url;
@@ -240,14 +232,6 @@ export const updateMenuItem = async (req: Request, res: Response) => {
     //   }
     // }
     if (req.file) {
-      console.log("=== FILE UPLOAD DEBUG ===");
-      console.log(
-        "File buffer size:",
-        req.file.buffer ? req.file.buffer.length : "No buffer"
-      );
-      console.log("File size:", req.file.size);
-      console.log("File mimetype:", req.file.mimetype);
-      console.log("=========================");
 
       let uploadResult;
       if (req.file.buffer) {
@@ -266,7 +250,7 @@ export const updateMenuItem = async (req: Request, res: Response) => {
         });
       }
 
-      console.log("Cloudinary upload result:", uploadResult);
+
 
       if (uploadResult.success) {
         imageUrl = uploadResult.url;

@@ -118,7 +118,6 @@ export async function handleReservationSubmit(
       );
       const result = await response.json();
       if (result.success) {
-        console.log("Reservation updated successfully");
       } else {
         console.error("Failed to update reservation:", result.error);
         return { success: false, error: result.error };
@@ -135,7 +134,6 @@ export async function handleReservationSubmit(
       );
       const result = await response.json();
       if (result.success) {
-        console.log("Reservation created successfully");
       } else {
         console.error("Failed to create reservation:", result.error);
         return { success: false, error: result.error };

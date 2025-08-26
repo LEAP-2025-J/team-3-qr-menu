@@ -106,7 +106,6 @@ export function AdminDashboard() {
 
     // Backend polling-ээр шинэ notification илрэхэд toast харуулах
     const handleNewNotificationDetected = (event: CustomEvent) => {
-      console.log("🔔 New notification detected via polling, showing toast");
       // Хамгийн сүүлийн захиалгын table number-г олох (backend-аас)
       // Энэ нь deploy дээр өөр төхөөрөмжөөс захиалга үүсгэхэд ажиллана
       toast({
@@ -214,7 +213,6 @@ export function AdminDashboard() {
 
   const handleViewQR = (tableId: string) => {
     // QR code view logic
-    console.log("View QR for table:", tableId);
   };
 
   const handleCompleteOrder = async (orderId: string) => {
@@ -227,7 +225,6 @@ export function AdminDashboard() {
 
   const handlePrintOrder = (orderId: string) => {
     // Print order logic
-    console.log("Print order:", orderId);
   };
 
   const handleRefresh = async () => {
@@ -264,8 +261,6 @@ export function AdminDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
       });
-
-      console.log("API response status:", response.status);
 
       if (response.ok) {
         const responseData = await response.json();

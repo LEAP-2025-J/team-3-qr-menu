@@ -67,7 +67,7 @@ function QRMenuContent() {
         tableNumber={tableNumber}
       />
 
-      <DiscountBanner isBefore7PM={isBefore7PM()} />
+      <DiscountBanner />
 
       <MenuGrid
         loadingMenu={loadingMenu}
@@ -128,14 +128,6 @@ function QRMenuContent() {
             };
 
             // Send order to backend
-            console.log("=== QR ORDER DEBUG INFO ===");
-            console.log("Backend URL:", API_CONFIG.BACKEND_URL);
-            console.log(
-              "Full API URL:",
-              `${API_CONFIG.BACKEND_URL}/api/orders`
-            );
-            console.log("Order data:", orderData);
-            console.log("===========================");
 
             const response = await fetch(
               `${API_CONFIG.BACKEND_URL}/api/orders`,
@@ -149,10 +141,6 @@ function QRMenuContent() {
             );
 
             if (!response.ok) {
-              console.log("=== ERROR DETAILS ===");
-              console.log("Response status:", response.status);
-              console.log("Response status text:", response.statusText);
-              console.log("Response URL:", response.url);
               throw new Error(
                 `Failed to submit order - Status: ${response.status}`
               );
@@ -168,7 +156,6 @@ function QRMenuContent() {
               // Trigger notification for admin
               if (typeof window !== "undefined") {
                 const tableNum = parseInt(tableNumber || "0");
-                console.log("QR order submitted for table:", tableNum);
 
                 // localStorage-д notification хадгалах
                 const currentCount = parseInt(
@@ -179,16 +166,12 @@ function QRMenuContent() {
                   "qr-notification-count",
                   newCount.toString()
                 );
-                console.log("Updated notification count:", newCount);
 
                 // Хамгийн сүүлийн захиалгын table number хадгалах
                 localStorage.setItem(
                   "last-qr-order",
                   JSON.stringify({ tableNumber: tableNum })
                 );
-                console.log("Saved last order to localStorage:", {
-                  tableNumber: tableNum,
-                });
 
                 // Custom event trigger хийх
                 const event = new CustomEvent("qr-order-notification", {
