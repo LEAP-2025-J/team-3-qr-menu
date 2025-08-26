@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { User, Lock, Building2 } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function SignInPage() {
   const [username, setUsername] = useState("");
@@ -14,19 +14,7 @@ export default function SignInPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const router = useRouter();
-
-  // Mock credentials for both admin and user
-  const credentials = {
-    admin: {
-      username: "admin",
-      password: "admin123"
-    },
-    user: {
-      username: "user",
-      password: "user123"
-    }
-  };
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,30 +22,14 @@ export default function SignInPage() {
     setError("");
 
     try {
-      // Check admin credentials
-      if (username === credentials.admin.username && password === credentials.admin.password) {
-        // Store admin session
-        localStorage.setItem("admin", "true");
-        localStorage.setItem("username", username);
-        
-        // Redirect to admin dashboard
-        router.push("/admin");
-        return;
-      }
+      const result = await login(username, password);
       
-      // Check user credentials
-      if (username === credentials.user.username && password === credentials.user.password) {
-        // Store user session
-        localStorage.setItem("user", "true");
-        localStorage.setItem("username", username);
-        
-        // Redirect to user dashboard
-        router.push("/user");
-        return;
+      if (result.success) {
+        // Login successful, redirect will be handled by the hook
+        console.log("Login successful:", result.user);
+      } else {
+        setError(result.error || "Login failed");
       }
-      
-      // Invalid credentials
-      setError("Invalid username or password");
     } catch (error) {
       setError("An error occurred during login");
     } finally {
@@ -130,6 +102,7 @@ export default function SignInPage() {
               <p>Demo Credentials:</p>
               <p>Admin: admin | admin123</p>
               <p>User: user | user123</p>
+              <p className="text-blue-600 mt-1">Secure JWT Authentication</p>
             </div>
 
             <div className="text-center">

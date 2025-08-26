@@ -1,14 +1,15 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
 import {
   ShoppingCart,
   Calendar,
   MenuIcon,
   Settings,
+  Users,
   LogOut,
 } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 interface AdminSidebarProps {
   activeTab: string;
@@ -16,19 +17,14 @@ interface AdminSidebarProps {
 }
 
 export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
-  const router = useRouter();
+  const { logout } = useAuth();
 
   const handleSignOut = () => {
     // Ask for confirmation before signing out
     const isConfirmed = window.confirm("Та гарахдаа итгэлтэй байна уу? (Are you sure you want to sign out?)");
     
     if (isConfirmed) {
-      // Clear admin session
-      localStorage.removeItem("admin");
-      localStorage.removeItem("username");
-      
-      // Redirect to sign-in page
-      router.push("/sign-in");
+      logout();
     }
   };
 
@@ -61,6 +57,15 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
           >
             <MenuIcon className="w-4 h-4 mr-3 flex-shrink-0" />
             <span className="truncate">Хоолны цэс</span>
+          </Button>
+
+          <Button
+            variant={activeTab === "users" ? "default" : "ghost"}
+            className="w-full justify-start text-left overflow-hidden"
+            onClick={() => onTabChange("users")}
+          >
+            <Users className="w-4 h-4 mr-3 flex-shrink-0" />
+            <span className="truncate">Хэрэглэгчид</span>
           </Button>
 
           <Button

@@ -1,12 +1,12 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
 import {
   ShoppingCart,
   Settings,
   LogOut,
 } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 interface UserSidebarProps {
   activeTab: string;
@@ -14,19 +14,14 @@ interface UserSidebarProps {
 }
 
 export function UserSidebar({ activeTab, onTabChange }: UserSidebarProps) {
-  const router = useRouter();
+  const { logout } = useAuth();
 
   const handleSignOut = () => {
     // Ask for confirmation before signing out
     const isConfirmed = window.confirm("Та гарахдаа итгэлтэй байна уу? (Are you sure you want to sign out?)");
     
     if (isConfirmed) {
-      // Clear user session
-      localStorage.removeItem("user");
-      localStorage.removeItem("username");
-      
-      // Redirect to sign-in page
-      router.push("/sign-in");
+      logout();
     }
   };
 
