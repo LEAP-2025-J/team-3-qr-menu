@@ -86,9 +86,7 @@ export const MenuGrid = forwardRef<MenuGridRef, MenuGridProps>(
       return (
         item.nameEn.toLowerCase().includes(query) ||
         item.nameMn.toLowerCase().includes(query) ||
-        item.description.toLowerCase().includes(query) ||
-        item.category?.nameEn.toLowerCase().includes(query) ||
-        item.price.toString().includes(query)
+        item.nameJp.toLowerCase().includes(query)
       );
     });
 
