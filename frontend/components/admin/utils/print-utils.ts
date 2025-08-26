@@ -34,9 +34,17 @@ export function generatePrintContent(order: Order, table: Table): string {
             (item) => `
           <div class="item">
             <div>
-              <div>${item.menuItem?.nameMn || item.menuItem?.name || "Unknown Item"}</div>
-              <div class="special-instructions">${item.menuItem?.nameJp || ""}</div>
-              ${item.specialInstructions ? `<div class="special-instructions">Тэмдэглэл: ${item.specialInstructions}</div>` : ""}
+              <div>${
+                item.menuItem?.nameMn || item.menuItem?.name || "Unknown Item"
+              }</div>
+              <div class="special-instructions">${
+                item.menuItem?.nameJp || ""
+              }</div>
+              ${
+                item.specialInstructions
+                  ? `<div class="special-instructions">Тэмдэглэл: ${item.specialInstructions}</div>`
+                  : ""
+              }
             </div>
             <div>${item.quantity}</div>
           </div>
@@ -48,7 +56,7 @@ export function generatePrintContent(order: Order, table: Table): string {
       <div class="total">
         <div class="item">
           <span>Нийт дүн:</span>
-          <span>$${order.total.toLocaleString()}</span>
+          <span>₮${order.total.toLocaleString()}</span>
         </div>
       </div>
     </body>
@@ -83,10 +91,5 @@ export function handlePrint(
     setTimeout(() => {
       document.body.removeChild(printFrame);
     }, 1000);
-  }
-
-  // Хэрэв pending статус байвал preparing болгох
-  if (order.status === "pending" && onStatusUpdate) {
-    onStatusUpdate();
   }
 }

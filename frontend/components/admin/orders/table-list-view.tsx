@@ -145,10 +145,8 @@ export function TableListView({
                 <Badge className="text-xs bg-green-100 text-green-800">
                   {table.currentOrder.status === "pending"
                     ? "Хүлээгдэж буй"
-                    : table.currentOrder.status === "preparing"
-                    ? "Бэлтгэж буй"
                     : table.currentOrder.status === "serving"
-                    ? "Хооллож буй"
+                    ? "Үйлчилж байна"
                     : table.currentOrder.status === "completed"
                     ? "Дууссан"
                     : table.currentOrder.status === "cancelled"

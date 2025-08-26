@@ -16,8 +16,6 @@ export function OrderHistory({ orders, onUpdateStatus }: OrderHistoryProps) {
     switch (status) {
       case "pending":
         return "bg-yellow-100 text-yellow-800";
-      case "preparing":
-        return "bg-blue-100 text-blue-800";
       case "serving":
         return "bg-purple-100 text-purple-800";
       case "completed":
@@ -33,10 +31,8 @@ export function OrderHistory({ orders, onUpdateStatus }: OrderHistoryProps) {
     switch (status) {
       case "pending":
         return "Хүлээгдэж буй";
-      case "preparing":
-        return "Бэлтгэж буй";
       case "serving":
-        return "Хооллож буй";
+        return "Үйлчилж байна";
       case "completed":
         return "Дууссан";
       case "cancelled":
@@ -110,19 +106,10 @@ export function OrderHistory({ orders, onUpdateStatus }: OrderHistoryProps) {
                 {order.status === "pending" && (
                   <Button
                     size="sm"
-                    onClick={() => onUpdateStatus(order._id, "preparing")}
-                  >
-                    <Clock className="w-4 h-4 mr-1" />
-                    Бэлтгэж эхлэх
-                  </Button>
-                )}
-                {order.status === "preparing" && (
-                  <Button
-                    size="sm"
                     onClick={() => onUpdateStatus(order._id, "serving")}
                   >
-                    <CheckCircle className="w-4 h-4 mr-1" />
-                    Хоол гаргах
+                    <Clock className="w-4 h-4 mr-1" />
+                    Үйлчлэх
                   </Button>
                 )}
                 {order.status === "serving" && (
@@ -134,8 +121,7 @@ export function OrderHistory({ orders, onUpdateStatus }: OrderHistoryProps) {
                     Дуусгах
                   </Button>
                 )}
-                {(order.status === "pending" ||
-                  order.status === "preparing") && (
+                {order.status === "pending" && (
                   <Button
                     size="sm"
                     variant="destructive"

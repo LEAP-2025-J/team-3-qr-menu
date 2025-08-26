@@ -30,11 +30,10 @@ interface OrdersListProps {
 export function OrdersList({ orders, onUpdateStatus }: OrdersListProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "preparing":
+      case "pending":
         return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "ready":
+      case "serving":
         return "bg-green-100 text-green-800 border-green-200";
-      case "served":
       case "completed":
         return "bg-blue-100 text-blue-800 border-blue-200";
       default:
@@ -44,11 +43,10 @@ export function OrdersList({ orders, onUpdateStatus }: OrdersListProps) {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "preparing":
+      case "pending":
         return <Clock className="w-4 h-4" />;
-      case "ready":
+      case "serving":
         return <CheckCircle className="w-4 h-4" />;
-      case "served":
       case "completed":
         return <CheckCircle className="w-4 h-4" />;
       default:
@@ -106,26 +104,17 @@ export function OrdersList({ orders, onUpdateStatus }: OrdersListProps) {
                   {order.status === "pending" && (
                     <Button
                       size="sm"
-                      onClick={() => onUpdateStatus(order._id, "preparing")}
+                      onClick={() => onUpdateStatus(order._id, "serving")}
                     >
-                      Start Preparing
+                      Үйлчлэх
                     </Button>
                   )}
-                  {order.status === "preparing" && (
+                  {order.status === "serving" && (
                     <Button
                       size="sm"
-                      onClick={() => onUpdateStatus(order._id, "ready")}
+                      onClick={() => onUpdateStatus(order._id, "completed")}
                     >
-                      Mark Ready
-                    </Button>
-                  )}
-                  {order.status === "ready" && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => onUpdateStatus(order._id, "served")}
-                    >
-                      Mark Served
+                      Дуусгах
                     </Button>
                   )}
                   <Button size="sm" variant="outline">
