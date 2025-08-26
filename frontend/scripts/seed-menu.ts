@@ -14,6 +14,7 @@ const categories: Category[] = [
   {
     nameEn: "appetizers",
     nameMn: "Завсрын хоол",
+    nameJa: "前菜",
     description: "Light dishes to start your meal",
     icon: "ChefHat",
     order: 1,
@@ -22,6 +23,7 @@ const categories: Category[] = [
   {
     nameEn: "sushi",
     nameMn: "Суши",
+    nameJa: "寿司",
     description: "Fresh sushi and sashimi",
     icon: "Fish",
     order: 2,
@@ -30,6 +32,7 @@ const categories: Category[] = [
   {
     nameEn: "mains",
     nameMn: "Үндсэн хоол",
+    nameJa: "メインディッシュ",
     description: "Main course dishes",
     icon: "Beef",
     order: 3,
@@ -38,6 +41,7 @@ const categories: Category[] = [
   {
     nameEn: "ramen",
     nameMn: "Рамен",
+    nameJa: "ラーメン",
     description: "Traditional Japanese noodle soup",
     icon: "Soup",
     order: 4,
@@ -46,6 +50,7 @@ const categories: Category[] = [
   {
     nameEn: "desserts",
     nameMn: "Амттан",
+    nameJa: "デザート",
     description: "Sweet treats and desserts",
     icon: "Coffee",
     order: 5,

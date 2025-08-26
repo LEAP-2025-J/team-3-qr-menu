@@ -15,6 +15,7 @@ export interface ScriptResult {
 export interface Category {
   nameEn: string;
   nameMn: string;
+  nameJa: string;
   description: string;
   icon: string;
   order: number;

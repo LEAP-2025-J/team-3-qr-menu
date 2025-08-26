@@ -39,7 +39,7 @@ function QRMenuContent() {
     getDiscountedPrice,
   } = useRestaurant(currentLanguage);
   const { menuItems, categories, loadingMenu, fetchingData, groupedMenu } =
-    useMenu();
+    useMenu(currentLanguage);
   const {
     cart,
     setCart,
