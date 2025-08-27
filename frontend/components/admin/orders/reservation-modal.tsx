@@ -429,15 +429,14 @@ export function ReservationModal({
               </Label>
               <Input
                 id="time"
-                type="text"
+                type="time"
+                step="1800"
                 value={formData.time}
                 onChange={(e) =>
                   setFormData({ ...formData, time: e.target.value })
                 }
-                placeholder="14:30 (цц:мм)"
                 required
                 className="text-base sm:text-sm"
-                maxLength={5}
               />
               {currentTimeError && (
                 <p className="text-xs text-red-600">⚠️ {currentTimeError}</p>

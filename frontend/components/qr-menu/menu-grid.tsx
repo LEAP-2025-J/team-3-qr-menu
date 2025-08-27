@@ -9,7 +9,7 @@ import { CategorySkeleton } from "@/components/ui/loading-skeleton";
 import CloudinaryImage from "@/components/CloudinaryImage";
 import { useLanguage } from "@/contexts/language-context";
 import { formatPrice } from "@/components/admin/utils/price-utils";
-import { ChefHat, Fish, Soup, Beef, Coffee } from "lucide-react";
+import { ChefHat, Fish, Soup, Beef, Coffee, ShoppingCart } from "lucide-react";
 
 interface MenuGridProps {
   loadingMenu: boolean;
@@ -47,16 +47,32 @@ export function MenuGrid({
   const [activeTab, setActiveTab] = useState<string>("");
   const tabsListRef = useRef<HTMLDivElement>(null);
 
-  // Set default active tab to first category and update when language changes
+  // Set default active tab to first category only on initial load
   useEffect(() => {
-    if (Object.keys(groupedMenu).length > 0) {
-      // Always set to first category when groupedMenu changes or language changes
+    if (Object.keys(groupedMenu).length > 0 && !activeTab) {
+      // Only set to first category if no tab is currently active
       const firstCategory = Object.keys(groupedMenu)[0];
-      if (firstCategory && firstCategory !== activeTab) {
+      if (firstCategory) {
         setActiveTab(firstCategory);
       }
     }
-  }, [groupedMenu, currentLanguage]);
+  }, [groupedMenu]);
+
+  // Update active tab when language changes (category names change but keep same position)
+  useEffect(() => {
+    if (Object.keys(groupedMenu).length > 0 && activeTab) {
+      const categories = Object.keys(groupedMenu);
+      const currentIndex = categories.findIndex((cat) => cat === activeTab);
+
+      // If current tab doesn't exist in new language, keep the same position
+      if (currentIndex === -1 && categories.length > 0) {
+        setActiveTab(categories[0]); // fallback to first category
+      } else if (currentIndex >= 0) {
+        // Keep the same category position but with new language name
+        setActiveTab(categories[currentIndex]);
+      }
+    }
+  }, [currentLanguage, groupedMenu]);
 
   if (loadingMenu || Object.keys(groupedMenu).length === 0) {
     return (
@@ -92,35 +108,36 @@ export function MenuGrid({
 
       {/* Tabbed Menu Interface */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="relative">
-          {/* Mobile scroll hint - removed since we're using wrap now */}
+        <div className="relative mb-2 z-10">
           <TabsList
-            className="w-full mb-4 rounded-lg relative category-grid-mobile"
+            className="w-full bg-white/80 backdrop-blur-sm p-1.5 rounded-xl shadow-lg border border-orange-100 grid grid-cols-3 gap-1 min-h-[70px]"
             ref={tabsListRef}
           >
-            {Object.keys(groupedMenu).map((category, index) => (
-              <TabsTrigger
-                key={category}
-                value={category}
-                className="flex items-center justify-center text-xs data-[state=active]:bg-white data-[state=active]:text-black data-[state=inactive]:bg-gradient-to-r data-[state=inactive]:from-yellow-300 data-[state=inactive]:to-yellow-400 data-[state=inactive]:text-gray-800 rounded-lg transition-all duration-200 whitespace-nowrap hover:from-yellow-200 hover:to-yellow-300 hover:shadow-md active:scale-95 active:shadow-inner category-mobile-item px-3 py-2 border border-yellow-200 hover:border-yellow-400 cursor-pointer select-none shadow-sm"
-              >
-                <span className="capitalize text-xs">{category}</span>
-              </TabsTrigger>
-            ))}
+            {Object.keys(groupedMenu).map((category, index) => {
+              const IconComponent = getCategoryIcon(category);
+              return (
+                <TabsTrigger
+                  key={category}
+                  value={category}
+                  className="group relative flex items-center justify-center gap-1 px-2 py-2 text-xs font-medium transition-all duration-300 rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-400 data-[state=active]:to-amber-400 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:bg-orange-50 data-[state=inactive]:hover:text-orange-600 whitespace-nowrap select-none min-h-[28px]"
+                >
+                  <IconComponent className="w-3 h-3 transition-all duration-300" />
+                  <span className="capitalize font-medium leading-tight text-[10px]">
+                    {category}
+                  </span>
+                </TabsTrigger>
+              );
+            })}
           </TabsList>
         </div>
 
         {Object.entries(groupedMenu).map(([category, items]) => (
-          <TabsContent key={category} value={category} className="mt-0">
+          <TabsContent key={category} value={category} className="mt-1">
             <div className="grid items-start grid-cols-2 gap-3 md:grid-cols-2 lg:grid-cols-3 md:gap-6">
               {items.map((item, index) => (
                 <Card
                   key={item._id || index}
-                  className="flex flex-col h-full p-0 overflow-hidden transition-all duration-200 bg-white border-0 rounded-lg shadow-xl hover:shadow-2xl"
-                  style={{
-                    boxShadow:
-                      "8px 8px 16px rgba(0, 0, 0, 0.15), 4px 4px 8px rgba(0, 0, 0, 0.1)",
-                  }}
+                  className="group flex flex-col h-full p-0 overflow-hidden transition-all duration-300 bg-white border border-orange-100 rounded-2xl shadow-lg hover:shadow-xl hover:border-orange-300"
                 >
                   <CardContent className="flex flex-col h-full p-0">
                     <div className="relative flex-shrink-0">
@@ -130,12 +147,12 @@ export function MenuGrid({
                           alt={item.nameEn || item.name}
                           width={300}
                           height={200}
-                          className="object-cover w-full h-32 rounded-t-lg md:h-48"
+                          className="object-cover w-full h-32 rounded-t-2xl md:h-48 transition-transform duration-300 group-hover:scale-110"
                         />
                       ) : (
-                        <div className="flex items-center justify-center w-full h-32 bg-gray-200 rounded-t-lg md:h-48">
-                          <span className="text-sm text-gray-500">
-                            No image
+                        <div className="flex items-center justify-center w-full h-32 bg-gradient-to-br from-orange-100 to-amber-100 rounded-t-2xl md:h-48">
+                          <span className="text-sm text-orange-400 font-medium">
+                            📷 No image
                           </span>
                         </div>
                       )}
@@ -196,13 +213,10 @@ export function MenuGrid({
                       </p>
                       <Button
                         size="sm"
-                        style={{
-                          backgroundColor: "#FFD09B",
-                          color: "#8B4513",
-                        }}
-                        className="w-full py-1 mt-auto text-xs font-medium hover:opacity-80 md:text-sm md:py-2"
+                        className="w-full py-3 mt-auto text-xs font-semibold bg-gradient-to-r from-orange-400 to-amber-400 text-white rounded-xl hover:from-orange-500 hover:to-amber-500 hover:shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95 md:text-sm border-0"
                         onClick={() => onAddToCart(item)}
                       >
+                        <ShoppingCart className="w-4 h-4 mr-2 text-white" />
                         {getText(
                           "Add to Cart",
                           "Сагсанд нэмэх",

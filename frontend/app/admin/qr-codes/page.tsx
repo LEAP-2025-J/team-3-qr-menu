@@ -18,7 +18,7 @@ const BASE_URL = "frontend-cyan-tau-99.vercel.app";
 const TABLE_COUNT = 21;
 
 function getQrUrl(table: number) {
-  const tableUrl = `${BASE_URL}/?table=${table}`;
+  const tableUrl = `https://${BASE_URL}/?table=${table}`;
   return {
     url: tableUrl,
     qrUrl: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(
@@ -56,7 +56,7 @@ export default function QRCodesPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-6 md:grid-cols-4 lg:grid-cols-5">
-                {[...Array(20)].map((_, index) => (
+                {[...Array(21)].map((_, index) => (
                   <Card key={index} className="text-center">
                     <QRCodeSkeleton />
                   </Card>
@@ -76,7 +76,7 @@ export default function QRCodesPage() {
           <CardHeader className="print:pb-2">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>QR Codes for Tables 1–20</CardTitle>
+                <CardTitle>QR Codes for Tables 1–21</CardTitle>
                 <p className="text-gray-600">
                   Scan to view the menu for each table
                 </p>

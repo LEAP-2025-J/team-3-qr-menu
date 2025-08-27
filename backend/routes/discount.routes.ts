@@ -3,7 +3,7 @@ import {
   getDiscountSettings,
   updateDiscountSettings,
   getDiscountHistory,
-} from "../controllers/discount.controller";
+} from "../controllers/discount.controller.js";
 
 const router = express.Router();
 

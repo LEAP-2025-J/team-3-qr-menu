@@ -69,7 +69,7 @@ export function UserDashboard() {
       // Toast notification харуулах
       toast({
         title: `${tableNumber}-р ширээнд QR захиалга ирлээ`,
-        description: "OK дарж шинэчлэх",
+        description: "OK",
         action: (
           <Button
             size="sm"

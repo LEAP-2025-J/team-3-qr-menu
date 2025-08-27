@@ -1,0 +1,7 @@
+dist/
+*.d.ts
+.git/
+node_modules/
+.env
+scripts/
+*.md

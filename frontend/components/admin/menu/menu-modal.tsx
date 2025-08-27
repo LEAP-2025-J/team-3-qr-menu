@@ -368,11 +368,16 @@ export const MenuModal = ({
               <Input
                 id="preparationTime"
                 type="number"
-                value={formatNumberForInput(formData.preparationTime, 15)}
+                value={
+                  formData.preparationTime === 0
+                    ? ""
+                    : formData.preparationTime.toString()
+                }
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    preparationTime: parseInt(e.target.value) || 15,
+                    preparationTime:
+                      e.target.value === "" ? 0 : parseInt(e.target.value) || 0,
                   })
                 }
                 placeholder="15"
