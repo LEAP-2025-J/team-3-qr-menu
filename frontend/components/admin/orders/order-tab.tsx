@@ -17,16 +17,47 @@ function isOrderActive(order: any): boolean {
     return false;
   }
 
-  // Өнөөдрийн огноог UTC+8 timezone-тай болгож авах (Mongolia timezone)
-  const now = new Date();
-  const utc8Date = new Date(now.getTime() + 8 * 60 * 60 * 1000); // UTC+8
-  const todayString = utc8Date.toISOString().split("T")[0]; // YYYY-MM-DD формат
+  // Business day mode-г шалгах (SSR-д localStorage байхгүй байж болно)
+  let isBusinessDayMode = false;
+  if (typeof window !== "undefined") {
+    isBusinessDayMode = localStorage.getItem("businessDayMode") === "true";
+  }
 
-  // Захиалгын огноог шалгах
-  const orderDate = new Date(order.createdAt);
-  const orderDateString = orderDate.toISOString().split("T")[0]; // YYYY-MM-DD формат
+  if (isBusinessDayMode) {
+    // Business day mode-д businessDay field-г ашиглах
+    if (order.businessDay) {
+      const now = new Date();
+      const utc8Time = new Date(
+        now.toLocaleString("en-US", { timeZone: "Asia/Ulaanbaatar" })
+      );
+      const currentHour = utc8Time.getHours();
 
-  return orderDateString === todayString;
+      let currentBusinessDay;
+      if (currentHour >= 0 && currentHour < 9) {
+        // 04:00-09:00 хооронд - өмнөх өдөр
+        const previousDay = new Date(utc8Time);
+        previousDay.setDate(previousDay.getDate() - 1);
+        currentBusinessDay = previousDay.toISOString().split("T")[0];
+      } else {
+        // 09:00-24:00 хооронд - өнөөдөр
+        currentBusinessDay = utc8Time.toISOString().split("T")[0];
+      }
+
+      return order.businessDay === currentBusinessDay;
+    }
+    return false;
+  } else {
+    // Хуучин логик - UTC+8 timezone ашиглах (Mongolia timezone)
+    const now = new Date();
+    const utc8Date = new Date(now.getTime() + 8 * 60 * 60 * 1000); // UTC+8
+    const todayString = utc8Date.toISOString().split("T")[0]; // YYYY-MM-DD формат
+
+    // Захиалгын огноог шалгах
+    const orderDate = new Date(order.createdAt);
+    const orderDateString = orderDate.toISOString().split("T")[0]; // YYYY-MM-DD формат
+
+    return orderDateString === todayString;
+  }
 }
 
 interface OrderTabProps {
@@ -60,14 +91,58 @@ export function OrderTab({
     return () => clearInterval(interval);
   }, []);
 
+  // Business day mode өөрчлөгдөхөд refresh хийх
+  useEffect(() => {
+    const handleBusinessDayModeChange = () => {
+      setRefreshKey((prev) => prev + 1);
+    };
+
+    window.addEventListener(
+      "businessDayModeChanged",
+      handleBusinessDayModeChange
+    );
+    return () => {
+      window.removeEventListener(
+        "businessDayModeChanged",
+        handleBusinessDayModeChange
+      );
+    };
+  }, []);
+
   // Тухайн ширээнд сууснаас хойшхи бүх захиалга (completed, cancelled биш, өчигдрийн захиалга биш)
-  const sessionOrders =
-    (table as any).orders?.filter(
-      (order: any) =>
-        order.status !== "completed" &&
-        order.status !== "cancelled" &&
-        isOrderActive(order) // Зөвхөн өнөөдрийн захиалгуудыг харуулах
-    ) || [];
+  const sessionOrders = (() => {
+    // SSR-д hydration алдаа гарахаас сэргийлэх
+    if (typeof window === "undefined") {
+      return [];
+    }
+
+    return (
+      (table as any).orders?.filter(
+        (order: any) =>
+          order.status !== "completed" &&
+          order.status !== "cancelled" &&
+          isOrderActive(order) // Зөвхөн өнөөдрийн захиалгуудыг харуулах
+      ) || []
+    );
+  })();
+
+  // Debug: Business day mode болон захиалгын мэдээллийг хэвлэх (зөвхөн client-side)
+  if (typeof window !== "undefined") {
+    console.log("🔍 Order Tab Debug:");
+    console.log("Business Day Mode:", localStorage.getItem("businessDayMode"));
+    console.log("Table orders:", (table as any).orders);
+    console.log("Session orders:", sessionOrders);
+    console.log(
+      "Is order active test:",
+      (table as any).orders?.map((order: any) => ({
+        orderNumber: order.orderNumber,
+        status: order.status,
+        createdAt: order.createdAt,
+        businessDay: order.businessDay,
+        isActive: isOrderActive(order),
+      }))
+    );
+  }
 
   if (sessionOrders.length === 0) {
     return (

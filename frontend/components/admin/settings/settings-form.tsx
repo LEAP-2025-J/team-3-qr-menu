@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { restaurantApi, RestaurantSettings } from "@/lib/restaurant-api";
 import { useToast } from "@/hooks/use-toast";
 import { DiscountSettings } from "./discount-settings";
+import BusinessDaySettings from "./business-day-settings";
 
 export function SettingsForm() {
   const [settings, setSettings] = useState<RestaurantSettings | null>(null);
@@ -198,9 +199,12 @@ export function SettingsForm() {
   }
 
   return (
-    <div className="grid grid-cols-3 gap-4 h-full">
+    <div className="grid grid-cols-4 gap-4 h-full">
       {/* Хөнгөлөлтийн тохиргоо */}
       <DiscountSettings />
+
+      {/* Business Day тохиргоо */}
+      <BusinessDaySettings />
 
       {/* Restaurant Information Card */}
       <Card className="h-full flex flex-col">

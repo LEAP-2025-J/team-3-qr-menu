@@ -188,6 +188,7 @@ export function UserDashboard() {
     tableId: string;
     items: any[];
     total: number;
+    orderSource?: string; // Админ захиалга гэж тэмдэглэх
   }) => {
     try {
       const requestBody = {
@@ -200,6 +201,7 @@ export function UserDashboard() {
         })),
         total: orderData.total,
         status: "pending",
+        orderSource: orderData.orderSource || "admin", // Админ захиалга гэж тэмдэглэх
       };
 
       // Захиалга үүсгэх API дуудах

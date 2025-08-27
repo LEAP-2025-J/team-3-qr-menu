@@ -69,10 +69,14 @@ export function useDiscount() {
   const isDiscountTime = () => {
     if (!discountSettings.isActive) return false;
 
+    // Business day mode-г шалгах (SSR-д localStorage байхгүй байж болно)
+    let isBusinessDayMode = false;
+    if (typeof window !== "undefined") {
+      isBusinessDayMode = localStorage.getItem("businessDayMode") === "true";
+    }
+
     // Одоогийн цагийг UTC+8 timezone-тай болгож авах (Mongolia timezone)
     const now = new Date();
-
-    // UTC+8 timezone-тай болгож авах
     const utc8Time = new Date(
       now.toLocaleString("en-US", { timeZone: "Asia/Ulaanbaatar" })
     );
@@ -80,16 +84,33 @@ export function useDiscount() {
     const currentHour = utc8Time.getHours();
     const currentMinute = utc8Time.getMinutes();
 
-    // Хөнгөлөлтийн дуусах цагийг парслах
-    const [endHour, endMinute] = discountSettings.discountEndTime
-      .split(":")
-      .map(Number);
+    if (isBusinessDayMode) {
+      // Business day mode-д хөнгөлөлтийн логик
+      // 04:00-09:00 хооронд хөнгөлөлт ажиллахгүй (өмнөх өдрийн business day)
+      if (currentHour >= 0 && currentHour < 9) {
+        return false;
+      }
 
-    // Одоогийн цаг хөнгөлөлтийн хугацаанд байгаа эсэхийг шалгах
-    const currentTimeInMinutes = currentHour * 60 + currentMinute;
-    const endTimeInMinutes = endHour * 60 + endMinute;
+      // 09:00-24:00 хооронд хөнгөлөлтийн цагийг шалгах
+      const [endHour, endMinute] = discountSettings.discountEndTime
+        .split(":")
+        .map(Number);
 
-    return currentTimeInMinutes < endTimeInMinutes;
+      const currentTimeInMinutes = currentHour * 60 + currentMinute;
+      const endTimeInMinutes = endHour * 60 + endMinute;
+
+      return currentTimeInMinutes < endTimeInMinutes;
+    } else {
+      // Хуучин логик - UTC+8 timezone ашиглах (Mongolia timezone)
+      const [endHour, endMinute] = discountSettings.discountEndTime
+        .split(":")
+        .map(Number);
+
+      const currentTimeInMinutes = currentHour * 60 + currentMinute;
+      const endTimeInMinutes = endHour * 60 + endMinute;
+
+      return currentTimeInMinutes < endTimeInMinutes;
+    }
   };
 
   // Хөнгөлөлттэй үнэ тооцоолох
@@ -117,7 +138,33 @@ export function useDiscount() {
   };
 
   useEffect(() => {
+    // SSR-д hydration алдаа гарахаас сэргийлэх
+    if (typeof window === "undefined") {
+      return;
+    }
+
     fetchDiscountSettings();
+  }, []);
+
+  // Business day mode өөрчлөгдөхөд хөнгөлөлтийн мэдээллийг дахин авах
+  useEffect(() => {
+    const handleBusinessDayModeChange = () => {
+      // Хөнгөлөлтийн мэдээллийг дахин тооцоолох
+      console.log(
+        "🔄 Business day mode өөрчлөгдсөн - хөнгөлөлтийн мэдээллийг дахин тооцоолж байна"
+      );
+    };
+
+    window.addEventListener(
+      "businessDayModeChanged",
+      handleBusinessDayModeChange
+    );
+    return () => {
+      window.removeEventListener(
+        "businessDayModeChanged",
+        handleBusinessDayModeChange
+      );
+    };
   }, []);
 
   return {

@@ -53,6 +53,7 @@ interface CreateOrderModalProps {
       specialInstructions?: string;
     }[];
     total: number;
+    orderSource?: string; // Админ захиалга гэж тэмдэглэх
   }) => Promise<{ success: boolean }>;
   tableId: string;
   tableNumber: number;
@@ -170,6 +171,7 @@ export function CreateOrderModal({
         tableId,
         items: formattedItems,
         total,
+        orderSource: "admin", // Админ захиалга гэж тэмдэглэх
       });
 
       if (result.success) {
