@@ -155,14 +155,31 @@ export function useDiscount() {
       );
     };
 
+    const handleDiscountSettingsChange = (event: CustomEvent) => {
+      // Хөнгөлөлтийн тохиргоо өөрчлөгдөхөд мэдээллийг шинэчлэх
+      console.log(
+        "🔄 Хөнгөлөлтийн тохиргоо өөрчлөгдсөн - мэдээллийг шинэчлэж байна"
+      );
+      fetchDiscountSettings();
+    };
+
     window.addEventListener(
       "businessDayModeChanged",
       handleBusinessDayModeChange
     );
+    window.addEventListener(
+      "discountSettingsChanged",
+      handleDiscountSettingsChange as EventListener
+    );
+
     return () => {
       window.removeEventListener(
         "businessDayModeChanged",
         handleBusinessDayModeChange
+      );
+      window.removeEventListener(
+        "discountSettingsChanged",
+        handleDiscountSettingsChange as EventListener
       );
     };
   }, []);

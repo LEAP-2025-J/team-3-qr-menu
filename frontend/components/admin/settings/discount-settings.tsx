@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
@@ -45,6 +46,14 @@ export function DiscountSettings() {
     try {
       const result = await updateDiscountSettings(formData);
       if (result.success) {
+        // Admin header-г шинэчлэх custom event илгээх
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent("discountSettingsChanged", {
+              detail: { settings: formData },
+            })
+          );
+        }
         alert("Хөнгөлөлтийн тохиргоо амжилттай хадгалагдлаа!");
       } else {
         alert(`Алдаа: ${result.error}`);
@@ -131,7 +140,7 @@ export function DiscountSettings() {
                 className="flex items-center gap-2"
               >
                 <Percent className="w-4 h-4" />
-                Хөнгөлөлтийн хувь (%)
+                Хөнгөлөлтийн хувь
               </Label>
               <Input
                 id="discountPercentage"
@@ -160,25 +169,28 @@ export function DiscountSettings() {
               <Input
                 id="discountEndTime"
                 type="time"
+                step="3600"
                 value={formData.discountEndTime}
                 onChange={(e) =>
                   setFormData({ ...formData, discountEndTime: e.target.value })
                 }
                 className="mt-1"
+                placeholder="19:00"
               />
             </div>
           </div>
 
           <div>
             <Label htmlFor="description">Тайлбар</Label>
-            <Input
+            <Textarea
               id="description"
               value={formData.description}
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
               }
               placeholder="Хөгжөөний цаг! 19:00 цагийн өмнөх бүх бараанд 1% хөнгөлөлт"
-              className="mt-1"
+              className="mt-1 min-h-[80px] resize-none"
+              rows={3}
             />
           </div>
         </div>

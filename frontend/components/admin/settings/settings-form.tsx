@@ -383,31 +383,31 @@ export function SettingsForm() {
             {settings.operatingHours.map((hours, index) => (
               <div
                 key={hours.day}
-                className="flex items-center gap-4 p-3 border rounded-lg bg-gray-50"
+                className="flex items-center gap-2 p-2 border rounded-lg bg-gray-50"
               >
-                <span className="font-semibold w-24 text-gray-700">
+                <span className="font-semibold w-16 text-xs text-gray-700">
                   {hours.day}
                 </span>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   <Input
                     type="time"
                     value={hours.openTime}
                     onChange={(e) =>
                       updateOperatingHours(index, "openTime", e.target.value)
                     }
-                    className="w-24 h-9"
+                    className="w-20 h-8 text-xs"
                   />
-                  <span className="text-gray-500 font-medium">-</span>
+                  <span className="text-gray-500 text-xs">-</span>
                   <Input
                     type="time"
                     value={hours.closeTime}
                     onChange={(e) =>
                       updateOperatingHours(index, "closeTime", e.target.value)
                     }
-                    className="w-24 h-9"
+                    className="w-20 h-8 text-xs"
                   />
                 </div>
-                <div className="flex items-center gap-2 ml-auto">
+                <div className="flex items-center gap-1 ml-auto">
                   <input
                     type="checkbox"
                     id={`open-${index}`}
@@ -415,11 +415,11 @@ export function SettingsForm() {
                     onChange={(e) =>
                       updateOperatingHours(index, "isOpen", e.target.checked)
                     }
-                    className="rounded w-4 h-4"
+                    className="rounded w-3 h-3"
                   />
                   <Label
                     htmlFor={`open-${index}`}
-                    className="text-sm font-medium text-gray-700"
+                    className="text-xs font-medium text-gray-700"
                   >
                     Нээлттэй
                   </Label>
