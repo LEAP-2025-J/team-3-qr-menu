@@ -13,19 +13,9 @@ const nextConfig = {
   experimental: {
     forceSwcTransforms: true,
   },
-  // Cache цэвэрлэх - preview mode-д зориулсан
+  // Simplified build configuration to avoid webpack conflicts
   generateBuildId: async () => {
-    const timestamp = Date.now();
-    const random = Math.random().toString(36).substr(2, 9);
-    const previewMode =
-      process.env.NEXT_PUBLIC_PREVIEW_MODE === "true" ? "preview" : "prod";
-    const cacheBuster = Math.floor(Math.random() * 1000000);
-    return `build-${previewMode}-${timestamp}-${random}-${cacheBuster}`;
-  },
-  // Build cache хаах
-  onDemandEntries: {
-    maxInactiveAge: 25 * 1000,
-    pagesBufferLength: 2,
+    return `build-${Date.now()}`;
   },
   // swcMinify нь Next.js 15-д аль хэдийн default болсон
   // Cross origin request анхааруулгыг арилгах

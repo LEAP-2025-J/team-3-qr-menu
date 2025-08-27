@@ -21,16 +21,16 @@ export const API_CONFIG = {
     (isLocalEnvironment()
       ? process.env.NEXT_PUBLIC_LOCAL_BACKEND_URL || "http://localhost:5000"
       : process.env.NEXT_PUBLIC_PRODUCTION_BACKEND_URL ||
-        "https://backend-wine-pi.vercel.app"), // Тогтмол Vercel URL
+        "http://localhost:5000"), // Default to localhost for development
   FRONTEND_URL:
     process.env.NEXT_PUBLIC_FRONTEND_URL ||
     (process.env.NODE_ENV === "production"
-      ? "frontend-cyan-tau-99.vercel.app" // Тогтмол Vercel URL
+      ? "http://localhost:3000" // Default to localhost for development
       : process.env.NEXT_PUBLIC_LOCAL_FRONTEND_URL || "http://localhost:3000"),
 };
 
 // Preview deployment-д зориулсан backend URL
-export const PREVIEW_BACKEND_URL = "https://backend-wine-pi.vercel.app";
+export const PREVIEW_BACKEND_URL = "http://localhost:5000";
 
 // Backend API endpoints
 export const API_ENDPOINTS = {
