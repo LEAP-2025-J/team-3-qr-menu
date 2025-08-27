@@ -47,16 +47,32 @@ export function MenuGrid({
   const [activeTab, setActiveTab] = useState<string>("");
   const tabsListRef = useRef<HTMLDivElement>(null);
 
-  // Set default active tab to first category and update when language changes
+  // Set default active tab to first category only on initial load
   useEffect(() => {
-    if (Object.keys(groupedMenu).length > 0) {
-      // Always set to first category when groupedMenu changes or language changes
+    if (Object.keys(groupedMenu).length > 0 && !activeTab) {
+      // Only set to first category if no tab is currently active
       const firstCategory = Object.keys(groupedMenu)[0];
-      if (firstCategory && firstCategory !== activeTab) {
+      if (firstCategory) {
         setActiveTab(firstCategory);
       }
     }
-  }, [groupedMenu, currentLanguage]);
+  }, [groupedMenu]);
+
+  // Update active tab when language changes (category names change but keep same position)
+  useEffect(() => {
+    if (Object.keys(groupedMenu).length > 0 && activeTab) {
+      const categories = Object.keys(groupedMenu);
+      const currentIndex = categories.findIndex((cat) => cat === activeTab);
+
+      // If current tab doesn't exist in new language, keep the same position
+      if (currentIndex === -1 && categories.length > 0) {
+        setActiveTab(categories[0]); // fallback to first category
+      } else if (currentIndex >= 0) {
+        // Keep the same category position but with new language name
+        setActiveTab(categories[currentIndex]);
+      }
+    }
+  }, [currentLanguage, groupedMenu]);
 
   if (loadingMenu || Object.keys(groupedMenu).length === 0) {
     return (

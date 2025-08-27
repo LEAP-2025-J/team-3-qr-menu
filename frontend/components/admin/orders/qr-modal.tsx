@@ -23,9 +23,12 @@ export function QRModal({
   qrCode,
   tableNumber,
 }: QRModalProps) {
+  // Зөв QR код URL үүсгэх (qr-codes page дээрхтэй адил)
+  const correctTableUrl = `https://frontend-cyan-tau-99.vercel.app/?table=${tableNumber}`;
+
   // QR код зурагны URL үүсгэх
   const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(
-    qrCode
+    correctTableUrl
   )}`;
 
   const handlePrint = () => {

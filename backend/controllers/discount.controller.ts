@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { Discount } from "../models/model.discount";
+import { Discount } from "../models/model.discount.js";
 
 // Хөнгөлөлтийн тохиргоог авах
 export const getDiscountSettings = async (req: Request, res: Response) => {
