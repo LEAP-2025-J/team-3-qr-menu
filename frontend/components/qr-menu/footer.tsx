@@ -52,7 +52,7 @@ export function Footer({ restaurantName, restaurantData }: FooterProps) {
         <p>
           {getText(
             "Please let your server know about any allergies or dietary restrictions",
-            "Аллерги эсвэл хоолны хязгаарлалттай бол үйлчилгээний ажилтанд мэдэгдээрэй",
+            "Харшил эсвэл хоолны хязгаарлалттай бол үйлчилгээний ажилтанд мэдэгдээрэй",
             "アレルギーや食事制限がある場合は、スタッフにお知らせください"
           )}
         </p>

@@ -83,7 +83,7 @@ export default function BusinessDaySettings() {
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-xl font-bold">
-          <Calendar className="w-5 h-5" />
+          {/* <Calendar className="w-5 h-5" /> */}
           Бизнес горим
         </CardTitle>
       </CardHeader>
@@ -99,7 +99,7 @@ export default function BusinessDaySettings() {
             </Label>
             <p className="text-sm text-muted-foreground">
               {isBusinessDayMode
-                ? "09:00-04:00 (маргааш) = 1 business day"
+                ? "09:00-04:00 = 1 бизнесийн өдөр"
                 : "00:00-23:59 = 1 өдөр"}
             </p>
           </div>
@@ -141,9 +141,8 @@ export default function BusinessDaySettings() {
             <strong>Business Day Mode ON:</strong>
           </p>
           <ul className="ml-2 space-y-1 list-disc list-inside">
-            <li>09:00-04:00 (маргааш) = 1 business day</li>
-            <li>04:00-09:00 = өмнөх өдрийн business day</li>
-            <li>Notification, order list бүгд business day-г ашиглана</li>
+            <li>09:00-04:00 (маргааш) = 1 бизнесийн өдөр</li>
+            <li>Шөнийн 04 цагаас хойш шинэ өдөр гэж тооцно</li>
           </ul>
 
           <p className="mt-2">
@@ -151,7 +150,7 @@ export default function BusinessDaySettings() {
           </p>
           <ul className="ml-2 space-y-1 list-disc list-inside">
             <li>00:00-23:59 = 1 өдөр</li>
-            <li>Хуучин логик ашиглана</li>
+            <li>Шөнийн 24 цагаас хойш шинэ өдөр гэж тооцно</li>
           </ul>
         </div>
       </CardContent>
