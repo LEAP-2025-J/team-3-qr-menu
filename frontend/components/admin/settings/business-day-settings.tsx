@@ -84,7 +84,7 @@ export default function BusinessDaySettings() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-xl font-bold">
           <Calendar className="w-5 h-5" />
-          Business Day Тохиргоо
+          Бизнес горим
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
