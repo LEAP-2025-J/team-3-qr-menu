@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { API_CONFIG } from "@/config/api";
+import { useDiscount } from "./use-discount";
 
 export function useRestaurant(currentLanguage: "en" | "mn" | "ja") {
   const [restaurantName, setRestaurantName] = useState("Haku");
   const [restaurantData, setRestaurantData] = useState<any>(null);
+  const { isDiscountTime, getDiscountedPrice, getDiscountInfo } = useDiscount();
 
   // Fetch restaurant data
   useEffect(() => {
@@ -78,16 +80,9 @@ export function useRestaurant(currentLanguage: "en" | "mn" | "ja") {
     return description;
   };
 
-  // Check if current time is before 10pm for discount (тест хийхээр 22 цаг болгосон)
+  // Check if current time is before discount end time (UTC+8)
   const isBefore7PM = () => {
-    const now = new Date();
-    const currentHour = now.getHours();
-    return currentHour < 22; // 10pm = 22:00 (тест хийхээр өөрчилсөн)
-  };
-
-  // Calculate discounted price (10% off)
-  const getDiscountedPrice = (originalPrice: number) => {
-    return originalPrice * 0.9; // 10% discount
+    return isDiscountTime();
   };
 
   return {

@@ -86,11 +86,10 @@ export function TableCard({
       return null;
     }
 
-    // Өнөөдрийн огноотой идэвхтэй захиалгуудыг олох (pending, preparing, serving)
+    // Өнөөдрийн огноотой идэвхтэй захиалгуудыг олох (pending, serving)
     const activeOrders = (table as any).orders.filter(
       (order: any) =>
-        ["pending", "preparing", "serving"].includes(order.status) &&
-        isOrderActive(order)
+        ["pending", "serving"].includes(order.status) && isOrderActive(order)
     );
 
     if (activeOrders.length === 0) {
@@ -110,7 +109,7 @@ export function TableCard({
     const updateStatus = async () => {
       setIsUpdating(true);
       try {
-        await requestUpdateStatus(orderId, "preparing");
+        await requestUpdateStatus(orderId, "serving");
         onRefresh?.();
       } catch (e) {
         console.error(e);

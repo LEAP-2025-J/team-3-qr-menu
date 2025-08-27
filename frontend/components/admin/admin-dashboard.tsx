@@ -51,7 +51,8 @@ export function AdminDashboard() {
   const [selectedReservation, setSelectedReservation] = useState<any>(null);
 
   const { toast, dismiss } = useToast();
-  const { notificationCount, addNotification, markAsRead } = useNotification();
+  const { notificationCount, addNotification, markAsRead, triggerToast } =
+    useNotification();
 
   const {
     orders,
@@ -77,7 +78,7 @@ export function AdminDashboard() {
   // MenuGrid ref
   const menuGridRef = React.useRef<any>(null);
 
-  // QR notification listener болон polling
+  // QR notification listener болон backend polling toast
   useEffect(() => {
     const handleQRNotification = (event: CustomEvent) => {
       const { tableNumber } = event.detail;
@@ -103,7 +104,30 @@ export function AdminDashboard() {
       });
     };
 
-    // localStorage өөрчлөгдөхийг сонсох
+    // Backend polling-ээр шинэ notification илрэхэд toast харуулах
+    const handleNewNotificationDetected = (event: CustomEvent) => {
+      // Хамгийн сүүлийн захиалгын table number-г олох (backend-аас)
+      // Энэ нь deploy дээр өөр төхөөрөмжөөс захиалга үүсгэхэд ажиллана
+      toast({
+        title: `Шинэ QR захиалга ирлээ`,
+        description: "OK дарж шинэчлэх",
+        action: (
+          <Button
+            size="sm"
+            onClick={() => {
+              markAsRead();
+              handleAutoRefresh();
+              dismiss();
+            }}
+          >
+            OK
+          </Button>
+        ),
+        duration: Infinity,
+      });
+    };
+
+    // localStorage өөрчлөгдөхийг сонсох (local орчинд)
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === "qr-notification-count") {
         const newCount = e.newValue ? parseInt(e.newValue) : 0;
@@ -142,12 +166,21 @@ export function AdminDashboard() {
       handleQRNotification as EventListener
     );
 
+    window.addEventListener(
+      "new-notification-detected",
+      handleNewNotificationDetected as EventListener
+    );
+
     window.addEventListener("storage", handleStorageChange);
 
     return () => {
       window.removeEventListener(
         "qr-order-notification",
         handleQRNotification as EventListener
+      );
+      window.removeEventListener(
+        "new-notification-detected",
+        handleNewNotificationDetected as EventListener
       );
       window.removeEventListener("storage", handleStorageChange);
     };
@@ -180,7 +213,6 @@ export function AdminDashboard() {
 
   const handleViewQR = (tableId: string) => {
     // QR code view logic
-    console.log("View QR for table:", tableId);
   };
 
   const handleCompleteOrder = async (orderId: string) => {
@@ -193,7 +225,6 @@ export function AdminDashboard() {
 
   const handlePrintOrder = (orderId: string) => {
     // Print order logic
-    console.log("Print order:", orderId);
   };
 
   const handleRefresh = async () => {
@@ -210,6 +241,7 @@ export function AdminDashboard() {
     tableId: string;
     items: any[];
     total: number;
+    orderSource?: string; // Админ захиалга гэж тэмдэглэх
   }) => {
     try {
       const requestBody = {
@@ -222,6 +254,7 @@ export function AdminDashboard() {
         })),
         total: orderData.total,
         status: "pending",
+        orderSource: orderData.orderSource || "admin", // Админ захиалга гэж тэмдэглэх
       };
 
       // Захиалга үүсгэх API дуудах
@@ -230,8 +263,6 @@ export function AdminDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
       });
-
-      console.log("API response status:", response.status);
 
       if (response.ok) {
         const responseData = await response.json();

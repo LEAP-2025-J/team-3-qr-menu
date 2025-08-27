@@ -93,11 +93,26 @@ export function TotalOrdersModal({
       return;
     }
 
-    const confirmComplete = window.confirm(
-      `Бүх ${orderIds.length} захиалгыг дуусгахдаа итгэлтэй байна уу?`
+    // Бүх захиалга pending статустай байгаа эсэхийг шалгах
+    const pendingOrders = sessionOrders.filter(
+      (order: any) => order.status === "pending"
     );
 
-    if (!confirmComplete) return;
+    if (pendingOrders.length > 0) {
+      const pendingOrderNumbers = pendingOrders
+        .map((order: any) => `#${order.orderNumber}`)
+        .join(", ");
+
+      const warningMessage = `Дараах захиалгуудын хоол хүргэгдээгүй байна:\n${pendingOrderNumbers}\n\nБүх захиалгыг дуусгахдаа итгэлтэй байна уу?`;
+
+      const confirmComplete = window.confirm(warningMessage);
+      if (!confirmComplete) return;
+    } else {
+      const confirmComplete = window.confirm(
+        `Бүх ${orderIds.length} захиалгыг дуусгахдаа итгэлтэй байна уу?`
+      );
+      if (!confirmComplete) return;
+    }
 
     try {
       const success = await completeAllOrders(orderIds);

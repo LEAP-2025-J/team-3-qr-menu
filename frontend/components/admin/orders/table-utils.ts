@@ -77,10 +77,10 @@ export function calculateTableStats(tables: Table[]): TableStats {
           // Зөвхөн completed статустай өнөөдрийн захиалгууд
           if (order.status !== "completed") return false;
 
-          // Өнөөдрийн огноотой эсэхийг шалгах
+          // Өнөөдрийн огноотой эсэхийг шалгах - UTC+8 timezone ашиглах
           if (!order.createdAt) return false;
           const now = new Date();
-          const utc8Date = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+          const utc8Date = new Date(now.getTime() + 8 * 60 * 60 * 1000); // UTC+8
           const todayString = utc8Date.toISOString().split("T")[0];
           const orderDate = new Date(order.createdAt);
           const orderDateString = orderDate.toISOString().split("T")[0];
@@ -118,7 +118,6 @@ export async function handleReservationSubmit(
       );
       const result = await response.json();
       if (result.success) {
-        console.log("Reservation updated successfully");
       } else {
         console.error("Failed to update reservation:", result.error);
         return { success: false, error: result.error };
@@ -135,7 +134,6 @@ export async function handleReservationSubmit(
       );
       const result = await response.json();
       if (result.success) {
-        console.log("Reservation created successfully");
       } else {
         console.error("Failed to create reservation:", result.error);
         return { success: false, error: result.error };

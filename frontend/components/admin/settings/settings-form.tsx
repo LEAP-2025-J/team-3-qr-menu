@@ -8,12 +8,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { restaurantApi, RestaurantSettings } from "@/lib/restaurant-api";
 import { useToast } from "@/hooks/use-toast";
+import { DiscountSettings } from "./discount-settings";
+import BusinessDaySettings from "./business-day-settings";
 
 export function SettingsForm() {
   const [settings, setSettings] = useState<RestaurantSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [currentDescLang, setCurrentDescLang] = useState<"en" | "ja" | "mn">(
+    "en"
+  );
+  const [currentNameLang, setCurrentNameLang] = useState<"en" | "ja" | "mn">(
     "en"
   );
   const { toast } = useToast();
@@ -43,9 +48,9 @@ export function SettingsForm() {
 
     try {
       setSaving(true);
-      console.log("Saving settings:", settings); // Debug log
+      // Тохиргоо хадгалах хүсэлт илгээх
       const result = await restaurantApi.updateSettings(settings);
-      console.log("Save result:", result); // Debug log
+
       setSettings(result); // Update local state with the result
       toast({
         title: "Амжилттай",
@@ -111,6 +116,49 @@ export function SettingsForm() {
     }
   };
 
+  // Helper functions for restaurant name language switching
+  const getCurrentName = () => {
+    if (!settings) return "";
+    switch (currentNameLang) {
+      case "en":
+        return settings.nameEn || "";
+      case "ja":
+        return settings.name || "";
+      case "mn":
+        return settings.nameMn || "";
+      default:
+        return settings.nameEn || "";
+    }
+  };
+
+  const updateCurrentName = (value: string) => {
+    if (!settings) return;
+    switch (currentNameLang) {
+      case "en":
+        setSettings({ ...settings, nameEn: value });
+        break;
+      case "ja":
+        setSettings({ ...settings, name: value });
+        break;
+      case "mn":
+        setSettings({ ...settings, nameMn: value });
+        break;
+    }
+  };
+
+  const getNamePlaceholder = () => {
+    switch (currentNameLang) {
+      case "en":
+        return "Haku";
+      case "ja":
+        return "白 Haku";
+      case "mn":
+        return "Сакура";
+      default:
+        return "Haku";
+    }
+  };
+
   const updateOperatingHours = (index: number, field: string, value: any) => {
     if (!settings) return;
     const newHours = [...settings.operatingHours];
@@ -151,7 +199,13 @@ export function SettingsForm() {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-4 h-full">
+    <div className="grid grid-cols-4 gap-4 h-full">
+      {/* Хөнгөлөлтийн тохиргоо */}
+      <DiscountSettings />
+
+      {/* Business Day тохиргоо */}
+      <BusinessDaySettings />
+
       {/* Restaurant Information Card */}
       <Card className="h-full flex flex-col">
         <CardHeader className="pb-3">
@@ -162,43 +216,52 @@ export function SettingsForm() {
         <CardContent className="space-y-3 flex-1">
           {/* Restaurant Names Section */}
           <div className="space-y-3">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="p-3 border rounded-lg bg-gray-50 space-y-2">
-                <Label htmlFor="nameEn" className="text-sm font-semibold">
-                  Рестораны нэр (Англи)
-                </Label>
-                <Input
-                  id="nameEn"
-                  value={settings.nameEn}
-                  onChange={(e) => updateField("nameEn", e.target.value)}
-                  placeholder="Haku"
-                  className="h-10"
-                />
+            <div className="p-3 border rounded-lg bg-gray-50 space-y-2">
+              <div className="flex items-center justify-between mb-2">
+                <Label className="text-sm font-semibold">Рестораны нэр</Label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentNameLang("en")}
+                    className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                      currentNameLang === "en"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    }`}
+                  >
+                    English
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentNameLang("ja")}
+                    className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                      currentNameLang === "ja"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    }`}
+                  >
+                    日本語
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentNameLang("mn")}
+                    className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                      currentNameLang === "mn"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    }`}
+                  >
+                    Монгол
+                  </button>
+                </div>
               </div>
-              <div className="p-3 border rounded-lg bg-gray-50 space-y-2">
-                <Label htmlFor="nameMn" className="text-sm font-semibold">
-                  Рестораны нэр (Монгол)
-                </Label>
-                <Input
-                  id="nameMn"
-                  value={settings.nameMn}
-                  onChange={(e) => updateField("nameMn", e.target.value)}
-                  placeholder="Сакура"
-                  className="h-10"
-                />
-              </div>
-              <div className="p-3 border rounded-lg bg-gray-50 space-y-2">
-                <Label htmlFor="name" className="text-sm font-semibold">
-                  Рестораны нэр (Япон)
-                </Label>
-                <Input
-                  id="name"
-                  value={settings.name}
-                  onChange={(e) => updateField("name", e.target.value)}
-                  placeholder="白 Haku"
-                  className="h-10"
-                />
-              </div>
+
+              <Input
+                value={getCurrentName()}
+                onChange={(e) => updateCurrentName(e.target.value)}
+                placeholder={getNamePlaceholder()}
+                className="h-10"
+              />
             </div>
 
             <div className="p-3 border rounded-lg bg-gray-50 space-y-2">
@@ -217,7 +280,7 @@ export function SettingsForm() {
 
           {/* Address Section */}
           <div className="space-y-3">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3">
               <div className="p-3 border rounded-lg bg-gray-50 space-y-2">
                 <Label htmlFor="addressEn" className="text-sm font-semibold">
                   Хаяг (Англи)
@@ -298,13 +361,13 @@ export function SettingsForm() {
           </div>
 
           {/* Save Button */}
-          <div className="pt-2 mt-auto">
+          <div className="pt-2 mt-auto flex justify-center">
             <Button
               onClick={handleSave}
               disabled={saving}
-              className="w-full h-10 text-base font-semibold"
+              className="w-fit h-10 text-base font-semibold"
             >
-              {saving ? "Хадгалж байна..." : "Өөрчлөлт хадгалах"}
+              {saving ? "Хадгалж байна..." : "Хадгалах"}
             </Button>
           </div>
         </CardContent>
@@ -366,13 +429,13 @@ export function SettingsForm() {
           </div>
 
           {/* Save Hours Button */}
-          <div className="pt-2 mt-auto">
+          <div className="pt-2 mt-auto flex justify-center">
             <Button
               onClick={handleSave}
               disabled={saving}
-              className="w-full h-10 text-base font-semibold"
+              className="w-fit h-10 text-base font-semibold"
             >
-              {saving ? "Хадгалж байна..." : "Цаг хадгалах"}
+              {saving ? "Хадгалж байна..." : "Хадгалах"}
             </Button>
           </div>
         </CardContent>

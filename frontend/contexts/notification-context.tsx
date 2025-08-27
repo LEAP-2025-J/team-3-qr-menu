@@ -14,6 +14,7 @@ interface NotificationContextType {
   addNotification: (tableNumber: number) => void;
   clearNotifications: () => void;
   markAsRead: () => void;
+  triggerToast: (tableNumber: number) => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(
@@ -26,51 +27,64 @@ export function NotificationProvider({
   children: React.ReactNode;
 }) {
   const [notificationCount, setNotificationCount] = useState(0);
+  const [lastNotificationCount, setLastNotificationCount] = useState(0);
 
   // Backend-аас notification count авах функц
   const fetchNotificationCount = useCallback(async () => {
     try {
+      // Business day mode-г шалгах (SSR-д localStorage байхгүй байж болно)
+      let isBusinessDayMode = false;
+      if (typeof window !== "undefined") {
+        isBusinessDayMode = localStorage.getItem("businessDayMode") === "true";
+      }
+
       // Локал орчинд локал backend ашиглах
       const backendUrl = window.location.hostname.startsWith("192.168.")
         ? "http://localhost:5000"
         : API_CONFIG.BACKEND_URL;
-      const url = `${backendUrl}/api/orders/notifications`;
-      console.log("🌐 NotificationContext fetching from URL:", url);
+      const url = `${backendUrl}/api/orders/notifications?useBusinessDay=${isBusinessDayMode}`;
       const response = await fetch(url);
-      console.log("📡 Response status:", response.status);
 
       if (response.ok) {
         const data = await response.json();
-        console.log("✅ Notification data:", data);
         if (data.success) {
-          console.log(
-            "📊 Setting notification count to:",
-            data.data.unreadTableCount
-          );
-          setNotificationCount(data.data.unreadTableCount);
+          const newCount = data.data.unreadTableCount;
+
+          // Хэрэв notification count нэмэгдсэн бол toast trigger хийх
+          if (newCount > lastNotificationCount && lastNotificationCount > 0) {
+            // Custom event trigger хийх (toast notification-д хэрэгтэй)
+            if (typeof window !== "undefined") {
+              const event = new CustomEvent("new-notification-detected", {
+                detail: { count: newCount },
+              });
+              window.dispatchEvent(event);
+            }
+          }
+
+          setLastNotificationCount(notificationCount);
+          setNotificationCount(newCount);
         }
       } else {
-        console.error(
-          "❌ Response not ok:",
-          response.status,
-          response.statusText
-        );
-        const errorText = await response.text();
-        console.error("❌ Error response body:", errorText);
+        console.error("❌ Notification request failed");
       }
     } catch (error) {
       console.error("💥 Error fetching notifications:", error);
     }
-  }, []);
+  }, [lastNotificationCount, notificationCount]);
 
   // Backend-аас notification count унших (polling every 10 seconds)
   useEffect(() => {
+    // SSR-д hydration алдаа гарахаас сэргийлэх
+    if (typeof window === "undefined") {
+      return;
+    }
+
     // Эхлээд localStorage цэвэрлэх (хуучин data арилгах)
     localStorage.removeItem("qr-notification-count");
 
     fetchNotificationCount(); // Анх удаа ачаалах
 
-    const interval = setInterval(fetchNotificationCount, 10000); // 10 секунд тутам шалгах
+    const interval = setInterval(fetchNotificationCount, 5000); // 5 секунд тутам шалгах (deploy дээр хурдан мэдэгдэхээр)
     return () => clearInterval(interval);
   }, [fetchNotificationCount]);
 
@@ -98,6 +112,34 @@ export function NotificationProvider({
     [fetchNotificationCount]
   );
 
+  // Business day mode өөрчлөгдөхөд notification count дахин авах
+  useEffect(() => {
+    const handleBusinessDayModeChange = () => {
+      fetchNotificationCount();
+    };
+
+    window.addEventListener(
+      "businessDayModeChanged",
+      handleBusinessDayModeChange
+    );
+    return () => {
+      window.removeEventListener(
+        "businessDayModeChanged",
+        handleBusinessDayModeChange
+      );
+    };
+  }, [fetchNotificationCount]);
+
+  // Toast notification trigger функц (deploy дээр ашиглах)
+  const triggerToast = useCallback((tableNumber: number) => {
+    if (typeof window !== "undefined") {
+      const event = new CustomEvent("qr-order-notification", {
+        detail: { tableNumber },
+      });
+      window.dispatchEvent(event);
+    }
+  }, []);
+
   // Бүх notification-г цэвэрлэх (backend дамжуулж шинэчлэх)
   const clearNotifications = useCallback(() => {
     setNotificationCount(0);
@@ -122,7 +164,6 @@ export function NotificationProvider({
       });
 
       if (response.ok) {
-        console.log("✅ Orders marked as read");
         // Шинэ count авах
         fetchNotificationCount();
       } else {
@@ -152,6 +193,7 @@ export function NotificationProvider({
         addNotification,
         clearNotifications,
         markAsRead,
+        triggerToast,
       }}
     >
       {children}

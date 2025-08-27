@@ -29,6 +29,8 @@ export interface IOrder extends Document {
   paymentStatus: "pending" | "paid" | "failed";
   paymentMethod?: "cash" | "card" | "mobile";
   isReadByAdmin: boolean; // Admin харсан эсэх
+  businessDay: string; // Business day (YYYY-MM-DD)
+  orderSource?: "qr" | "admin"; // Захиалгын эх сурвалж (optional)
   createdAt: Date;
   updatedAt: Date;
 }
@@ -134,13 +136,25 @@ const OrderSchema = new Schema<IOrder>(
       type: Boolean,
       default: false,
     },
+    businessDay: {
+      type: String,
+      required: false, // Optional болгох - хуучин захиалгуудад business day байхгүй байж болно
+    },
+    orderSource: {
+      type: String,
+      enum: ["qr", "admin"],
+      default: "qr", // Default нь QR захиалга
+    },
   },
   {
     timestamps: true,
   }
 );
 
-// Generate order number before saving
+// Import business day utility
+import { getBusinessDayString } from "../utils/business-day-utils.js";
+
+// Generate order number and business day before saving
 OrderSchema.pre("save", async function (next) {
   if (this.isNew) {
     try {
@@ -158,11 +172,15 @@ OrderSchema.pre("save", async function (next) {
       }
 
       this.orderNumber = `ORD-${String(nextNumber).padStart(4, "0")}`;
+
+      // Business day тооцоолох
+      this.businessDay = getBusinessDayString(new Date());
     } catch (error) {
       console.error("Error generating order number:", error);
       // Fallback: timestamp-based order number
       const timestamp = Date.now().toString().slice(-6);
       this.orderNumber = `ORD-${timestamp}`;
+      this.businessDay = getBusinessDayString(new Date());
     }
   }
   next();
@@ -173,5 +191,7 @@ OrderSchema.index({ table: 1, status: 1 });
 OrderSchema.index({ orderNumber: 1 });
 OrderSchema.index({ createdAt: -1 });
 OrderSchema.index({ status: 1 });
+OrderSchema.index({ businessDay: 1 }); // Business day index
+OrderSchema.index({ businessDay: 1, status: 1 }); // Business day + status index
 
 export default mongoose.model<IOrder>("Order", OrderSchema);

@@ -1,34 +1,31 @@
 "use client";
 
-import { useLanguage } from "@/contexts/language-context";
+import { useDiscount } from "@/hooks/use-discount";
 
-interface DiscountBannerProps {
-  isBefore7PM: boolean;
-}
+export function DiscountBanner() {
+  const { getDiscountInfo } = useDiscount();
+  const discountInfo = getDiscountInfo();
 
-export function DiscountBanner({ isBefore7PM }: DiscountBannerProps) {
-  const { getText } = useLanguage();
-
-  if (!isBefore7PM) return null;
+  if (!discountInfo) {
+    return null;
+  }
 
   return (
-    <div className="container px-4 py-1 mx-auto">
-      <div className="px-3 py-2 text-center text-white rounded-lg shadow-lg bg-gradient-to-r from-yellow-400 to-orange-400">
-        <div className="flex items-center justify-center gap-1">
-          <span className="text-base">🎉</span>
-          <span className="text-lg font-bold">
-            {getText("Happy Hour!", "Хөгжөөний цаг!", "ハッピーアワー！")}
-          </span>
-          <span className="text-sm">
-            {getText(
-              "10% OFF all items before 7:00 PM",
-              "19:00 цагийн өмнөх бүх бараанд 10% хөнгөлөлт",
-              "19:00までの全商品10%オフ"
-            )}
-          </span>
-          <span className="text-base">🎉</span>
+    <div className="relative w-full p-4 mb-4 overflow-hidden rounded-lg bg-gradient-to-r from-yellow-400 to-orange-400">
+      <div className="flex items-center justify-center gap-1s">
+        <span className="text-base">🎉</span>
+        {/* Content */}
+        <div className="relative z-10 text-center">
+          <div className="mb-1 text-lg font-bold text-white">
+            Хөнгөлөлтийн цаг!
+          </div>
+          <div className="text-sm text-white">
+            {discountInfo.endTime} цагаас өмнө бүх хоол{" "}
+            {discountInfo.percentage}% хөнгөлөлттэй
+          </div>
         </div>
+        <span className="text-base">🎉</span>
       </div>
     </div>
   );
-} 
+}

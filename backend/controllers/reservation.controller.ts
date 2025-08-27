@@ -37,8 +37,6 @@ export const getAllReservations = async (req: Request, res: Response) => {
 // POST /api/reservations - Create new reservation
 export const createReservation = async (req: Request, res: Response) => {
   try {
-    console.log("Received reservation data:", req.body);
-
     // Keep date as string format (YYYY-MM-DD) to avoid timezone issues
     const reservationData = { ...req.body };
     if (typeof reservationData.date === "string") {
@@ -52,7 +50,6 @@ export const createReservation = async (req: Request, res: Response) => {
       }
 
       // Keep the date as string - no conversion needed
-      console.log("Date kept as string:", reservationData.date);
     }
 
     // Handle tableId to table mapping
@@ -175,23 +172,12 @@ export const createReservation = async (req: Request, res: Response) => {
           }
 
           // If reservation is 3+ hours later, allow it but show a warning
-          console.log(
-            `Allowing reservation for table with active orders - reservation is ${hoursDifference.toFixed(
-              1
-            )} hours later`
-          );
         }
-      } catch (importError) {
-        console.log("Order model not available, skipping order conflict check");
-      }
+      } catch (importError) {}
     }
-
-    console.log("Processed reservation data:", reservationData);
 
     const reservation = new Reservation(reservationData);
     await reservation.save();
-
-    console.log("Reservation saved successfully:", reservation);
 
     res.status(201).json({
       success: true,
@@ -269,7 +255,6 @@ export const updateReservation = async (req: Request, res: Response) => {
           error: "Invalid date format. Expected YYYY-MM-DD",
         });
       }
-      console.log("Date kept as string:", updateData.date);
     }
 
     // Handle tableId to table mapping
@@ -338,9 +323,7 @@ export const deleteReservation = async (req: Request, res: Response) => {
           { status: "empty" },
           { new: true }
         );
-      } catch (importError) {
-        console.log("Table model not available, skipping table status update");
-      }
+      } catch (importError) {}
     }
 
     await (Reservation as any).findByIdAndDelete(id);
@@ -392,10 +375,6 @@ export const cleanupOldReservations = async () => {
       status: "no-show",
       date: { $lt: noShowCutoff },
     });
-
-    console.log(
-      `Cleanup completed: ${deletedCompleted.deletedCount} completed, ${deletedCancelled.deletedCount} cancelled, ${deletedNoShow.deletedCount} no-show reservations removed`
-    );
 
     return {
       success: true,

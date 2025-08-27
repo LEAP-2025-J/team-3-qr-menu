@@ -6,8 +6,6 @@ export function getOrderStatusColor(status: Order["status"]): string {
   switch (status) {
     case "pending":
       return "bg-yellow-100 text-yellow-800 border-yellow-200";
-    case "preparing":
-      return "bg-blue-100 text-blue-800 border-blue-200";
     case "serving":
       return "bg-green-100 text-green-800 border-green-200";
     case "completed":
@@ -24,8 +22,6 @@ export function getOrderStatusText(status: Order["status"]): string {
   switch (status) {
     case "pending":
       return "Хүлээгдэж буй";
-    case "preparing":
-      return "Бэлтгэж байна";
     case "serving":
       return "Үйлчилж байна";
     case "completed":
@@ -41,8 +37,6 @@ export function getOrderStatusText(status: Order["status"]): string {
 export function getNextStatus(currentStatus: Order["status"]): Order["status"] {
   switch (currentStatus) {
     case "pending":
-      return "preparing";
-    case "preparing":
       return "serving";
     case "serving":
       return "completed";
@@ -55,8 +49,6 @@ export function getNextStatus(currentStatus: Order["status"]): Order["status"] {
 export function getPrimaryActionLabel(status: Order["status"]): string {
   switch (status) {
     case "pending":
-      return "Бэлтгэх";
-    case "preparing":
       return "Үйлчлэх";
     case "serving":
       return "Дуусгах";
@@ -93,41 +85,49 @@ export async function requestUpdateStatus(
   }
 }
 
-// Захиалгын хугацаа тооцоолох функц
+// Захиалгын хугацаа тооцоолох функц - зөв цагийн тооцоолол
 export function calculateOrderTime(order: any): string | null {
   if (!order || !order.createdAt) {
     return null;
   }
 
-  // Зөвхөн pending, preparing төлөвт байгаа захиалгуудад хугацаа харуулах
-  if (order.status !== "pending" && order.status !== "preparing") {
+  // Зөвхөн pending төлөвт байгаа захиалгуудад хугацаа харуулах
+  if (order.status !== "pending") {
     return null;
   }
 
+  // Захиалгын цаг (UTC+0 дээр хадгалагдсан)
   const startTime = new Date(order.createdAt);
-  const endTime = new Date(); // Одоогийн цаг
 
-  const timeDiff = endTime.getTime() - startTime.getTime();
+  // Одоогийн цаг (browser-ийн local timezone)
+  const now = new Date();
+
+  // Цагийн зөрүүг тооцоолох
+  const timeDiff = now.getTime() - startTime.getTime();
   const minutes = Math.floor(timeDiff / (1000 * 60));
 
   // Зөвхөн тоогоор харагдах (мин гэдэг үггүй)
   return `${minutes}`;
 }
 
-// Захиалгын хугацааг секундээр тооцоолох (auto refresh-д хэрэгтэй)
+// Захиалгын хугацааг секундээр тооцоолох (auto refresh-д хэрэгтэй) - зөв цагийн тооцоолол
 export function getOrderTimeInSeconds(order: any): number | null {
   if (!order || !order.createdAt) {
     return null;
   }
 
-  if (order.status !== "pending" && order.status !== "preparing") {
+  if (order.status !== "pending") {
     return null;
   }
 
+  // Захиалгын цаг (UTC+0 дээр хадгалагдсан)
   const startTime = new Date(order.createdAt);
-  const endTime = new Date(); // Одоогийн цаг
 
-  return Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
+  // Одоогийн цаг (browser-ийн local timezone)
+  const now = new Date();
+
+  // Цагийн зөрүүг секундээр тооцоолох
+  return Math.floor((now.getTime() - startTime.getTime()) / 1000);
 }
 
 // Бүх захиалгыг дуусгах функц
@@ -142,7 +142,6 @@ export async function completeAllOrders(orderIds: string[]): Promise<boolean> {
     const allSuccessful = results.every((result) => result === true);
 
     if (allSuccessful) {
-      console.log("Бүх захиалга амжилттай дууслаа");
       return true;
     } else {
       console.error("Зарим захиалга дуусгахад алдаа гарлаа");

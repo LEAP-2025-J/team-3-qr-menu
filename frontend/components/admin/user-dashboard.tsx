@@ -161,7 +161,6 @@ export function UserDashboard() {
 
   const handleViewQR = (tableId: string) => {
     // QR code view logic
-    console.log("View QR for table:", tableId);
   };
 
   const handleCompleteOrder = async (orderId: string) => {
@@ -174,7 +173,6 @@ export function UserDashboard() {
 
   const handlePrintOrder = (orderId: string) => {
     // Print order logic
-    console.log("Print order:", orderId);
   };
 
   const handleRefresh = async () => {
@@ -190,6 +188,7 @@ export function UserDashboard() {
     tableId: string;
     items: any[];
     total: number;
+    orderSource?: string; // Админ захиалга гэж тэмдэглэх
   }) => {
     try {
       const requestBody = {
@@ -202,6 +201,7 @@ export function UserDashboard() {
         })),
         total: orderData.total,
         status: "pending",
+        orderSource: orderData.orderSource || "admin", // Админ захиалга гэж тэмдэглэх
       };
 
       // Захиалга үүсгэх API дуудах
@@ -210,8 +210,6 @@ export function UserDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
       });
-
-      console.log("API response status:", response.status);
 
       if (response.ok) {
         const responseData = await response.json();

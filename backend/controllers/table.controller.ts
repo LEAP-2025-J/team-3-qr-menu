@@ -1,10 +1,11 @@
 import { Request, Response } from "express";
 import Table from "../models/model.table.js";
+import { getCurrentBusinessDayString } from "../utils/business-day-utils.js";
 
 // GET /api/tables - Get all tables or specific table by number
 export const getAllTables = async (req: Request, res: Response) => {
   try {
-    const { number } = req.query;
+    const { number, useBusinessDay = "false" } = req.query;
 
     let query: any = { isActive: true };
     if (number) {
@@ -60,12 +61,20 @@ export const getAllTables = async (req: Request, res: Response) => {
 
       // Хамгийн сүүлийн идэвхтэй захиалгыг currentOrder болгох
       if (table.orders && table.orders.length > 0) {
-        const activeOrders = table.orders.filter(
+        let activeOrders = table.orders.filter(
           (order: any) =>
             order.status === "pending" ||
             order.status === "preparing" ||
             order.status === "serving"
         );
+
+        // Business day mode-д зөвхөн business day-ийн захиалгуудыг харуулах
+        if (useBusinessDay === "true") {
+          const currentBusinessDay = getCurrentBusinessDayString();
+          activeOrders = activeOrders.filter(
+            (order: any) => order.businessDay === currentBusinessDay
+          );
+        }
 
         if (activeOrders.length > 0) {
           // Хамгийн сүүлийн идэвхтэй захиалгыг currentOrder болгох
@@ -247,13 +256,6 @@ export const clearTableOrder = async (req: Request, res: Response) => {
         error: "Table not found",
       });
     }
-
-    console.log(`Ширээний currentOrder цэвэрлэгдлээ:`, {
-      tableId: table._id,
-      tableNumber: table.number,
-      status: table.status,
-      currentOrder: table.currentOrder,
-    });
 
     res.json({
       success: true,
