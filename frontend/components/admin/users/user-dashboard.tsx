@@ -17,27 +17,30 @@ import {
 } from "lucide-react";
 import { UserHeader } from "./user-header";
 import { UserSidebar } from "./user-sidebar";
-import { OrdersList } from "./orders/orders-list";
-import { ReservationsList } from "./orders/reservations-list";
-import { TableLayout } from "./orders/table-layout";
-import { SettingsForm } from "./settings/settings-form";
-import { ReservationModal } from "./orders/reservation-modal";
-import { EditReservationModal } from "./orders/edit-reservation-modal-new";
-import { CreateOrderModal } from "./orders/create-order-modal";
+import { OrdersList } from "../orders/orders-list";
+import { ReservationsList } from "../orders/reservations-list";
+import { TableLayout } from "../orders/table-layout";
+import { SettingsForm } from "../settings/settings-form";
+import { UserMenuManagement } from "../menu/user-menu-management";
+import { ReservationModal } from "../orders/reservation-modal";
+import { EditReservationModal } from "../orders/edit-reservation-modal-new";
+import { CreateOrderModal } from "../orders/create-order-modal";
 import { useAdminData } from "@/hooks/use-admin-data";
 import { useToast } from "@/hooks/use-toast";
 import { Toaster } from "@/components/ui/toaster";
 import { API_CONFIG } from "@/config/api";
-import { AdminDashboardSkeleton } from "./admin-dashboard-skeleton";
-import { SettingsSkeleton } from "./settings/settings-skeleton";
+import { AdminDashboardSkeleton } from "../admin-dashboard-skeleton";
+import { SettingsSkeleton } from "../settings/settings-skeleton";
 import {
   NotificationProvider,
   useNotification,
 } from "@/contexts/notification-context";
-import { NotificationDialog } from "./notifications/notification-dialog";
+import { NotificationDialog } from "../notifications/notification-dialog";
 
 export function UserDashboard() {
   const [activeTab, setActiveTab] = useState("orders");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
   const [isEditReservationModalOpen, setIsEditReservationModalOpen] =
     useState(false);
@@ -555,6 +558,26 @@ export function UserDashboard() {
                 onCreateOrder={handleCreateOrder}
                 onEditReservation={handleEditReservation}
               />
+            </TabsContent>
+
+            {/* Menu Tab */}
+            <TabsContent value="menu" className="space-y-6">
+              {loading ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-500 text-lg">
+                    Хоолны цэс ачааллаж байна...
+                  </p>
+                </div>
+              ) : (
+                <UserMenuManagement
+                  menuItems={menuItems}
+                  categories={categories}
+                  searchQuery={searchQuery}
+                  selectedCategory={selectedCategory}
+                  onSearchChange={setSearchQuery}
+                  onCategoryChange={setSelectedCategory}
+                />
+              )}
             </TabsContent>
 
             {/* Settings Tab */}
