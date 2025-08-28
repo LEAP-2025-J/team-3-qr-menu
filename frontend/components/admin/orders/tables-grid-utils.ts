@@ -22,14 +22,12 @@ export async function handleCreateReservation(
       onRefresh?.();
       return { success: true, message: "Reservation created successfully!" };
     } else {
-      console.error("Failed to create reservation:", result);
       return {
         success: false,
         error: result.message || "Failed to create reservation",
       };
     }
   } catch (error) {
-    console.error("Error creating reservation:", error);
     return {
       success: false,
       error: "Error creating reservation",

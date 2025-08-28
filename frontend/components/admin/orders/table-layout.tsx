@@ -83,13 +83,10 @@ export function TableLayout({
 
       const result = await response.json();
       if (result.success) {
-        console.log("Reservation status updated successfully");
         await onRefresh(); // Refresh data
-      } else {
-        console.error("Failed to update reservation status:", result.error);
       }
     } catch (error) {
-      console.error("Error updating reservation status:", error);
+      // Алдаа гарвал зөндөө орхино
     }
   };
 

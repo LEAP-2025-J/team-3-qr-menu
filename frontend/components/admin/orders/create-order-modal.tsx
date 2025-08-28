@@ -179,7 +179,7 @@ export function CreateOrderModal({
         onClose();
       }
     } catch (error) {
-      console.error("Захиалга үүсгэхэд алдаа гарлаа:", error);
+      // Захиалга үүсгэхэд алдаа гарвал зөндөө орхино
     } finally {
       setLoading(false);
     }

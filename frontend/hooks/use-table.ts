@@ -24,20 +24,7 @@ export function useTable(
         // Check if table is reserved
         if (table.status === "reserved") {
           setTableAvailable(true); // Захиалгатай ширээнд ч гэсэн true болгох
-          toast({
-            title: getText(
-              "✅ Table Active",
-              "✅ Ширээ идэвхтэй",
-              "✅ テーブルはアクティブ"
-            ),
-            description: getText(
-              "This table has an active order. You can continue adding items to your cart.",
-              "Энэ ширээ идэвхтэй захиалгатай байна. Та сагсанд бараа нэмж үргэлжлүүлж болно.",
-              "このテーブルは使用中です。カートに商品を追加し続けることができます。"
-            ),
-            variant: "default",
-            duration: 3000,
-          });
+          // Toast болиулсан - захиалгатай ширээнд дахин QR уншуулахад toast гаргахгүй
         } else {
           setTableAvailable(true);
         }

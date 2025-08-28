@@ -122,37 +122,24 @@ export function useAdminData() {
   // Fetch data functions
   const fetchOrders = async () => {
     try {
-      // Business day mode-г шалгах (SSR-д localStorage байхгүй байж болно)
-      let isBusinessDayMode = false;
-      if (typeof window !== "undefined") {
-        isBusinessDayMode = localStorage.getItem("businessDayMode") === "true";
-      }
-      const url = `${API_ENDPOINTS.ORDERS}?limit=20${
-        isBusinessDayMode ? "&useBusinessDay=true" : ""
-      }`;
+      // Энгийн календарь өдрийн захиалгуудыг авах
+      const url = `${API_ENDPOINTS.ORDERS}?limit=20`;
 
       const response = await fetch(url);
       const data = await response.json();
       if (data.success) {
         setOrders(data.data);
 
-        // Calculate stats - Business day mode-г ашиглах
-        let todayOrders;
-        if (isBusinessDayMode) {
-          // Business day mode-д бүх захиалгуудыг business day-ийн захиалга гэж үзэх
-          todayOrders = data.data;
-        } else {
-          // Хуучин логик - UTC+8 timezone ашиглах (Mongolia timezone)
-          const now = new Date();
-          const utc8Date = new Date(now.getTime() + 8 * 60 * 60 * 1000); // UTC+8
-          const todayString = utc8Date.toISOString().split("T")[0]; // YYYY-MM-DD формат
+        // Өнөөдрийн захиалгуудын статистик тооцоолох (календарь өдрөөр)
+        const now = new Date();
+        const utc8Date = new Date(now.getTime() + 8 * 60 * 60 * 1000); // UTC+8
+        const todayString = utc8Date.toISOString().split("T")[0]; // YYYY-MM-DD формат
 
-          todayOrders = data.data.filter((order: Order) => {
-            const orderDate = new Date(order.createdAt);
-            const orderDateString = orderDate.toISOString().split("T")[0]; // YYYY-MM-DD формат
-            return orderDateString === todayString;
-          });
-        }
+        const todayOrders = data.data.filter((order: Order) => {
+          const orderDate = new Date(order.createdAt);
+          const orderDateString = orderDate.toISOString().split("T")[0]; // YYYY-MM-DD формат
+          return orderDateString === todayString;
+        });
 
         const totalRevenue = todayOrders.reduce(
           (sum: number, order: Order) => sum + order.total,
@@ -173,34 +160,10 @@ export function useAdminData() {
     }
   };
 
-  // Business day mode өөрчлөгдөхөд orders дахин авах
-  useEffect(() => {
-    const handleBusinessDayModeChange = () => {
-      fetchOrders();
-    };
-
-    window.addEventListener(
-      "businessDayModeChanged",
-      handleBusinessDayModeChange
-    );
-    return () => {
-      window.removeEventListener(
-        "businessDayModeChanged",
-        handleBusinessDayModeChange
-      );
-    };
-  }, []);
-
   const fetchTables = async () => {
     try {
-      // Business day mode-г шалгах (SSR-д localStorage байхгүй байж болно)
-      let isBusinessDayMode = false;
-      if (typeof window !== "undefined") {
-        isBusinessDayMode = localStorage.getItem("businessDayMode") === "true";
-      }
-      const url = `${API_ENDPOINTS.TABLES}${
-        isBusinessDayMode ? "?useBusinessDay=true" : ""
-      }`;
+      // Энгийн календарь өдрийн ширээний мэдээллийг авах
+      const url = `${API_ENDPOINTS.TABLES}`;
 
       const response = await fetch(url);
       const data = await response.json();

@@ -55,11 +55,9 @@ export function TableListView({
         if (result.success) {
           onRefresh?.();
         } else {
-          console.error("Failed to cancel reservation:", result.error);
           alert("Failed to cancel reservation: " + result.error);
         }
       } catch (error) {
-        console.error("Error cancelling reservation:", error);
         alert("Error cancelling reservation");
       }
     }
@@ -78,11 +76,9 @@ export function TableListView({
         if (result.success) {
           onRefresh?.();
         } else {
-          console.error("Failed to delete reservation:", result.error);
           alert("Failed to delete reservation: " + result.error);
         }
       } catch (error) {
-        console.error("Error deleting reservation:", error);
         alert("Error deleting reservation");
       }
     }
