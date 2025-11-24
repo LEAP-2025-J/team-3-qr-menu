@@ -74,7 +74,7 @@ export function TableCard({
       await requestUpdateStatus(orderId, next);
       onRefresh?.();
     } catch (e) {
-      console.error(e);
+      // Алдаа гарвал зөндөө орхино
     } finally {
       setIsUpdating(false);
     }
@@ -112,7 +112,7 @@ export function TableCard({
         await requestUpdateStatus(orderId, "serving");
         onRefresh?.();
       } catch (e) {
-        console.error(e);
+        // Алдаа гарвал зөндөө орхино
       } finally {
         setIsUpdating(false);
       }

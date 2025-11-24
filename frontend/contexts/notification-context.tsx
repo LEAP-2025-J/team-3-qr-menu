@@ -32,17 +32,11 @@ export function NotificationProvider({
   // Backend-аас notification count авах функц
   const fetchNotificationCount = useCallback(async () => {
     try {
-      // Business day mode-г шалгах (SSR-д localStorage байхгүй байж болно)
-      let isBusinessDayMode = false;
-      if (typeof window !== "undefined") {
-        isBusinessDayMode = localStorage.getItem("businessDayMode") === "true";
-      }
-
       // Локал орчинд локал backend ашиглах
       const backendUrl = window.location.hostname.startsWith("192.168.")
         ? "http://localhost:5000"
         : API_CONFIG.BACKEND_URL;
-      const url = `${backendUrl}/api/orders/notifications?useBusinessDay=${isBusinessDayMode}`;
+      const url = `${backendUrl}/api/orders/notifications`;
       const response = await fetch(url);
 
       if (response.ok) {
@@ -111,24 +105,6 @@ export function NotificationProvider({
     },
     [fetchNotificationCount]
   );
-
-  // Business day mode өөрчлөгдөхөд notification count дахин авах
-  useEffect(() => {
-    const handleBusinessDayModeChange = () => {
-      fetchNotificationCount();
-    };
-
-    window.addEventListener(
-      "businessDayModeChanged",
-      handleBusinessDayModeChange
-    );
-    return () => {
-      window.removeEventListener(
-        "businessDayModeChanged",
-        handleBusinessDayModeChange
-      );
-    };
-  }, [fetchNotificationCount]);
 
   // Toast notification trigger функц (deploy дээр ашиглах)
   const triggerToast = useCallback((tableNumber: number) => {

@@ -3,9 +3,8 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Bell, Percent, Clock, Calendar } from "lucide-react";
+import { Bell, Percent, Clock } from "lucide-react";
 import { useDiscount } from "@/hooks/use-discount";
-import { useBusinessDay } from "@/hooks/use-business-day";
 
 interface AdminHeaderProps {
   notificationCount?: number;
@@ -17,24 +16,12 @@ export function AdminHeader({
   notificationDialog,
 }: AdminHeaderProps) {
   const { isDiscountTime, getDiscountInfo } = useDiscount();
-  const { isBusinessDayMode } = useBusinessDay();
   const discountInfo = getDiscountInfo();
 
   return (
     <header className="px-6 py-4 bg-white border-b border-gray-200">
       <div className="flex items-center justify-end">
         <div className="flex items-center gap-4">
-          {/* Business day мэдээлэл */}
-          <div className="flex items-center gap-2 px-3 py-1 bg-blue-100 border border-blue-300 rounded-lg">
-            <span className="text-sm font-medium text-blue-800">
-              Бизнес горим:
-            </span>
-            <Calendar className="w-4 h-4 text-blue-600" />
-            <span className="text-sm font-medium text-blue-800">
-              {isBusinessDayMode ? "ON" : "OFF"}
-            </span>
-          </div>
-
           {/* Хөнгөлөлтийн мэдээлэл */}
           {discountInfo && (
             <div className="flex items-center gap-2 px-3 py-1 bg-yellow-100 border border-yellow-300 rounded-lg">

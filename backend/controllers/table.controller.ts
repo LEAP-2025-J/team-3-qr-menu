@@ -1,16 +1,37 @@
 import { Request, Response } from "express";
 import Table from "../models/model.table.js";
-import { getCurrentBusinessDayString } from "../utils/business-day-utils.js";
 
 // GET /api/tables - Get all tables or specific table by number
 export const getAllTables = async (req: Request, res: Response) => {
   try {
-    const { number, useBusinessDay = "false" } = req.query;
+    const { number } = req.query;
 
     let query: any = { isActive: true };
     if (number) {
       query = { ...query, number: parseInt(number as string) };
     }
+
+    // Энгийн календарь өдрийн захиалгуудыг харуулах (Mongolia timezone)
+    const now = new Date();
+    const utc8Date = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+
+    // Calendar day: 00:00-23:59 (Mongolia time)
+    const todayStart = new Date(utc8Date);
+    todayStart.setHours(0, 0, 0, 0);
+
+    const todayEnd = new Date(utc8Date);
+    todayEnd.setHours(23, 59, 59, 999);
+
+    // UTC-руу хөрвүүлэх
+    const todayStartUTC = new Date(todayStart.getTime() - 8 * 60 * 60 * 1000);
+    const todayEndUTC = new Date(todayEnd.getTime() - 8 * 60 * 60 * 1000);
+
+    const ordersMatch = {
+      createdAt: {
+        $gte: todayStartUTC,
+        $lte: todayEndUTC,
+      },
+    };
 
     const tables = await (Table as any)
       .find(query)
@@ -23,6 +44,7 @@ export const getAllTables = async (req: Request, res: Response) => {
       })
       .populate({
         path: "orders",
+        match: ordersMatch, // Өнөөдрийн захиалгуудыг шүүх
         populate: {
           path: "items.menuItem",
           select: "name nameEn nameMn nameJp price",
@@ -34,22 +56,32 @@ export const getAllTables = async (req: Request, res: Response) => {
 
     // Хоосон ширээнүүдийн currentOrder-г null болгох
     const processedTables = tables.map((table: any) => {
-      // Хэрэв currentOrder байхгүй эсвэл orders array хоосон бол хоосон ширээ
-      if (!table.currentOrder || !table.orders || table.orders.length === 0) {
+      // Хэрэв currentOrder байхгүй бол хоосон ширээ
+      if (!table.currentOrder) {
         return {
           ...table,
           currentOrder: null,
-          orders: [],
+          orders: table.orders || [],
           status: "empty", // Хоосон ширээний статус
         };
       }
 
-      // currentOrder байгаа ч тухайн захиалга дууссан/цуцлагдсан бол currentOrder-г null болгох
+      // currentOrder байгаа ч тухайн захиалга дууссан/цуцлагдсан эсвэл өнөөдрийн огноотой биш бол currentOrder-г null болгох
       if (table.currentOrder) {
         const currentOrderStatus = table.currentOrder.status;
+
+        // Өнөөдрийн огноотой эсэхийг шалгах
+        const now = new Date();
+        const utc8Date = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+        const todayString = utc8Date.toISOString().split("T")[0];
+        const orderDate = new Date(table.currentOrder.createdAt);
+        const orderDateString = orderDate.toISOString().split("T")[0];
+        const isTodayOrder = orderDateString === todayString;
+
         if (
           currentOrderStatus === "completed" ||
-          currentOrderStatus === "cancelled"
+          currentOrderStatus === "cancelled" ||
+          !isTodayOrder
         ) {
           return {
             ...table,
@@ -67,14 +99,6 @@ export const getAllTables = async (req: Request, res: Response) => {
             order.status === "preparing" ||
             order.status === "serving"
         );
-
-        // Business day mode-д зөвхөн business day-ийн захиалгуудыг харуулах
-        if (useBusinessDay === "true") {
-          const currentBusinessDay = getCurrentBusinessDayString();
-          activeOrders = activeOrders.filter(
-            (order: any) => order.businessDay === currentBusinessDay
-          );
-        }
 
         if (activeOrders.length > 0) {
           // Хамгийн сүүлийн идэвхтэй захиалгыг currentOrder болгох

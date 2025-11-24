@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +26,7 @@ export function DiscountSettings() {
     isActive: true,
     description: "",
   });
+  const [discountInputValue, setDiscountInputValue] = useState("1");
   const [isUpdating, setIsUpdating] = useState(false);
 
   // Form data-г шинэчлэх
@@ -37,6 +38,7 @@ export function DiscountSettings() {
         isActive: discountSettings.isActive,
         description: discountSettings.description,
       });
+      setDiscountInputValue(discountSettings.discountPercentage.toString());
     }
   }, [discountSettings]);
 
@@ -44,13 +46,24 @@ export function DiscountSettings() {
   const handleSave = async () => {
     setIsUpdating(true);
     try {
-      const result = await updateDiscountSettings(formData);
+      // Автоматаар тайлбар үүсгэх
+      const autoDescription = `Хөнгөлөлтийн цаг! ${formData.discountEndTime} цагийн өмнө бүх хоол ${formData.discountPercentage}% хөнгөлөлт`;
+
+      const updatedFormData = {
+        ...formData,
+        description: autoDescription,
+      };
+
+      const result = await updateDiscountSettings(updatedFormData);
       if (result.success) {
+        // Form data-г шинэчлэх
+        setFormData(updatedFormData);
+
         // Admin header-г шинэчлэх custom event илгээх
         if (typeof window !== "undefined") {
           window.dispatchEvent(
             new CustomEvent("discountSettingsChanged", {
-              detail: { settings: formData },
+              detail: { settings: updatedFormData },
             })
           );
         }
@@ -147,13 +160,38 @@ export function DiscountSettings() {
                 type="number"
                 min="0"
                 max="100"
-                value={formData.discountPercentage}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    discountPercentage: parseInt(e.target.value) || 0,
-                  })
-                }
+                value={discountInputValue}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setDiscountInputValue(value);
+
+                  // Хэрэглэгч хоосон болгосон бол 0 болгох
+                  if (value === "") {
+                    setFormData({
+                      ...formData,
+                      discountPercentage: 0,
+                    });
+                  } else {
+                    const numValue = parseInt(value);
+                    // Зөвхөн тоо байвал шинэчлэх (0-100 хооронд)
+                    if (!isNaN(numValue) && numValue >= 0 && numValue <= 100) {
+                      setFormData({
+                        ...formData,
+                        discountPercentage: numValue,
+                      });
+                    }
+                  }
+                }}
+                onBlur={(e) => {
+                  // Input-аас гарч байх үед хоосон байвал 0 болгох
+                  if (e.target.value === "") {
+                    setDiscountInputValue("0");
+                    setFormData({
+                      ...formData,
+                      discountPercentage: 0,
+                    });
+                  }
+                }}
                 className="mt-1"
               />
             </div>
@@ -178,20 +216,6 @@ export function DiscountSettings() {
                 placeholder="19:00"
               />
             </div>
-          </div>
-
-          <div>
-            <Label htmlFor="description">Тайлбар</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              placeholder="Хөгжөөний цаг! 19:00 цагийн өмнөх бүх бараанд 1% хөнгөлөлт"
-              className="mt-1 min-h-[80px] resize-none"
-              rows={3}
-            />
           </div>
         </div>
 

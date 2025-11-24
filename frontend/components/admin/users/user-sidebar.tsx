@@ -1,11 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {
-  ShoppingCart,
-  Settings,
-  LogOut,
-} from "lucide-react";
+import { ShoppingCart, Settings, LogOut, MenuIcon } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 interface UserSidebarProps {
@@ -18,8 +14,10 @@ export function UserSidebar({ activeTab, onTabChange }: UserSidebarProps) {
 
   const handleSignOut = () => {
     // Ask for confirmation before signing out
-    const isConfirmed = window.confirm("Та гарахдаа итгэлтэй байна уу? (Are you sure you want to sign out?)");
-    
+    const isConfirmed = window.confirm(
+      "Та гарахдаа итгэлтэй байна уу? (Are you sure you want to sign out?)"
+    );
+
     if (isConfirmed) {
       logout();
     }
@@ -45,6 +43,15 @@ export function UserSidebar({ activeTab, onTabChange }: UserSidebarProps) {
           >
             <ShoppingCart className="w-4 h-4 mr-3 flex-shrink-0" />
             <span className="truncate">Захиалгууд</span>
+          </Button>
+
+          <Button
+            variant={activeTab === "menu" ? "default" : "ghost"}
+            className="w-full justify-start text-left overflow-hidden"
+            onClick={() => onTabChange("menu")}
+          >
+            <MenuIcon className="w-4 h-4 mr-3 flex-shrink-0" />
+            <span className="truncate">Хоолны цэс</span>
           </Button>
 
           <Button

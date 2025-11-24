@@ -13,7 +13,7 @@ export function isOrderActive(order: any): boolean {
     return false; // completed, cancelled, reserved статустай захиалгууд идэвхгүй
   }
 
-  // Өнөөдрийн огноог UTC+8 timezone-тай болгож авах (Mongolia timezone)
+  // Энгийн календарь өдрийн логик (Mongolia timezone)
   const now = new Date();
   const utc8Date = new Date(now.getTime() + 8 * 60 * 60 * 1000); // UTC+8
   const todayString = utc8Date.toISOString().split("T")[0]; // YYYY-MM-DD формат
@@ -119,7 +119,6 @@ export async function handleReservationSubmit(
       const result = await response.json();
       if (result.success) {
       } else {
-        console.error("Failed to update reservation:", result.error);
         return { success: false, error: result.error };
       }
     } else {
@@ -135,14 +134,12 @@ export async function handleReservationSubmit(
       const result = await response.json();
       if (result.success) {
       } else {
-        console.error("Failed to create reservation:", result.error);
         return { success: false, error: result.error };
       }
     }
     onRefresh?.();
     return { success: true };
   } catch (error) {
-    console.error("Error handling reservation:", error);
     return { success: false, error: "Unknown error occurred" };
   }
 }

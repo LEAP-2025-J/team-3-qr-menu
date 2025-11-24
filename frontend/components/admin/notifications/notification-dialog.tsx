@@ -59,15 +59,11 @@ export function NotificationDialog({
   const fetchTodayOrders = async () => {
     try {
       setLoading(true);
-      // Business day mode-г шалгах
-      const isBusinessDayMode =
-        localStorage.getItem("businessDayMode") === "true";
-
       // Локал орчинд локал backend ашиглах
       const backendUrl = window.location.hostname.startsWith("192.168.")
         ? "http://localhost:5000"
         : API_CONFIG.BACKEND_URL;
-      const url = `${backendUrl}/api/orders/notifications?useBusinessDay=${isBusinessDayMode}`;
+      const url = `${backendUrl}/api/orders/notifications`;
       const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
@@ -137,14 +133,14 @@ export function NotificationDialog({
           ) : (
             <div className="p-4 space-y-3">
               {todayOrders.map((order) => (
-                                 <div
-                   key={order._id}
-                   className={`border rounded-lg p-3 shadow-sm ${
-                     order.orderSource === "admin"
-                       ? "bg-gray-50 border-gray-200" // Админ захиалга - саарал өнгө
-                       : "bg-white border-blue-200" // QR захиалга - цагаан өнгө, цэнхэр хүрээ
-                   }`}
-                 >
+                <div
+                  key={order._id}
+                  className={`border rounded-lg p-3 shadow-sm ${
+                    order.orderSource === "admin"
+                      ? "bg-gray-50 border-gray-200" // Админ захиалга - саарал өнгө
+                      : "bg-white border-blue-200" // QR захиалга - цагаан өнгө, цэнхэр хүрээ
+                  }`}
+                >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <Badge variant="outline" className="text-blue-600">

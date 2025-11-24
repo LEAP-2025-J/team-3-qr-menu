@@ -14,17 +14,17 @@ export function getBusinessDay(date: Date): Date {
   );
   const currentHour = utc8Date.getHours();
 
-  // Хэрэв 04:00-09:00 хооронд бол өмнөх өдөр
-  if (currentHour >= 0 && currentHour < 9) {
+  // Хэрэв 00:00-06:59 хооронд бол өмнөх өдөр
+  if (currentHour >= 0 && currentHour < 7) {
     const previousDay = new Date(utc8Date);
     previousDay.setDate(previousDay.getDate() - 1);
-    previousDay.setHours(9, 0, 0, 0);
+    previousDay.setHours(7, 0, 0, 0);
     return previousDay;
   }
 
-  // Хэрэв 09:00-24:00 хооронд бол өнөөдөр
+  // Хэрэв 07:00-23:59 хооронд бол өнөөдөр
   const businessDay = new Date(utc8Date);
-  businessDay.setHours(9, 0, 0, 0);
+  businessDay.setHours(7, 0, 0, 0);
   return businessDay;
 }
 
@@ -48,7 +48,7 @@ export function getBusinessDayRange(date: Date): { start: Date; end: Date } {
   const start = new Date(businessDay);
   const end = new Date(businessDay);
   end.setDate(end.getDate() + 1);
-  end.setHours(4, 0, 0, 0);
+  end.setHours(7, 0, 0, 0);
 
   return { start, end };
 }

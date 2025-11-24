@@ -69,12 +69,6 @@ export function useDiscount() {
   const isDiscountTime = () => {
     if (!discountSettings.isActive) return false;
 
-    // Business day mode-г шалгах (SSR-д localStorage байхгүй байж болно)
-    let isBusinessDayMode = false;
-    if (typeof window !== "undefined") {
-      isBusinessDayMode = localStorage.getItem("businessDayMode") === "true";
-    }
-
     // Одоогийн цагийг UTC+8 timezone-тай болгож авах (Mongolia timezone)
     const now = new Date();
     const utc8Time = new Date(
@@ -84,33 +78,15 @@ export function useDiscount() {
     const currentHour = utc8Time.getHours();
     const currentMinute = utc8Time.getMinutes();
 
-    if (isBusinessDayMode) {
-      // Business day mode-д хөнгөлөлтийн логик
-      // 04:00-09:00 хооронд хөнгөлөлт ажиллахгүй (өмнөх өдрийн business day)
-      if (currentHour >= 0 && currentHour < 9) {
-        return false;
-      }
+    // Энгийн календарь өдрийн логик - UTC+8 timezone ашиглах (Mongolia timezone)
+    const [endHour, endMinute] = discountSettings.discountEndTime
+      .split(":")
+      .map(Number);
 
-      // 09:00-24:00 хооронд хөнгөлөлтийн цагийг шалгах
-      const [endHour, endMinute] = discountSettings.discountEndTime
-        .split(":")
-        .map(Number);
+    const currentTimeInMinutes = currentHour * 60 + currentMinute;
+    const endTimeInMinutes = endHour * 60 + endMinute;
 
-      const currentTimeInMinutes = currentHour * 60 + currentMinute;
-      const endTimeInMinutes = endHour * 60 + endMinute;
-
-      return currentTimeInMinutes < endTimeInMinutes;
-    } else {
-      // Хуучин логик - UTC+8 timezone ашиглах (Mongolia timezone)
-      const [endHour, endMinute] = discountSettings.discountEndTime
-        .split(":")
-        .map(Number);
-
-      const currentTimeInMinutes = currentHour * 60 + currentMinute;
-      const endTimeInMinutes = endHour * 60 + endMinute;
-
-      return currentTimeInMinutes < endTimeInMinutes;
-    }
+    return currentTimeInMinutes < endTimeInMinutes;
   };
 
   // Хөнгөлөлттэй үнэ тооцоолох
@@ -146,15 +122,8 @@ export function useDiscount() {
     fetchDiscountSettings();
   }, []);
 
-  // Business day mode өөрчлөгдөхөд хөнгөлөлтийн мэдээллийг дахин авах
+  // Хөнгөлөлтийн тохиргоо өөрчлөгдөхөд мэдээллийг шинэчлэх
   useEffect(() => {
-    const handleBusinessDayModeChange = () => {
-      // Хөнгөлөлтийн мэдээллийг дахин тооцоолох
-      console.log(
-        "🔄 Business day mode өөрчлөгдсөн - хөнгөлөлтийн мэдээллийг дахин тооцоолж байна"
-      );
-    };
-
     const handleDiscountSettingsChange = (event: CustomEvent) => {
       // Хөнгөлөлтийн тохиргоо өөрчлөгдөхөд мэдээллийг шинэчлэх
       console.log(
@@ -164,19 +133,11 @@ export function useDiscount() {
     };
 
     window.addEventListener(
-      "businessDayModeChanged",
-      handleBusinessDayModeChange
-    );
-    window.addEventListener(
       "discountSettingsChanged",
       handleDiscountSettingsChange as EventListener
     );
 
     return () => {
-      window.removeEventListener(
-        "businessDayModeChanged",
-        handleBusinessDayModeChange
-      );
       window.removeEventListener(
         "discountSettingsChanged",
         handleDiscountSettingsChange as EventListener

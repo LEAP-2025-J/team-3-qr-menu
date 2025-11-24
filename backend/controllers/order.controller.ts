@@ -2,18 +2,11 @@ import { Request, Response } from "express";
 import Order from "../models/model.order.js";
 import Table from "../models/model.table.js";
 import MenuItem from "../models/model.menuItem.js";
-import { getCurrentBusinessDayString } from "../utils/business-day-utils.js";
 
 // GET /api/orders - Get all orders
 export const getAllOrders = async (req: Request, res: Response) => {
   try {
-    const {
-      status,
-      table,
-      limit = 50,
-      page = 1,
-      useBusinessDay = "false",
-    } = req.query;
+    const { status, table, limit = 50, page = 1 } = req.query;
     const query: any = {};
 
     if (status) {
@@ -22,11 +15,6 @@ export const getAllOrders = async (req: Request, res: Response) => {
 
     if (table) {
       query.table = table;
-    }
-
-    // Business day filter - хэрэв useBusinessDay=true бол ашиглах
-    if (useBusinessDay === "true") {
-      query.businessDay = getCurrentBusinessDayString();
     }
 
     const orders = await Order.find(query)
@@ -275,75 +263,43 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 // GET /api/orders/notifications - Get unread QR orders count for notifications
 export const getNotifications = async (req: Request, res: Response) => {
   try {
-    const { useBusinessDay = "false" } = req.query;
+    // Энгийн календарь өдрийн логик ашиглах (Mongolia timezone)
+    const now = new Date();
+    const mongoliaTime = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+    const todayStart = new Date(mongoliaTime);
+    todayStart.setHours(0, 0, 0, 0);
+    const todayStartUTC = new Date(todayStart.getTime() - 8 * 60 * 60 * 1000);
+    const todayEnd = new Date(mongoliaTime);
+    todayEnd.setHours(23, 59, 59, 999);
+    const todayEndUTC = new Date(todayEnd.getTime() - 8 * 60 * 60 * 1000);
 
-    let unreadQROrders: any[];
-    let todayQROrders: any[];
+    // Badge дээр харуулах зөвхөн unread QR захиалгууд
+    const unreadQROrders = await Order.find({
+      status: "pending",
+      isReadByAdmin: false,
+      orderSource: "qr", // Зөвхөн QR захиалгууд
+      createdAt: {
+        $gte: todayStartUTC,
+        $lte: todayEndUTC,
+      },
+    })
+      .populate("table", "number location")
+      .lean();
 
-    if (useBusinessDay === "true") {
-      // Business day логик ашиглах
-      const currentBusinessDay = getCurrentBusinessDayString();
-
-      // Badge дээр харуулах зөвхөн unread QR захиалгууд
-      unreadQROrders = await Order.find({
-        status: "pending",
-        isReadByAdmin: false, // Зөвхөн хараагүй захиалгууд
-        orderSource: "qr", // Зөвхөн QR захиалгууд
-        businessDay: currentBusinessDay,
-      })
-        .populate("table", "number location")
-        .lean();
-
-      // Dialog дээр харуулах одоогийн business day-ийн бүх QR захиалгууд (read болон unread)
-      todayQROrders = await Order.find({
-        businessDay: currentBusinessDay,
-      })
-        .select(
-          "orderNumber table items total createdAt status isReadByAdmin orderSource"
-        )
-        .populate("table", "number location")
-        .populate("items.menuItem", "name nameEn nameMn nameJp")
-        .sort({ createdAt: -1 }) // Хамгийн сүүлд үүсгэсэн захиалга дээрээ
-        .lean();
-    } else {
-      // Хуучин логик ашиглах (одоогийн ажиллаж байгаа)
-      const now = new Date();
-      const mongoliaTime = new Date(now.getTime() + 8 * 60 * 60 * 1000);
-      const todayStart = new Date(mongoliaTime);
-      todayStart.setHours(0, 0, 0, 0);
-      const todayStartUTC = new Date(todayStart.getTime() - 8 * 60 * 60 * 1000);
-      const todayEnd = new Date(mongoliaTime);
-      todayEnd.setHours(23, 59, 59, 999);
-      const todayEndUTC = new Date(todayEnd.getTime() - 8 * 60 * 60 * 1000);
-
-      // Badge дээр харуулах зөвхөн unread QR захиалгууд
-      unreadQROrders = await Order.find({
-        status: "pending",
-        isReadByAdmin: false,
-        orderSource: "qr", // Зөвхөн QR захиалгууд
-        createdAt: {
-          $gte: todayStartUTC,
-          $lte: todayEndUTC,
-        },
-      })
-        .populate("table", "number location")
-        .lean();
-
-      // Dialog дээр харуулах өнөөдрийн бүх QR захиалгууд (read болон unread)
-      todayQROrders = await Order.find({
-        createdAt: {
-          $gte: todayStartUTC,
-          $lte: todayEndUTC,
-        },
-      })
-        .select(
-          "orderNumber table items total createdAt status isReadByAdmin orderSource"
-        )
-        .populate("table", "number location")
-        .populate("items.menuItem", "name nameEn nameMn nameJp")
-        .sort({ createdAt: -1 })
-        .lean();
-    }
+    // Dialog дээр харуулах өнөөдрийн бүх QR захиалгууд (read болон unread)
+    const todayQROrders = await Order.find({
+      createdAt: {
+        $gte: todayStartUTC,
+        $lte: todayEndUTC,
+      },
+    })
+      .select(
+        "orderNumber table items total createdAt status isReadByAdmin orderSource"
+      )
+      .populate("table", "number location")
+      .populate("items.menuItem", "name nameEn nameMn nameJp")
+      .sort({ createdAt: -1 })
+      .lean();
 
     // Unread захиалгатай ширээний тоо (unique table count)
     const uniqueTables = new Set();
@@ -376,53 +332,31 @@ export const getNotifications = async (req: Request, res: Response) => {
 // POST /api/orders/mark-as-read - Mark today's QR orders as read by admin
 export const markOrdersAsRead = async (req: Request, res: Response) => {
   try {
-    const { useBusinessDay = "false" } = req.query;
+    // Энгийн календарь өдрийн логик ашиглах (Mongolia timezone)
+    const now = new Date();
+    const mongoliaTime = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+    const todayStart = new Date(mongoliaTime);
+    todayStart.setHours(0, 0, 0, 0);
+    const todayStartUTC = new Date(todayStart.getTime() - 8 * 60 * 60 * 1000);
+    const todayEnd = new Date(mongoliaTime);
+    todayEnd.setHours(23, 59, 59, 999);
+    const todayEndUTC = new Date(todayEnd.getTime() - 8 * 60 * 60 * 1000);
 
-    let updateResult: any;
-
-    if (useBusinessDay === "true") {
-      // Business day логик ашиглах
-      const currentBusinessDay = getCurrentBusinessDayString();
-
-      // Одоогийн business day-ийн бүх pending QR захиалгуудыг "харсан" болгох
-      updateResult = await Order.updateMany(
-        {
-          status: "pending",
-          isReadByAdmin: false,
-          orderSource: "qr", // Зөвхөн QR захиалгууд
-          businessDay: currentBusinessDay,
+    // Өнөөдрийн бүх pending QR захиалгуудыг "харсан" болгох
+    const updateResult = await Order.updateMany(
+      {
+        status: "pending",
+        isReadByAdmin: false,
+        orderSource: "qr", // Зөвхөн QR захиалгууд
+        createdAt: {
+          $gte: todayStartUTC,
+          $lte: todayEndUTC,
         },
-        {
-          $set: { isReadByAdmin: true },
-        }
-      );
-    } else {
-      // Хуучин логик ашиглах (одоогийн ажиллаж байгаа)
-      const now = new Date();
-      const mongoliaTime = new Date(now.getTime() + 8 * 60 * 60 * 1000);
-      const todayStart = new Date(mongoliaTime);
-      todayStart.setHours(0, 0, 0, 0);
-      const todayStartUTC = new Date(todayStart.getTime() - 8 * 60 * 60 * 1000);
-      const todayEnd = new Date(mongoliaTime);
-      todayEnd.setHours(23, 59, 59, 999);
-      const todayEndUTC = new Date(todayEnd.getTime() - 8 * 60 * 60 * 1000);
-
-      // Өнөөдрийн бүх pending QR захиалгуудыг "харсан" болгох
-      updateResult = await Order.updateMany(
-        {
-          status: "pending",
-          isReadByAdmin: false,
-          orderSource: "qr", // Зөвхөн QR захиалгууд
-          createdAt: {
-            $gte: todayStartUTC,
-            $lte: todayEndUTC,
-          },
-        },
-        {
-          $set: { isReadByAdmin: true },
-        }
-      );
-    }
+      },
+      {
+        $set: { isReadByAdmin: true },
+      }
+    );
 
     res.json({
       success: true,

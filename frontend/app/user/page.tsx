@@ -1,6 +1,6 @@
 "use client";
 
-import { UserDashboard } from "@/components/admin/user-dashboard";
+import { UserDashboard } from "@/components/admin/users/user-dashboard";
 import { NotificationProvider } from "@/contexts/notification-context";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 
